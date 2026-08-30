@@ -1,0 +1,701 @@
+{
+  "version": "1.0",
+  "description": "Database-agnostic data model for CRM System. SAP-compatible field types and lengths are annotated on shared objects (Accounts/Business Partners, Contacts/Business Partners, Products/Materials, Quotations/Sales Quotations, Sales Orders, Invoices/Billing Documents, Tickets/Quality Notifications, Assets/Equipment, Line Items/Document Items).",
+  "field_types": {
+    "string": "Fixed-length character string (specify length)",
+    "text": "Variable-length long text, no length limit",
+    "integer": "Whole number",
+    "decimal": "Decimal number (specify precision and scale)",
+    "currency": "Decimal with 2 decimal places for monetary values",
+    "boolean": "True/false",
+    "date": "Date without time (YYYY-MM-DD)",
+    "datetime": "Date with time (ISO 8601)",
+    "enum": "Enumerated value from a defined list",
+    "reference": "Foreign key reference to another object",
+    "json": "Flexible structured data (JSON object)",
+    "uuid": "Universally unique identifier (36 chars)"
+  },
+  "common_fields": [
+    { "name": "id", "type": "uuid", "required": true, "primary_key": true, "description": "Unique identifier" },
+    { "name": "created_at", "type": "datetime", "required": true, "description": "Record creation timestamp" },
+    { "name": "updated_at", "type": "datetime", "required": true, "description": "Last update timestamp" },
+    { "name": "created_by", "type": "reference", "target": "UserProfile", "required": true, "description": "User who created the record" },
+    { "name": "updated_by", "type": "reference", "target": "UserProfile", "required": true, "description": "User who last updated the record" }
+  ],
+  "objects": {
+    "Account": {
+      "description": "Company or organization the business interacts with",
+      "sap_equivalent": "Business Partner — Organization (BU type)",
+      "fields": [
+        { "name": "account_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Account number", "sap_field": "PARTNER", "sap_type": "CHAR 10" },
+        { "name": "name1", "type": "string", "length": 40, "required": true, "description": "Primary name", "sap_field": "NAME_ORG1", "sap_type": "CHAR 40" },
+        { "name": "name2", "type": "string", "length": 40, "required": false, "description": "Secondary name", "sap_field": "NAME_ORG2", "sap_type": "CHAR 40" },
+        { "name": "street", "type": "string", "length": 60, "required": false, "description": "Street address", "sap_field": "STREET", "sap_type": "CHAR 60" },
+        { "name": "house_number", "type": "string", "length": 10, "required": false, "description": "House number", "sap_field": "HOUSE_NUM1", "sap_type": "CHAR 10" },
+        { "name": "postal_code", "type": "string", "length": 10, "required": false, "description": "Postal code", "sap_field": "POST_CODE1", "sap_type": "CHAR 10" },
+        { "name": "city", "type": "string", "length": 40, "required": false, "description": "City", "sap_field": "CITY1", "sap_type": "CHAR 40" },
+        { "name": "region", "type": "string", "length": 3, "required": false, "description": "State or region code", "sap_field": "REGION", "sap_type": "CHAR 3" },
+        { "name": "country", "type": "string", "length": 3, "required": false, "description": "Country code (ISO 3166)", "sap_field": "COUNTRY", "sap_type": "CHAR 3" },
+        { "name": "phone", "type": "string", "length": 30, "required": false, "description": "Primary phone number", "sap_field": "TEL_NUMBER", "sap_type": "CHAR 30" },
+        { "name": "fax", "type": "string", "length": 30, "required": false, "description": "Fax number", "sap_field": "FAX_NUMBER", "sap_type": "CHAR 30" },
+        { "name": "email", "type": "string", "length": 241, "required": false, "description": "Primary email address", "sap_field": "SMTP_ADDR", "sap_type": "CHAR 241" },
+        { "name": "website", "type": "string", "length": 132, "required": false, "description": "Company website URL", "sap_field": "URI_ADDR", "sap_type": "CHAR 132" },
+        { "name": "industry", "type": "string", "length": 10, "required": false, "description": "Industry sector code", "sap_field": "INDUSTRY", "sap_type": "CHAR 10" },
+        { "name": "industry_description", "type": "string", "length": 100, "required": false, "description": "Industry sector description" },
+        { "name": "company_size", "type": "enum", "values": ["1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5000+"], "required": false, "description": "Number of employees range" },
+        { "name": "annual_revenue", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Annual revenue" },
+        { "name": "currency", "type": "string", "length": 5, "required": false, "description": "Currency code (ISO 4217)", "sap_field": "WAERS", "sap_type": "CHAR 5" },
+        { "name": "parent_account_id", "type": "reference", "target": "Account", "required": false, "description": "Parent account for hierarchy" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Account owner (assigned user)" },
+        { "name": "description", "type": "text", "required": false, "description": "Free-text account description" },
+        { "name": "status", "type": "enum", "values": ["Active", "Inactive"], "required": true, "default": "Active", "description": "Account status" }
+      ],
+      "relationships": [
+        { "name": "contacts", "type": "one-to-many", "target": "Contact", "foreign_key": "account_id" },
+        { "name": "additional_contacts", "type": "many-to-many", "target": "Contact", "through": "ContactAccount" },
+        { "name": "child_accounts", "type": "one-to-many", "target": "Account", "foreign_key": "parent_account_id" },
+        { "name": "leads", "type": "one-to-many", "target": "Lead", "foreign_key": "account_id" },
+        { "name": "opportunities", "type": "one-to-many", "target": "Opportunity", "foreign_key": "account_id" },
+        { "name": "quotations", "type": "one-to-many", "target": "Quotation", "foreign_key": "account_id" },
+        { "name": "sales_orders", "type": "one-to-many", "target": "SalesOrder", "foreign_key": "account_id" },
+        { "name": "invoices", "type": "one-to-many", "target": "Invoice", "foreign_key": "account_id" },
+        { "name": "tickets", "type": "one-to-many", "target": "Ticket", "foreign_key": "account_id" },
+        { "name": "assets", "type": "one-to-many", "target": "Asset", "foreign_key": "account_id" },
+        { "name": "activities", "type": "one-to-many", "target": "Activity", "foreign_key": "account_id" },
+        { "name": "service_contracts", "type": "one-to-many", "target": "ServiceContract", "foreign_key": "account_id" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'Account'" }
+      ]
+    },
+
+    "Contact": {
+      "description": "Individual person the business interacts with",
+      "sap_equivalent": "Business Partner — Person (PE type)",
+      "fields": [
+        { "name": "contact_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Contact number", "sap_field": "PARTNER", "sap_type": "CHAR 10" },
+        { "name": "title", "type": "string", "length": 30, "required": false, "description": "Salutation or title", "sap_field": "TITLE_P", "sap_type": "CHAR 30" },
+        { "name": "first_name", "type": "string", "length": 40, "required": true, "description": "First name", "sap_field": "NAME_FIRST", "sap_type": "CHAR 40" },
+        { "name": "last_name", "type": "string", "length": 40, "required": true, "description": "Last name", "sap_field": "NAME_LAST", "sap_type": "CHAR 40" },
+        { "name": "department", "type": "string", "length": 40, "required": false, "description": "Department within the company", "sap_field": "DEPARTMENT", "sap_type": "CHAR 40" },
+        { "name": "position", "type": "string", "length": 40, "required": false, "description": "Job title or function", "sap_field": "FUNCTION", "sap_type": "CHAR 40" },
+        { "name": "phone", "type": "string", "length": 30, "required": false, "description": "Office phone number", "sap_field": "TEL_NUMBER", "sap_type": "CHAR 30" },
+        { "name": "mobile", "type": "string", "length": 30, "required": false, "description": "Mobile phone number", "sap_field": "MOB_NUMBER", "sap_type": "CHAR 30" },
+        { "name": "email", "type": "string", "length": 241, "required": false, "description": "Email address", "sap_field": "SMTP_ADDR", "sap_type": "CHAR 241" },
+        { "name": "street", "type": "string", "length": 60, "required": false, "description": "Street address", "sap_field": "STREET", "sap_type": "CHAR 60" },
+        { "name": "house_number", "type": "string", "length": 10, "required": false, "description": "House number", "sap_field": "HOUSE_NUM1", "sap_type": "CHAR 10" },
+        { "name": "postal_code", "type": "string", "length": 10, "required": false, "description": "Postal code", "sap_field": "POST_CODE1", "sap_type": "CHAR 10" },
+        { "name": "city", "type": "string", "length": 40, "required": false, "description": "City", "sap_field": "CITY1", "sap_type": "CHAR 40" },
+        { "name": "country", "type": "string", "length": 3, "required": false, "description": "Country code (ISO 3166)", "sap_field": "COUNTRY", "sap_type": "CHAR 3" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": false, "description": "Primary account" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Contact owner (assigned user)" },
+        { "name": "description", "type": "text", "required": false, "description": "Free-text notes about the contact" },
+        { "name": "status", "type": "enum", "values": ["Active", "Inactive"], "required": true, "default": "Active", "description": "Contact status" }
+      ],
+      "relationships": [
+        { "name": "accounts", "type": "many-to-many", "target": "Account", "through": "ContactAccount" },
+        { "name": "leads", "type": "one-to-many", "target": "Lead", "foreign_key": "contact_id" },
+        { "name": "opportunities", "type": "many-to-many", "target": "Opportunity", "through": "OpportunityContact" },
+        { "name": "quotations", "type": "one-to-many", "target": "Quotation", "foreign_key": "contact_id" },
+        { "name": "tickets", "type": "one-to-many", "target": "Ticket", "foreign_key": "contact_id" },
+        { "name": "activities", "type": "one-to-many", "target": "Activity", "foreign_key": "contact_id" },
+        { "name": "assets", "type": "one-to-many", "target": "Asset", "foreign_key": "contact_id" }
+      ]
+    },
+
+    "ContactAccount": {
+      "description": "Junction table linking contacts to accounts (many-to-many)",
+      "fields": [
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": true, "description": "Contact reference" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Account reference" },
+        { "name": "role", "type": "string", "length": 50, "required": false, "description": "Contact's role at this account (e.g., Decision Maker, Technical Contact)" },
+        { "name": "is_primary", "type": "boolean", "required": true, "default": false, "description": "Whether this is the contact's primary account" }
+      ]
+    },
+
+    "Lead": {
+      "description": "Potential sales prospect not yet qualified as a contact or opportunity",
+      "fields": [
+        { "name": "lead_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Lead number" },
+        { "name": "first_name", "type": "string", "length": 40, "required": true, "description": "First name" },
+        { "name": "last_name", "type": "string", "length": 40, "required": true, "description": "Last name" },
+        { "name": "company", "type": "string", "length": 40, "required": false, "description": "Company name (free text before conversion)" },
+        { "name": "position", "type": "string", "length": 40, "required": false, "description": "Job title" },
+        { "name": "email", "type": "string", "length": 241, "required": false, "description": "Email address" },
+        { "name": "phone", "type": "string", "length": 30, "required": false, "description": "Phone number" },
+        { "name": "mobile", "type": "string", "length": 30, "required": false, "description": "Mobile number" },
+        { "name": "website", "type": "string", "length": 132, "required": false, "description": "Company or personal website" },
+        { "name": "source", "type": "enum", "values": ["Web", "Referral", "Trade Show", "Cold Call", "Email Campaign", "Social Media", "Partner", "Other"], "required": false, "description": "Lead source of origin" },
+        { "name": "status", "type": "enum", "values": ["New", "Contacted", "Qualified", "Unqualified", "Converted"], "required": true, "default": "New", "description": "Lead status" },
+        { "name": "score", "type": "integer", "required": false, "default": 0, "description": "Lead qualification score (0-100)" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": false, "description": "Associated account (if identified before conversion)" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Linked contact (populated on conversion)" },
+        { "name": "converted_account_id", "type": "reference", "target": "Account", "required": false, "description": "Account created on conversion" },
+        { "name": "converted_contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Contact created on conversion" },
+        { "name": "converted_opportunity_id", "type": "reference", "target": "Opportunity", "required": false, "description": "Opportunity created on conversion" },
+        { "name": "converted_at", "type": "datetime", "required": false, "description": "Timestamp of conversion" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Lead owner (assigned user)" },
+        { "name": "description", "type": "text", "required": false, "description": "Free-text notes about the lead" }
+      ],
+      "relationships": [
+        { "name": "activities", "type": "one-to-many", "target": "Activity", "foreign_key": "lead_id" }
+      ]
+    },
+
+    "Opportunity": {
+      "description": "Sales deal tracked through a configurable pipeline",
+      "fields": [
+        { "name": "opportunity_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Opportunity number" },
+        { "name": "name", "type": "string", "length": 120, "required": true, "description": "Opportunity name or deal title" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Associated account" },
+        { "name": "lead_id", "type": "reference", "target": "Lead", "required": false, "description": "Originating lead (if converted)" },
+        { "name": "stage_id", "type": "reference", "target": "PipelineStage", "required": true, "description": "Current pipeline stage" },
+        { "name": "amount", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Total deal value" },
+        { "name": "currency", "type": "string", "length": 5, "required": true, "default": "USD", "description": "Currency code (ISO 4217)" },
+        { "name": "probability", "type": "integer", "required": false, "description": "Win probability percentage (0-100)" },
+        { "name": "expected_close_date", "type": "date", "required": false, "description": "Expected close date" },
+        { "name": "actual_close_date", "type": "date", "required": false, "description": "Actual close date (when won or lost)" },
+        { "name": "result", "type": "enum", "values": ["Open", "Won", "Lost"], "required": true, "default": "Open", "description": "Deal outcome" },
+        { "name": "loss_reason", "type": "string", "length": 255, "required": false, "description": "Reason for losing the deal" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Opportunity owner (assigned sales rep)" },
+        { "name": "description", "type": "text", "required": false, "description": "Free-text deal description" }
+      ],
+      "relationships": [
+        { "name": "line_items", "type": "one-to-many", "target": "LineItem", "foreign_key": "parent_id", "condition": "parent_type = 'Opportunity'" },
+        { "name": "contacts", "type": "many-to-many", "target": "Contact", "through": "OpportunityContact" },
+        { "name": "quotations", "type": "one-to-many", "target": "Quotation", "foreign_key": "opportunity_id" },
+        { "name": "sales_orders", "type": "one-to-many", "target": "SalesOrder", "foreign_key": "opportunity_id" },
+        { "name": "activities", "type": "one-to-many", "target": "Activity", "foreign_key": "opportunity_id" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'Opportunity'" }
+      ]
+    },
+
+    "OpportunityContact": {
+      "description": "Junction table linking opportunities to contacts with roles",
+      "fields": [
+        { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": true, "description": "Opportunity reference" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": true, "description": "Contact reference" },
+        { "name": "role", "type": "string", "length": 50, "required": false, "description": "Contact's role in the deal (e.g., Decision Maker, Influencer, Champion)" }
+      ]
+    },
+
+    "DealRoom": {
+      "description": "Optional purpose-built workspace for important opportunities",
+      "fields": [
+        { "name": "deal_room_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Deal room number" },
+        { "name": "name", "type": "string", "length": 120, "required": true, "description": "Deal room name" },
+        { "name": "description", "type": "text", "required": false, "description": "Deal room description" },
+        { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": true, "description": "Linked opportunity" },
+        { "name": "status", "type": "enum", "values": ["Active", "Closed"], "required": true, "default": "Active", "description": "Deal room status" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Deal room owner" }
+      ],
+      "relationships": [
+        { "name": "comments", "type": "one-to-many", "target": "Comment", "foreign_key": "parent_id", "condition": "parent_type = 'DealRoom'" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'DealRoom'" }
+      ]
+    },
+
+    "PipelineStage": {
+      "description": "Configurable pipeline stage for opportunities",
+      "fields": [
+        { "name": "name", "type": "string", "length": 50, "required": true, "description": "Stage name (e.g., Prospecting, Qualification, Proposal)" },
+        { "name": "sort_order", "type": "integer", "required": true, "description": "Display order in the pipeline" },
+        { "name": "default_probability", "type": "integer", "required": false, "description": "Default win probability for this stage (0-100)" },
+        { "name": "is_closed", "type": "boolean", "required": true, "default": false, "description": "Whether this stage represents a closed deal" },
+        { "name": "is_won", "type": "boolean", "required": true, "default": false, "description": "Whether this stage represents a won deal (only if is_closed)" },
+        { "name": "description", "type": "string", "length": 255, "required": false, "description": "Stage description" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this stage is currently in use" }
+      ]
+    },
+
+    "Quotation": {
+      "description": "Formal price proposal sent to a customer",
+      "sap_equivalent": "Sales Quotation (VBAK/VBAP, doc type AG)",
+      "fields": [
+        { "name": "quotation_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Quotation number", "sap_field": "VBELN", "sap_type": "CHAR 10" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account", "sap_field": "KUNNR", "sap_type": "CHAR 10" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Customer contact" },
+        { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": false, "description": "Related opportunity" },
+        { "name": "status", "type": "enum", "values": ["Draft", "Sent", "Accepted", "Rejected", "Expired"], "required": true, "default": "Draft", "description": "Quotation status" },
+        { "name": "valid_from", "type": "date", "required": false, "description": "Quotation validity start date", "sap_field": "ANGDT", "sap_type": "DATS 8" },
+        { "name": "valid_to", "type": "date", "required": false, "description": "Quotation validity end date", "sap_field": "BNDDT", "sap_type": "DATS 8" },
+        { "name": "total_amount", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Total quotation amount (calculated from line items)", "sap_field": "NETWR", "sap_type": "CURR 15.2" },
+        { "name": "currency", "type": "string", "length": 5, "required": true, "default": "USD", "description": "Currency code (ISO 4217)", "sap_field": "WAERK", "sap_type": "CUKY 5" },
+        { "name": "notes", "type": "text", "required": false, "description": "Internal notes or terms" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Quotation owner" }
+      ],
+      "relationships": [
+        { "name": "line_items", "type": "one-to-many", "target": "LineItem", "foreign_key": "parent_id", "condition": "parent_type = 'Quotation'" },
+        { "name": "sales_orders", "type": "one-to-many", "target": "SalesOrder", "foreign_key": "quotation_id" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'Quotation'" }
+      ]
+    },
+
+    "SalesOrder": {
+      "description": "Confirmed customer purchase order",
+      "sap_equivalent": "Sales Order (VBAK/VBAP, doc type TA)",
+      "fields": [
+        { "name": "order_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Sales order number", "sap_field": "VBELN", "sap_type": "CHAR 10" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account", "sap_field": "KUNNR", "sap_type": "CHAR 10" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Customer contact" },
+        { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": false, "description": "Related opportunity" },
+        { "name": "quotation_id", "type": "reference", "target": "Quotation", "required": false, "description": "Related quotation" },
+        { "name": "status", "type": "enum", "values": ["Draft", "Confirmed", "In Progress", "Shipped", "Completed", "Cancelled"], "required": true, "default": "Draft", "description": "Order status" },
+        { "name": "order_date", "type": "date", "required": true, "description": "Date the order was placed", "sap_field": "AUDAT", "sap_type": "DATS 8" },
+        { "name": "total_amount", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Total order amount (calculated from line items)", "sap_field": "NETWR", "sap_type": "CURR 15.2" },
+        { "name": "currency", "type": "string", "length": 5, "required": true, "default": "USD", "description": "Currency code (ISO 4217)", "sap_field": "WAERK", "sap_type": "CUKY 5" },
+        { "name": "notes", "type": "text", "required": false, "description": "Internal notes" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Order owner" }
+      ],
+      "relationships": [
+        { "name": "line_items", "type": "one-to-many", "target": "LineItem", "foreign_key": "parent_id", "condition": "parent_type = 'SalesOrder'" },
+        { "name": "invoices", "type": "one-to-many", "target": "Invoice", "foreign_key": "sales_order_id" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'SalesOrder'" }
+      ]
+    },
+
+    "Invoice": {
+      "description": "Customer billing document",
+      "sap_equivalent": "Billing Document (VBRK/VBRP)",
+      "fields": [
+        { "name": "invoice_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Invoice number", "sap_field": "VBELN", "sap_type": "CHAR 10" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account", "sap_field": "KUNAG", "sap_type": "CHAR 10" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Customer contact" },
+        { "name": "sales_order_id", "type": "reference", "target": "SalesOrder", "required": false, "description": "Related sales order" },
+        { "name": "status", "type": "enum", "values": ["Draft", "Sent", "Paid", "Partially Paid", "Overdue", "Cancelled"], "required": true, "default": "Draft", "description": "Invoice status" },
+        { "name": "invoice_date", "type": "date", "required": true, "description": "Invoice issue date", "sap_field": "FKDAT", "sap_type": "DATS 8" },
+        { "name": "due_date", "type": "date", "required": true, "description": "Payment due date", "sap_field": "ZFBDT", "sap_type": "DATS 8" },
+        { "name": "total_amount", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Total invoice amount (calculated from line items)", "sap_field": "NETWR", "sap_type": "CURR 15.2" },
+        { "name": "paid_amount", "type": "currency", "precision": 15, "scale": 2, "required": false, "default": 0, "description": "Amount already paid" },
+        { "name": "currency", "type": "string", "length": 5, "required": true, "default": "USD", "description": "Currency code (ISO 4217)", "sap_field": "WAERK", "sap_type": "CUKY 5" },
+        { "name": "notes", "type": "text", "required": false, "description": "Internal notes or payment terms" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Invoice owner" }
+      ],
+      "relationships": [
+        { "name": "line_items", "type": "one-to-many", "target": "LineItem", "foreign_key": "parent_id", "condition": "parent_type = 'Invoice'" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'Invoice'" }
+      ]
+    },
+
+    "LineItem": {
+      "description": "Product line item on an Opportunity, Quotation, Sales Order, or Invoice",
+      "sap_equivalent": "Sales Document Item (VBAP) / Billing Document Item (VBRP)",
+      "fields": [
+        { "name": "parent_type", "type": "enum", "values": ["Opportunity", "Quotation", "SalesOrder", "Invoice"], "required": true, "description": "Type of parent document" },
+        { "name": "parent_id", "type": "uuid", "required": true, "description": "ID of the parent document" },
+        { "name": "item_number", "type": "string", "length": 6, "required": true, "auto_generated": true, "description": "Item number within the document (auto: 10, 20, 30...)", "sap_field": "POSNR", "sap_type": "NUMC 6" },
+        { "name": "product_id", "type": "reference", "target": "Product", "required": true, "description": "Referenced product", "sap_field": "MATNR", "sap_type": "CHAR 40" },
+        { "name": "quantity", "type": "decimal", "precision": 13, "scale": 3, "required": true, "default": 1, "description": "Quantity", "sap_field": "KWMENG", "sap_type": "QUAN 13.3" },
+        { "name": "unit_price", "type": "currency", "precision": 11, "scale": 2, "required": true, "description": "Net price per unit", "sap_field": "NETPR", "sap_type": "CURR 11.2" },
+        { "name": "discount_percent", "type": "decimal", "precision": 5, "scale": 2, "required": false, "default": 0, "description": "Discount percentage (0-100)" },
+        { "name": "total_price", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Net value (auto-calculated: quantity × unit_price × (1 − discount/100))", "sap_field": "NETWR", "sap_type": "CURR 15.2" },
+        { "name": "unit_of_measure", "type": "string", "length": 3, "required": false, "description": "Sales unit of measure", "sap_field": "VRKME", "sap_type": "CHAR 3" },
+        { "name": "comment", "type": "string", "length": 40, "required": false, "description": "Optional comment", "sap_field": "ARKTX", "sap_type": "CHAR 40" },
+        { "name": "alternative_to", "type": "string", "length": 6, "required": false, "description": "Item number of the line item this is an alternative to. If set, this item does not count toward the document total.", "sap_field": "GRPOS", "sap_type": "NUMC 6" }
+      ]
+    },
+
+    "PricebookEntry": {
+      "description": "Price book entry defining the price for a product, optionally per customer and/or quantity range. Supports: (1) base price per product, (2) customer-specific price, (3) quantity-based pricing with either a fixed price or a discount percentage.",
+      "sap_equivalent": "Condition Record (KONP — pricing conditions)",
+      "fields": [
+        { "name": "product_id", "type": "reference", "target": "Product", "required": true, "description": "Product this price applies to", "sap_field": "MATNR", "sap_type": "CHAR 40" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": false, "description": "Customer-specific price. If empty, this is the general price for the product.", "sap_field": "KUNNR", "sap_type": "CHAR 10" },
+        { "name": "price", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Fixed price for this entry. If empty, the discount_percent is applied to the product's base price." },
+        { "name": "currency", "type": "string", "length": 5, "required": false, "description": "Currency code (ISO 4217). Required if price is set.", "sap_field": "KONWA", "sap_type": "CUKY 5" },
+        { "name": "quantity_from", "type": "decimal", "precision": 13, "scale": 3, "required": false, "description": "Minimum quantity for this price to apply (inclusive). If empty, no lower bound.", "sap_field": "KSTBM", "sap_type": "QUAN 13.3" },
+        { "name": "quantity_to", "type": "decimal", "precision": 13, "scale": 3, "required": false, "description": "Maximum quantity for this price to apply (inclusive). If empty, no upper bound." },
+        { "name": "discount_percent", "type": "decimal", "precision": 5, "scale": 2, "required": false, "description": "Discount percentage off the base price (0-100). Used when no fixed price is set for this entry." },
+        { "name": "valid_from", "type": "date", "required": false, "description": "Start date of price validity", "sap_field": "DATAB", "sap_type": "DATS 8" },
+        { "name": "valid_to", "type": "date", "required": false, "description": "End date of price validity", "sap_field": "DATBI", "sap_type": "DATS 8" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this price book entry is active" }
+      ]
+    },
+
+    "Product": {
+      "description": "Product or service in the catalog",
+      "sap_equivalent": "Material Master",
+      "fields": [
+        { "name": "product_number", "type": "string", "length": 40, "required": true, "unique": true, "auto_generated": true, "description": "Product number", "sap_field": "MATNR", "sap_type": "CHAR 40" },
+        { "name": "name", "type": "string", "length": 40, "required": true, "description": "Product name", "sap_field": "MAKTX", "sap_type": "CHAR 40" },
+        { "name": "description", "type": "text", "required": false, "description": "Detailed product description", "sap_field": "MAKTG", "sap_type": "STRING" },
+        { "name": "product_group", "type": "string", "length": 9, "required": false, "description": "Product group code", "sap_field": "MATKL", "sap_type": "CHAR 9" },
+        { "name": "product_group_description", "type": "string", "length": 100, "required": false, "description": "Product group description" },
+        { "name": "unit_of_measure", "type": "string", "length": 3, "required": true, "default": "EA", "description": "Base unit of measure", "sap_field": "MEINS", "sap_type": "CHAR 3" },
+        { "name": "base_price", "type": "currency", "precision": 13, "scale": 2, "required": false, "description": "Standard list price", "sap_field": "STPRS", "sap_type": "CURR 13.2" },
+        { "name": "currency", "type": "string", "length": 5, "required": false, "description": "Currency code", "sap_field": "WAERS", "sap_type": "CHAR 5" },
+        { "name": "product_type", "type": "enum", "values": ["Physical", "Service", "Subscription", "License"], "required": true, "default": "Physical", "description": "Type of product" },
+        { "name": "status", "type": "enum", "values": ["Active", "Inactive", "Discontinued"], "required": true, "default": "Active", "description": "Product availability status" }
+      ]
+    },
+
+    "Activity": {
+      "description": "Interaction or task (call, email, meeting, task) linked to CRM records",
+      "fields": [
+        { "name": "activity_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Activity number" },
+        { "name": "type", "type": "enum", "values": ["Call", "Email", "Meeting", "Task"], "required": true, "description": "Activity type" },
+        { "name": "subject", "type": "string", "length": 255, "required": true, "description": "Activity subject line" },
+        { "name": "description", "type": "text", "required": false, "description": "Activity details or notes" },
+        { "name": "status", "type": "enum", "values": ["Planned", "In Progress", "Completed", "Cancelled"], "required": true, "default": "Planned", "description": "Activity status" },
+        { "name": "priority", "type": "enum", "values": ["Low", "Medium", "High"], "required": false, "default": "Medium", "description": "Activity priority" },
+        { "name": "start_date", "type": "datetime", "required": false, "description": "Scheduled or actual start time" },
+        { "name": "end_date", "type": "datetime", "required": false, "description": "Scheduled or actual end time" },
+        { "name": "due_date", "type": "date", "required": false, "description": "Due date (for tasks)" },
+        { "name": "completed_at", "type": "datetime", "required": false, "description": "Actual completion timestamp" },
+        { "name": "duration_minutes", "type": "integer", "required": false, "description": "Duration in minutes" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": false, "description": "Related account" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Related contact" },
+        { "name": "lead_id", "type": "reference", "target": "Lead", "required": false, "description": "Related lead" },
+        { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": false, "description": "Related opportunity" },
+        { "name": "ticket_id", "type": "reference", "target": "Ticket", "required": false, "description": "Related ticket" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Activity owner (assigned user)" },
+        { "name": "is_auto_logged", "type": "boolean", "required": true, "default": false, "description": "Whether this activity was automatically logged from email" }
+      ]
+    },
+
+    "Ticket": {
+      "description": "Service or support ticket tracking a customer issue",
+      "sap_equivalent": "Quality Notification (QMEL)",
+      "fields": [
+        { "name": "ticket_number", "type": "string", "length": 12, "required": true, "unique": true, "auto_generated": true, "description": "Ticket number", "sap_field": "QMNUM", "sap_type": "CHAR 12" },
+        { "name": "subject", "type": "string", "length": 40, "required": true, "description": "Short description of the issue", "sap_field": "QMTXT", "sap_type": "CHAR 40" },
+        { "name": "description", "type": "text", "required": false, "description": "Detailed description of the issue" },
+        { "name": "status_id", "type": "reference", "target": "TicketStatus", "required": true, "description": "Current ticket status" },
+        { "name": "priority", "type": "enum", "values": ["Low", "Medium", "High", "Critical"], "required": true, "default": "Medium", "description": "Ticket priority", "sap_field": "PRIOK", "sap_type": "CHAR 1" },
+        { "name": "category", "type": "string", "length": 50, "required": false, "description": "Ticket category", "sap_field": "QMART", "sap_type": "CHAR 2" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Customer contact who reported the issue" },
+        { "name": "asset_id", "type": "reference", "target": "Asset", "required": false, "description": "Related asset (product installation)" },
+        { "name": "service_contract_id", "type": "reference", "target": "ServiceContract", "required": false, "description": "Active service contract covering this ticket" },
+        { "name": "sla_id", "type": "reference", "target": "SLA", "required": false, "description": "Assigned SLA" },
+        { "name": "assigned_to", "type": "reference", "target": "UserProfile", "required": false, "description": "Support agent assigned to this ticket" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Ticket owner" },
+        { "name": "resolution", "type": "text", "required": false, "description": "Resolution description" },
+        { "name": "sla_response_deadline", "type": "datetime", "required": false, "description": "Calculated SLA response deadline" },
+        { "name": "sla_resolution_deadline", "type": "datetime", "required": false, "description": "Calculated SLA resolution deadline" },
+        { "name": "first_response_at", "type": "datetime", "required": false, "description": "Timestamp of first response" },
+        { "name": "resolved_at", "type": "datetime", "required": false, "description": "Timestamp when resolved" },
+        { "name": "closed_at", "type": "datetime", "required": false, "description": "Timestamp when closed" }
+      ],
+      "relationships": [
+        { "name": "knowledge_articles", "type": "many-to-many", "target": "KnowledgeArticle", "through": "TicketKnowledgeArticle" },
+        { "name": "activities", "type": "one-to-many", "target": "Activity", "foreign_key": "ticket_id" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'Ticket'" }
+      ]
+    },
+
+    "TicketStatus": {
+      "description": "Configurable ticket status values",
+      "fields": [
+        { "name": "name", "type": "string", "length": 50, "required": true, "description": "Status name (e.g., New, In Progress, Resolved, Closed)" },
+        { "name": "sort_order", "type": "integer", "required": true, "description": "Display order" },
+        { "name": "is_closed", "type": "boolean", "required": true, "default": false, "description": "Whether this status represents a closed ticket" },
+        { "name": "is_resolved", "type": "boolean", "required": true, "default": false, "description": "Whether this status represents a resolved ticket" },
+        { "name": "description", "type": "string", "length": 255, "required": false, "description": "Status description" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this status is currently in use" }
+      ]
+    },
+
+    "SLA": {
+      "description": "Service Level Agreement defining response and resolution time targets",
+      "fields": [
+        { "name": "name", "type": "string", "length": 100, "required": true, "description": "SLA name" },
+        { "name": "description", "type": "text", "required": false, "description": "SLA description" },
+        { "name": "response_time_hours", "type": "decimal", "precision": 5, "scale": 1, "required": true, "description": "Target response time in hours" },
+        { "name": "resolution_time_hours", "type": "decimal", "precision": 5, "scale": 1, "required": true, "description": "Target resolution time in hours" },
+        { "name": "applies_to_priorities", "type": "json", "required": false, "description": "Array of priority values this SLA applies to (e.g., [\"High\", \"Critical\"])" },
+        { "name": "business_hours_only", "type": "boolean", "required": true, "default": true, "description": "Whether SLA timers count only business hours" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this SLA is currently in use" }
+      ]
+    },
+
+    "KnowledgeArticle": {
+      "description": "Knowledge base article with solutions and information",
+      "fields": [
+        { "name": "article_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Article number" },
+        { "name": "title", "type": "string", "length": 255, "required": true, "description": "Article title" },
+        { "name": "content", "type": "text", "required": true, "description": "Article content (rich text / markdown)" },
+        { "name": "category", "type": "string", "length": 100, "required": false, "description": "Article category" },
+        { "name": "status", "type": "enum", "values": ["Draft", "In Review", "Published", "Archived"], "required": true, "default": "Draft", "description": "Publication status" },
+        { "name": "source", "type": "enum", "values": ["Manual", "AI Generated", "Case Conversion"], "required": true, "default": "Manual", "description": "How the article was created" },
+        { "name": "author_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Article author" },
+        { "name": "views_count", "type": "integer", "required": true, "default": 0, "description": "Number of views" },
+        { "name": "helpful_count", "type": "integer", "required": true, "default": 0, "description": "Number of helpful votes" },
+        { "name": "published_at", "type": "datetime", "required": false, "description": "Date of publication" }
+      ],
+      "relationships": [
+        { "name": "tickets", "type": "many-to-many", "target": "Ticket", "through": "TicketKnowledgeArticle" }
+      ]
+    },
+
+    "TicketKnowledgeArticle": {
+      "description": "Junction table linking tickets to knowledge articles",
+      "fields": [
+        { "name": "ticket_id", "type": "reference", "target": "Ticket", "required": true, "description": "Ticket reference" },
+        { "name": "article_id", "type": "reference", "target": "KnowledgeArticle", "required": true, "description": "Article reference" },
+        { "name": "linked_at", "type": "datetime", "required": true, "description": "When the link was created" },
+        { "name": "linked_by", "type": "reference", "target": "UserProfile", "required": true, "description": "User who linked the article" }
+      ]
+    },
+
+    "ServiceContract": {
+      "description": "Service agreement defining coverage and entitlements for a customer",
+      "fields": [
+        { "name": "contract_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Contract number" },
+        { "name": "name", "type": "string", "length": 120, "required": true, "description": "Contract name" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account" },
+        { "name": "start_date", "type": "date", "required": true, "description": "Contract start date" },
+        { "name": "end_date", "type": "date", "required": true, "description": "Contract end date" },
+        { "name": "status", "type": "enum", "values": ["Draft", "Active", "Expired", "Terminated"], "required": true, "default": "Draft", "description": "Contract status" },
+        { "name": "entitlements", "type": "text", "required": false, "description": "Description of what the contract covers" },
+        { "name": "sla_id", "type": "reference", "target": "SLA", "required": false, "description": "SLA associated with this contract" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Contract owner" }
+      ],
+      "relationships": [
+        { "name": "tickets", "type": "one-to-many", "target": "Ticket", "foreign_key": "service_contract_id" }
+      ]
+    },
+
+    "Asset": {
+      "description": "Installed product at a customer site",
+      "sap_equivalent": "Equipment Master (EQUI)",
+      "fields": [
+        { "name": "asset_number", "type": "string", "length": 18, "required": true, "unique": true, "auto_generated": true, "description": "Asset/equipment number", "sap_field": "EQUNR", "sap_type": "CHAR 18" },
+        { "name": "name", "type": "string", "length": 40, "required": true, "description": "Equipment description", "sap_field": "EQKTX", "sap_type": "CHAR 40" },
+        { "name": "product_id", "type": "reference", "target": "Product", "required": true, "description": "Product from the catalog", "sap_field": "MATNR", "sap_type": "CHAR 40" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account where the asset is installed", "sap_field": "KUNNR", "sap_type": "CHAR 10" },
+        { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Primary contact for this asset" },
+        { "name": "serial_number", "type": "string", "length": 18, "required": false, "description": "Serial number", "sap_field": "SERNR", "sap_type": "CHAR 18" },
+        { "name": "install_date", "type": "date", "required": false, "description": "Start-up / installation date", "sap_field": "INBDT", "sap_type": "DATS 8" },
+        { "name": "warranty_end_date", "type": "date", "required": false, "description": "Warranty expiration date", "sap_field": "GWLDT", "sap_type": "DATS 8" },
+        { "name": "functional_location", "type": "string", "length": 30, "required": false, "description": "Functional location where the equipment is installed", "sap_field": "TPLNR", "sap_type": "CHAR 30" },
+        { "name": "manufacturer", "type": "string", "length": 30, "required": false, "description": "Manufacturer name", "sap_field": "HERST", "sap_type": "CHAR 30" },
+        { "name": "model_number", "type": "string", "length": 20, "required": false, "description": "Manufacturer model number", "sap_field": "TYPBZ", "sap_type": "CHAR 20" },
+        { "name": "status", "type": "enum", "values": ["Active", "Inactive", "Retired", "In Repair"], "required": true, "default": "Active", "description": "Asset status" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Asset owner" }
+      ],
+      "relationships": [
+        { "name": "tickets", "type": "one-to-many", "target": "Ticket", "foreign_key": "asset_id" }
+      ]
+    },
+
+    "Document": {
+      "description": "File attachment linked to any CRM record",
+      "fields": [
+        { "name": "name", "type": "string", "length": 255, "required": true, "description": "File name" },
+        { "name": "file_path", "type": "string", "length": 500, "required": true, "description": "Storage path (e.g., Firebase Storage URL)" },
+        { "name": "file_type", "type": "string", "length": 50, "required": false, "description": "MIME type" },
+        { "name": "file_size", "type": "integer", "required": false, "description": "File size in bytes" },
+        { "name": "parent_type", "type": "enum", "values": ["Account", "Contact", "Opportunity", "Quotation", "SalesOrder", "Invoice", "Ticket", "KnowledgeArticle", "DealRoom"], "required": true, "description": "Type of parent record" },
+        { "name": "parent_id", "type": "uuid", "required": true, "description": "ID of the parent record" },
+        { "name": "uploaded_by", "type": "reference", "target": "UserProfile", "required": true, "description": "User who uploaded the file" }
+      ]
+    },
+
+    "Comment": {
+      "description": "User comment or note on any CRM record",
+      "fields": [
+        { "name": "parent_type", "type": "enum", "values": ["Account", "Contact", "Lead", "Opportunity", "Quotation", "SalesOrder", "Invoice", "Ticket", "KnowledgeArticle", "Activity", "DealRoom"], "required": true, "description": "Type of parent record" },
+        { "name": "parent_id", "type": "uuid", "required": true, "description": "ID of the parent record" },
+        { "name": "content", "type": "text", "required": true, "description": "Comment text" },
+        { "name": "author_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User who wrote the comment" }
+      ]
+    },
+
+    "UserProfile": {
+      "description": "CRM user profile extending the authentication identity",
+      "fields": [
+        { "name": "auth_uid", "type": "string", "length": 128, "required": true, "unique": true, "description": "Authentication provider UID (e.g., Firebase Auth UID)" },
+        { "name": "email", "type": "string", "length": 241, "required": true, "unique": true, "description": "User email address" },
+        { "name": "first_name", "type": "string", "length": 40, "required": true, "description": "First name" },
+        { "name": "last_name", "type": "string", "length": 40, "required": true, "description": "Last name" },
+        { "name": "role_id", "type": "reference", "target": "Role", "required": true, "description": "Assigned role" },
+        { "name": "team_id", "type": "reference", "target": "Team", "required": false, "description": "Team membership" },
+        { "name": "avatar_url", "type": "string", "length": 500, "required": false, "description": "Profile picture URL" },
+        { "name": "xp_total", "type": "integer", "required": true, "default": 0, "description": "Total experience points earned" },
+        { "name": "level", "type": "integer", "required": true, "default": 1, "description": "Current gamification level" },
+        { "name": "level_name", "type": "string", "length": 50, "required": true, "default": "Rookie", "description": "Current level display name" },
+        { "name": "current_streak_days", "type": "integer", "required": true, "default": 0, "description": "Current consecutive activity streak in days" },
+        { "name": "longest_streak_days", "type": "integer", "required": true, "default": 0, "description": "Longest streak ever achieved" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether the user account is active" },
+        { "name": "theme_preference", "type": "enum", "values": ["Light", "Dark", "System"], "required": true, "default": "System", "description": "Preferred UI theme" },
+        { "name": "notification_preferences", "type": "json", "required": false, "description": "User notification settings (which events trigger desktop/email notifications)" },
+        { "name": "language_preference", "type": "string", "length": 5, "required": false, "default": "en", "description": "Preferred UI language (ISO 639-1 code)" }
+      ]
+    },
+
+    "Role": {
+      "description": "User role defining permissions and UI configuration",
+      "fields": [
+        { "name": "name", "type": "string", "length": 50, "required": true, "unique": true, "description": "Role name (e.g., Admin, Manager, Sales Rep, Support Agent)" },
+        { "name": "description", "type": "string", "length": 255, "required": false, "description": "Role description" },
+        { "name": "is_system_role", "type": "boolean", "required": true, "default": false, "description": "Whether this is a built-in role (Admin, Manager, User)" },
+        { "name": "permissions", "type": "json", "required": true, "description": "Object-level permissions: { object: { create, read, read_all, update, delete } }" },
+        { "name": "ribbon_items", "type": "json", "required": true, "description": "Array of navigation items visible in the Ribbon for this role" },
+        { "name": "visible_cards", "type": "json", "required": false, "description": "Per-object configuration of which Linked Record cards are visible" },
+        { "name": "layout_config", "type": "json", "required": false, "description": "Per-role layout configuration (Role-Adaptive UI)" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this role is currently in use" }
+      ]
+    },
+
+    "Team": {
+      "description": "Group of users under a manager",
+      "fields": [
+        { "name": "name", "type": "string", "length": 100, "required": true, "description": "Team name" },
+        { "name": "manager_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Team manager" },
+        { "name": "description", "type": "string", "length": 255, "required": false, "description": "Team description" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether the team is active" }
+      ],
+      "relationships": [
+        { "name": "members", "type": "one-to-many", "target": "UserProfile", "foreign_key": "team_id" }
+      ]
+    },
+
+    "Notification": {
+      "description": "In-app notification for a user",
+      "fields": [
+        { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Recipient user" },
+        { "name": "type", "type": "enum", "values": ["TicketAssigned", "SLABreach", "DealStageChange", "MentionedInComment", "LeadAssigned", "ChallengeAssigned", "BadgeEarned", "LevelUp", "PersonalBest", "System"], "required": true, "description": "Notification type" },
+        { "name": "title", "type": "string", "length": 255, "required": true, "description": "Notification title" },
+        { "name": "message", "type": "string", "length": 500, "required": false, "description": "Notification body text" },
+        { "name": "read", "type": "boolean", "required": true, "default": false, "description": "Whether the notification has been read" },
+        { "name": "link_type", "type": "string", "length": 50, "required": false, "description": "Type of record to navigate to" },
+        { "name": "link_id", "type": "uuid", "required": false, "description": "ID of record to navigate to" },
+        { "name": "send_email", "type": "boolean", "required": true, "default": false, "description": "Whether an email notification should also be sent" },
+        { "name": "email_sent", "type": "boolean", "required": true, "default": false, "description": "Whether the email notification was sent" }
+      ]
+    },
+
+    "DashboardConfig": {
+      "description": "User-specific dashboard layout configuration",
+      "fields": [
+        { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Dashboard owner" },
+        { "name": "name", "type": "string", "length": 100, "required": true, "default": "My Dashboard", "description": "Dashboard name" },
+        { "name": "is_default", "type": "boolean", "required": true, "default": true, "description": "Whether this is the user's default dashboard" },
+        { "name": "widgets", "type": "json", "required": true, "description": "Array of widget configurations: { type, title, position, size, config }" }
+      ]
+    },
+
+    "Badge": {
+      "description": "Achievement badge that users can earn",
+      "fields": [
+        { "name": "name", "type": "string", "length": 100, "required": true, "unique": true, "description": "Badge name (e.g., 'First 100 Accounts', 'SLA Warrior')" },
+        { "name": "description", "type": "string", "length": 255, "required": true, "description": "What the badge is awarded for" },
+        { "name": "icon_url", "type": "string", "length": 500, "required": false, "description": "Badge icon image URL" },
+        { "name": "category", "type": "enum", "values": ["Sales", "Service", "Data Quality", "Collaboration", "Milestone", "Challenge", "Special"], "required": true, "description": "Badge category" },
+        { "name": "criteria", "type": "json", "required": true, "description": "Conditions that trigger this badge: { metric, threshold, comparison }" },
+        { "name": "is_custom", "type": "boolean", "required": true, "default": false, "description": "Whether this badge was created by an admin (vs. system default)" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this badge can still be earned" }
+      ]
+    },
+
+    "UserBadge": {
+      "description": "Record of a badge earned by a user",
+      "fields": [
+        { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User who earned the badge" },
+        { "name": "badge_id", "type": "reference", "target": "Badge", "required": true, "description": "Badge earned" },
+        { "name": "earned_at", "type": "datetime", "required": true, "description": "When the badge was earned" }
+      ]
+    },
+
+    "Challenge": {
+      "description": "AI-assigned monthly challenge for a user",
+      "fields": [
+        { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User assigned the challenge" },
+        { "name": "title", "type": "string", "length": 255, "required": true, "description": "Challenge title (e.g., 'Contact 5 existing customers this month')" },
+        { "name": "description", "type": "text", "required": true, "description": "Detailed challenge description" },
+        { "name": "month", "type": "integer", "required": true, "description": "Month (1-12)" },
+        { "name": "year", "type": "integer", "required": true, "description": "Year" },
+        { "name": "target_metric", "type": "string", "length": 100, "required": true, "description": "What metric is being tracked" },
+        { "name": "target_value", "type": "decimal", "precision": 10, "scale": 2, "required": true, "description": "Target value to achieve" },
+        { "name": "current_value", "type": "decimal", "precision": 10, "scale": 2, "required": true, "default": 0, "description": "Current progress value" },
+        { "name": "status", "type": "enum", "values": ["Active", "Completed", "Failed", "Cancelled"], "required": true, "default": "Active", "description": "Challenge status" },
+        { "name": "reward_badge_id", "type": "reference", "target": "Badge", "required": false, "description": "Badge awarded on completion" },
+        { "name": "reward_xp", "type": "integer", "required": true, "default": 0, "description": "XP awarded on completion" },
+        { "name": "completed_at", "type": "datetime", "required": false, "description": "When the challenge was completed" }
+      ]
+    },
+
+    "Streak": {
+      "description": "Tracks consecutive-day activity streaks per user and activity type",
+      "fields": [
+        { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User" },
+        { "name": "activity_type", "type": "string", "length": 50, "required": true, "description": "Type of activity being tracked (e.g., 'daily_login', 'log_activity', 'contact_customer')" },
+        { "name": "current_count", "type": "integer", "required": true, "default": 0, "description": "Current consecutive days" },
+        { "name": "longest_count", "type": "integer", "required": true, "default": 0, "description": "All-time longest streak" },
+        { "name": "last_activity_date", "type": "date", "required": false, "description": "Date of last qualifying activity" }
+      ]
+    },
+
+    "PersonalBest": {
+      "description": "Tracks personal records for key performance metrics",
+      "fields": [
+        { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User" },
+        { "name": "metric", "type": "string", "length": 100, "required": true, "description": "Metric name (e.g., 'deals_closed_quarter', 'fastest_ticket_resolution', 'largest_deal')" },
+        { "name": "value", "type": "decimal", "precision": 15, "scale": 2, "required": true, "description": "Best value achieved" },
+        { "name": "achieved_at", "type": "datetime", "required": true, "description": "When this best was achieved" },
+        { "name": "previous_value", "type": "decimal", "precision": 15, "scale": 2, "required": false, "description": "Previous best value" },
+        { "name": "previous_achieved_at", "type": "datetime", "required": false, "description": "When the previous best was achieved" }
+      ]
+    },
+
+    "AuditLog": {
+      "description": "Tracks all record changes for undo support and audit trail",
+      "fields": [
+        { "name": "object_type", "type": "string", "length": 50, "required": true, "description": "Type of object that was changed" },
+        { "name": "object_id", "type": "uuid", "required": true, "description": "ID of the object that was changed" },
+        { "name": "action", "type": "enum", "values": ["Create", "Update", "Delete"], "required": true, "description": "Type of change" },
+        { "name": "field_name", "type": "string", "length": 100, "required": false, "description": "Field that was changed (for Update actions)" },
+        { "name": "old_value", "type": "text", "required": false, "description": "Previous value (serialized)" },
+        { "name": "new_value", "type": "text", "required": false, "description": "New value (serialized)" },
+        { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User who made the change" },
+        { "name": "timestamp", "type": "datetime", "required": true, "description": "When the change occurred" },
+        { "name": "object_name", "type": "string", "length": 255, "required": false, "description": "Display name of the record at time of event" },
+        { "name": "summary", "type": "string", "length": 500, "required": false, "description": "Human-readable event description" }
+      ]
+    },
+
+    "DataSourceConfig": {
+      "description": "Per-object configuration for the pluggable data source layer",
+      "fields": [
+        { "name": "object_type", "type": "string", "length": 50, "required": true, "unique": true, "description": "CRM object type (e.g., Account, Contact, Product)" },
+        { "name": "source_type", "type": "enum", "values": ["Local", "External"], "required": true, "default": "Local", "description": "Where data is read from and written to" },
+        { "name": "endpoint_url", "type": "string", "length": 500, "required": false, "description": "External system endpoint URL (required if source_type is External)" },
+        { "name": "auth_type", "type": "enum", "values": ["None", "BasicAuth", "OAuth2", "APIKey"], "required": false, "description": "Authentication method for external system" },
+        { "name": "auth_config", "type": "json", "required": false, "description": "Authentication credentials (encrypted)" },
+        { "name": "field_mapping", "type": "json", "required": false, "description": "Mapping between CRM fields and external system fields" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this data source configuration is active" }
+      ]
+    },
+
+    "AIProviderConfig": {
+      "description": "Configuration for the pluggable AI provider",
+      "fields": [
+        { "name": "provider", "type": "enum", "values": ["OpenAI", "Google", "Anthropic", "Moonshot"], "required": true, "description": "AI provider" },
+        { "name": "model", "type": "string", "length": 100, "required": true, "description": "Model identifier (e.g., gpt-4, gemini-pro, claude-sonnet)" },
+        { "name": "api_key", "type": "string", "length": 500, "required": true, "description": "API key (encrypted at rest)" },
+        { "name": "endpoint_url", "type": "string", "length": 500, "required": false, "description": "Custom endpoint URL (optional)" },
+        { "name": "is_active", "type": "boolean", "required": true, "default": false, "description": "Whether this is the currently active AI provider" }
+      ]
+    },
+
+    "LevelDefinition": {
+      "description": "Defines the gamification levels and their XP thresholds",
+      "fields": [
+        { "name": "level", "type": "integer", "required": true, "unique": true, "description": "Level number" },
+        { "name": "name", "type": "string", "length": 50, "required": true, "description": "Level display name (e.g., Rookie, Closer, Dealmaker, Legend)" },
+        { "name": "xp_threshold", "type": "integer", "required": true, "description": "Minimum XP required to reach this level" },
+        { "name": "unlocks", "type": "json", "required": false, "description": "System capabilities unlocked at this level" },
+        { "name": "icon_url", "type": "string", "length": 500, "required": false, "description": "Level icon image URL" }
+      ]
+    },
+
+    "XPEvent": {
+      "description": "Defines how many XP points are awarded for different CRM actions",
+      "fields": [
+        { "name": "event_type", "type": "string", "length": 100, "required": true, "unique": true, "description": "Event identifier (e.g., 'create_account', 'close_deal_won', 'resolve_ticket')" },
+        { "name": "description", "type": "string", "length": 255, "required": true, "description": "Human-readable description of the event" },
+        { "name": "xp_value", "type": "integer", "required": true, "description": "XP points awarded for this event" },
+        { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether this event currently awards XP" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "crmthree-firebase",
+  "private": true,
+  "scripts": {
+    "deploy": "npm --prefix app run build && firebase deploy --only hosting"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.4"
+  }
+}

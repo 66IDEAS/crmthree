@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Build output
+implementations/firebase/app/dist/
+
+# Local config and secrets
+implementations/firebase/.firebaserc
+implementations/firebase/app/.env
+implementations/firebase/app/.env.local
+
+# Firebase cache
+.firebase/
+*.log
