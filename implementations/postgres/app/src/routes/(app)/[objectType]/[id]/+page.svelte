@@ -7,6 +7,7 @@
 	import { onChange } from '$lib/realtime-client';
 	import RelatedCard from '$lib/components/RelatedCard.svelte';
 	import ConvertLeadDialog from '$lib/components/ConvertLeadDialog.svelte';
+	import CommentThread from '$lib/components/CommentThread.svelte';
 
 	let { data } = $props();
 
@@ -215,5 +216,10 @@
 	{#each data.related as card (card.name)}
 		<RelatedCard {card} columns={data.cardColumns[card.name] ?? []} linkOptions={data.linkOptions[card.name] ?? []} />
 	{/each}
+	{#if data.commentable}
+		<div class="mt-4">
+			<CommentThread parentType={data.objectType} parentId={String(data.record.id)} profileId={data.profileId} />
+		</div>
+	{/if}
 {/if}
 </div>

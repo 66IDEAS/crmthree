@@ -47,6 +47,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		options,
 		related,
 		conversions: (DOCUMENT_CONVERSIONS[objectType] ?? []).map(({ targetType, label }) => ({ targetType, label })),
+		commentable: (ModelRegistry.getFieldDefinition('Comment', 'parent_type')?.values ?? []).includes(objectType),
 		isLead: objectType === 'Lead',
 		cardColumns,
 		linkOptions,
