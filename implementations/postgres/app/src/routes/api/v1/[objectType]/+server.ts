@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import PostgresMapper from '$lib/server/PostgresMapper';
+import { validateObject } from '$lib/model/validators';
 
 /**
  * Collection endpoint (R9, P6). The browser reaches data only through here; there is no
@@ -52,8 +53,15 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const profileId = requireProfile(locals);
+	const body = await request.json().catch(() => ({}));
+	// Model validation runs on the server, where it cannot be skipped; the reference
+	// implementation validates in the browser only.
+	const problems = validateObject(params.objectType as string, body) as { field: string; error: string }[];
+	if (problems.length > 0) {
+		throw error(400, problems.map((p) => p.error).join('; '));
+	}
 	try {
-		const created = await PostgresMapper.create(profileId, params.objectType as string, await request.json());
+		const created = await PostgresMapper.create(profileId, params.objectType as string, body);
 		return json(created, { status: 201 });
 	} catch (e) {
 		throw error(400, (e as Error).message);
