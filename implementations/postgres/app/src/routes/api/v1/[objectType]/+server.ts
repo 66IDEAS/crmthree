@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import PostgresMapper from '$lib/server/PostgresMapper';
+import ModelRegistry from '$lib/model/ModelRegistry';
 import { validateObject } from '$lib/model/validators';
 
 /**
@@ -54,6 +55,12 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const profileId = requireProfile(locals);
 	const body = await request.json().catch(() => ({}));
+	// Model defaults first, validation second: the record checked is the record stored.
+	for (const field of ModelRegistry.getSpecificFields(params.objectType as string)) {
+		if (field.default !== undefined && (body[field.name] === undefined || body[field.name] === null)) {
+			body[field.name] = field.default;
+		}
+	}
 	// Model validation runs on the server, where it cannot be skipped; the reference
 	// implementation validates in the browser only.
 	const problems = validateObject(params.objectType as string, body) as { field: string; error: string }[];

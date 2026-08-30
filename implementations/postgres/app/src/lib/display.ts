@@ -44,8 +44,13 @@ export function monogram(objectType: string): string {
 	return (words.length > 1 ? words[0][0] + words[1][0] : objectType.slice(0, 2)).toUpperCase();
 }
 
-export function formatValue(field: { type: string }, value: unknown): string {
+export function formatValue(field: { type: string; auto_generated?: boolean }, value: unknown): string {
 	if (value == null || value === '') return '—';
+	// Auto-numbers are stored in their SAP-compatible zero-padded form; purely numeric ones
+	// display without the padding, alphanumeric replicated identifiers display as they are.
+	if (field.auto_generated && /^0*\d+$/.test(String(value))) {
+		return String(Number(value));
+	}
 	switch (field.type) {
 		case 'currency':
 			return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2 }).format(Number(value));

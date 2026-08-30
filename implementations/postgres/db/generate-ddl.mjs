@@ -30,9 +30,10 @@ function columnType(obj, field) {
 		case 'uuid':
 			return 'uuid';
 		case 'string':
-			// Auto-generated numbers become sequence-backed integers rather than zero-padded
-			// strings. Padding is a presentation concern, applied at render time.
-			return field.auto_generated ? 'integer' : `varchar(${field.length ?? 255})`;
+			// Auto-numbers stay strings: replicated SAP data carries alphanumeric identifiers
+			// (DE10002345), which sank the integer-column design. Locally created rows get a
+			// sequence-backed, zero-padded default below, so the database still assigns them.
+			return `varchar(${field.length ?? 255})`;
 		case 'text':
 			return 'text';
 		case 'integer':
@@ -59,7 +60,7 @@ function columnType(obj, field) {
 
 function defaultClause(obj, field) {
 	if (field.type === 'string' && field.auto_generated)
-		return ` default nextval('${seqName(obj, field)}')`;
+		return ` default lpad(nextval('${seqName(obj, field)}')::text, ${field.length ?? 10}, '0')`;
 	if (field.default === undefined) return '';
 	if (typeof field.default === 'string' && field.type !== 'enum') return ` default '${field.default}'`;
 	if (field.type === 'enum') return ` default '${field.default}'::${enumTypeName(obj, field)}`;

@@ -148,6 +148,14 @@ const PostgresMapper = {
 		const table = safeTable(objectType);
 		const id = (data.id as string) ?? randomUUID();
 
+		// Model defaults apply on the server, so API-first consumers (R9) get the same
+		// behaviour as the form, and validation sees the record it will actually store.
+		for (const field of ModelRegistry.getSpecificFields(objectType)) {
+			if (field.default !== undefined && (data[field.name] === undefined || data[field.name] === null)) {
+				data = { ...data, [field.name]: field.default };
+			}
+		}
+
 		// Auto-numbers are sequence defaults here, so unlike the reference implementation the
 		// caller never supplies one; omitted columns simply take their default.
 		const names = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by'];
