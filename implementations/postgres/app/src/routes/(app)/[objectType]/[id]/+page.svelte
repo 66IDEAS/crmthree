@@ -6,6 +6,7 @@
 	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
 	import { onChange } from '$lib/realtime-client';
 	import RelatedCard from '$lib/components/RelatedCard.svelte';
+	import ConvertLeadDialog from '$lib/components/ConvertLeadDialog.svelte';
 
 	let { data } = $props();
 
@@ -93,6 +94,23 @@
 		}
 	}
 
+	let convertingLead = $state(false);
+
+	async function runConversion(targetType: string, label: string) {
+		if (!confirm(`${label} from this ${objectLabel(data.objectType)}? Line items are copied along.`)) return;
+		const response = await fetch('/api/conversions', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ kind: 'document', sourceType: data.objectType, sourceId: data.record.id, targetType })
+		});
+		if (!response.ok) {
+			problem = (await response.json().catch(() => null))?.message ?? 'Conversion failed';
+			return;
+		}
+		const result = await response.json();
+		await goto(`/${result.objectType}/${result.id}`, { invalidateAll: true });
+	}
+
 	async function remove() {
 		if (!confirm(`Delete this ${objectLabel(data.objectType)}? This cannot be undone.`)) return;
 		try {
@@ -112,6 +130,18 @@
 		</div>
 		{#if !editing}
 			<div class="flex gap-2">
+				{#if data.isLead && data.record.status !== 'Converted'}
+					<button onclick={() => (convertingLead = true)}
+						class="rounded border border-accent-600 px-4 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50">
+						Convert
+					</button>
+				{/if}
+				{#each data.conversions as conversion (conversion.targetType)}
+					<button onclick={() => runConversion(conversion.targetType, conversion.label)}
+						class="rounded border border-accent-600 px-4 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50">
+						{conversion.label}
+					</button>
+				{/each}
 				<button onclick={startEdit} disabled={lockedByOther}
 					class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500 disabled:cursor-not-allowed disabled:opacity-40">
 					Edit
@@ -176,6 +206,10 @@
 			· Updated {formatValue({ type: 'datetime' }, data.record.updated_at)}
 		</p>
 	{/if}
+
+{#if convertingLead}
+	<ConvertLeadDialog lead={data.record} onclose={() => (convertingLead = false)} />
+{/if}
 
 {#if !editing}
 	{#each data.related as card (card.name)}

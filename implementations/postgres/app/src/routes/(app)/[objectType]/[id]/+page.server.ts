@@ -4,6 +4,7 @@ import ModelRegistry from '$lib/model/ModelRegistry';
 import PostgresMapper from '$lib/server/PostgresMapper';
 import { referenceOptions, resolveReferences } from '$lib/server/references';
 import { relatedCards } from '$lib/server/related';
+import { DOCUMENT_CONVERSIONS } from '$lib/server/conversions';
 import { listColumns, displayName } from '$lib/display';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -45,6 +46,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		referenceNames,
 		options,
 		related,
+		conversions: (DOCUMENT_CONVERSIONS[objectType] ?? []).map(({ targetType, label }) => ({ targetType, label })),
+		isLead: objectType === 'Lead',
 		cardColumns,
 		linkOptions,
 		fields: ModelRegistry.getSpecificFields(objectType),

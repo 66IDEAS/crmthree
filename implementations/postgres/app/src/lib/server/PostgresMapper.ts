@@ -77,6 +77,48 @@ function buildWhere(objectType: string, filters: Filter[] = [], params: unknown[
 	return clauses.length ? `where ${clauses.join(' and ')}` : '';
 }
 
+/**
+ * Insert on an existing transaction, so multi-record operations such as conversions are
+ * atomic. PostgresMapper.create wraps this in its own transaction for the single-row case.
+ */
+export async function createInTx(
+	client: pg.PoolClient,
+	profileId: string | null,
+	objectType: string,
+	data: Record<string, unknown>
+) {
+	const table = safeTable(objectType);
+	const id = (data.id as string) ?? randomUUID();
+
+	// Model defaults apply on the server, so API-first consumers (R9) get the same
+	// behaviour as the form, and validation sees the record it will actually store.
+	for (const field of ModelRegistry.getSpecificFields(objectType)) {
+		if (field.default !== undefined && (data[field.name] === undefined || data[field.name] === null)) {
+			data = { ...data, [field.name]: field.default };
+		}
+	}
+
+	// Auto-numbers are sequence defaults here, so unlike the reference implementation the
+	// caller never supplies one; omitted columns simply take their default.
+	const names = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by'];
+	const placeholders = ['$1', 'now()', 'now()', '$2', '$2'];
+	const params: unknown[] = [id, profileId];
+
+	for (const key of Object.keys(data)) {
+		if (key === 'id' || !ModelRegistry.getFieldDefinition(objectType, key)) continue;
+		params.push(data[key]);
+		names.push(safeColumn(objectType, key));
+		placeholders.push(`$${params.length}`);
+	}
+
+	const result = await client.query(
+		`insert into ${table} (${names.map((n) => `"${n}"`).join(', ')})
+		 values (${placeholders.join(', ')}) returning *`,
+		params
+	);
+	return result.rows[0];
+}
+
 const PostgresMapper = {
 	async getById(profileId: string | null, objectType: string, id: string) {
 		const table = safeTable(objectType);
@@ -145,38 +187,7 @@ const PostgresMapper = {
 	},
 
 	async create(profileId: string | null, objectType: string, data: Record<string, unknown>) {
-		const table = safeTable(objectType);
-		const id = (data.id as string) ?? randomUUID();
-
-		// Model defaults apply on the server, so API-first consumers (R9) get the same
-		// behaviour as the form, and validation sees the record it will actually store.
-		for (const field of ModelRegistry.getSpecificFields(objectType)) {
-			if (field.default !== undefined && (data[field.name] === undefined || data[field.name] === null)) {
-				data = { ...data, [field.name]: field.default };
-			}
-		}
-
-		// Auto-numbers are sequence defaults here, so unlike the reference implementation the
-		// caller never supplies one; omitted columns simply take their default.
-		const names = ['id', 'created_at', 'updated_at', 'created_by', 'updated_by'];
-		const placeholders = ['$1', 'now()', 'now()', '$2', '$2'];
-		const params: unknown[] = [id, profileId];
-
-		for (const key of Object.keys(data)) {
-			if (key === 'id' || !ModelRegistry.getFieldDefinition(objectType, key)) continue;
-			params.push(data[key]);
-			names.push(safeColumn(objectType, key));
-			placeholders.push(`$${params.length}`);
-		}
-
-		return withUser(profileId, async (client) => {
-			const result = await client.query(
-				`insert into ${table} (${names.map((n) => `"${n}"`).join(', ')})
-				 values (${placeholders.join(', ')}) returning *`,
-				params
-			);
-			return result.rows[0];
-		});
+		return withUser(profileId, (client) => createInTx(client, profileId, objectType, data));
 	},
 
 	async update(profileId: string | null, objectType: string, id: string, data: Record<string, unknown>) {
