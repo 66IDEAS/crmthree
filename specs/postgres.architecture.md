@@ -213,14 +213,21 @@ rendering primitives differ.
 
 ### P14. Design system and data grid
 
-Tailwind with shadcn-svelte, chosen so the result is visibly not the reference implementation.
-The grid is TanStack Table through its Svelte adapter, headless, with the presentation supplied
-by the design system.
+Tailwind with a small set of hand-rolled components, visibly not the reference
+implementation: dark slate rail with a teal accent instead of the orange-on-light Material
+ribbon, square-ish corners, filled enum chips, and a system font stack, so the UI is
+vendor-free down to the typography.
 
-Worth recording: Material React Table is itself built on TanStack Table, so the two
-implementations share a table engine while looking nothing alike. That is a useful data point
-about where the real cost of a UI port sits, which is the component library rather than the
-grid.
+Both shadcn-svelte and TanStack Table were considered and set aside once the pages took
+shape. The lists are server-rendered with sort and cursor in the URL, so the grid needs no
+client-side table engine at all; and the component inventory a model-driven CRM needs is
+small enough (inputs, chips, cards, one table) that a component library would be the heavier
+dependency. TanStack becomes worth revisiting when client-side column filtering lands.
+
+Worth recording anyway: Material React Table is itself built on TanStack Table, so a
+TanStack-based build would have shared a table engine with the reference implementation
+while looking nothing alike. The real cost of a UI port sits in the component library, not
+the grid.
 
 ### P15. Internationalisation
 
