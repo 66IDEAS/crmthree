@@ -4,6 +4,7 @@
 	import { NAV_OBJECTS, objectLabel } from '$lib/display';
 	import NavIcon from '$lib/components/NavIcon.svelte';
 	import NotificationBell from '$lib/components/NotificationBell.svelte';
+	import GlobalSearch from '$lib/components/GlobalSearch.svelte';
 
 	let { data, children } = $props();
 
@@ -82,13 +83,16 @@
 	</aside>
 
 	<div class="flex min-w-0 flex-1 flex-col">
-		<header class="flex items-center justify-end gap-4 border-b border-rule bg-white px-6 py-3">
+		<header class="flex items-center justify-between gap-4 border-b border-rule bg-white px-6 py-3">
+			<GlobalSearch />
+			<div class="flex items-center gap-4">
 			<NotificationBell />
 			<div class="text-sm">
 				<span class="font-medium">{data.profile.first_name} {data.profile.last_name}</span>
 				<span class="ml-1.5 rounded bg-rule/40 px-1.5 py-0.5 text-xs text-steel">{data.profile.role_name}</span>
 			</div>
 			<button onclick={signOut} class="text-sm text-steel hover:text-ink">Sign out</button>
+			</div>
 		</header>
 		<main class="flex-1 p-6">
 			{@render children()}
