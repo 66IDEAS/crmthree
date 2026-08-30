@@ -178,9 +178,9 @@ As a user, I want to see dashboards with key performance indicators so that I ca
 - The home page displays a dashboard with KPI number cards and Recharts-based charts
 - KPI cards show: Pipeline Value (sum of open opportunity amounts), Open Opportunities count, Open Tickets count, Open Leads count
 - Charts show: Opportunities by Stage (bar chart), Tickets by Priority (pie chart), Activity Trend over last 7 days (line chart), Revenue by Invoice Status (bar chart)
-- An AI Priority Summary placeholder card is shown at the top (full width) with an AutoAwesomeIcon and "coming soon" message
+- An AI Priority Summary placeholder card is shown at the top (full width) with a sparkle icon and "coming soon" message
 - Users can show or hide individual widgets via a settings gear icon that opens a dialog with checkboxes
-- Widget visibility preferences are persisted per user in a DashboardConfig Firestore document
+- Widget visibility preferences are persisted per user in a DashboardConfig record
 - Dashboards are role-aware: sales roles see sales widgets by default, service roles see service widgets by default, admin/manager roles see all widgets
 - Data is loaded via DataService.list() and aggregated client-side in a useDashboardData hook
 - Email notifications are deferred to a future release
@@ -205,7 +205,7 @@ As a user, I want to receive notifications about important events so that I can 
 **Data Model:** Notification → `specs/data-model.json`
 
 **Acceptance Criteria:**
-- Users receive in-app notifications in real time via a Firestore onSnapshot listener filtered to the current user
+- Users receive in-app notifications in real time via a database subscription filtered to the current user
 - A bell icon in the Top Bar shows the unread notification count as a badge; clicking opens a notification panel (UX18)
 - Clicking a notification navigates to the related record and marks it as read
 - Users can mark all notifications as read or delete individual notifications
@@ -270,7 +270,7 @@ As a user, I want an always-visible AI command interface so that I can ask quest
 - Keyword search works as before: debounced instant results as the user types
 - AI queries are sent on Enter: a response panel expands upward from the bar showing loading state, then the formatted AI response
 - Keyword search results still appear below the AI response (both visible simultaneously)
-- AI calls are routed through a Firebase Cloud Function proxy — API keys never reach the browser
+- AI calls are routed through a server-side proxy, so API keys never reach the browser
 - An admin configures the AI provider (OpenAI, Google, Anthropic, Moonshot), model, and API key in the Settings page
 - Only one AI provider can be active at a time; activating one deactivates others
 - If no AI provider is configured, all queries fall back to keyword search silently (no error messages)
@@ -342,7 +342,7 @@ As a user, I want to search across all objects using natural language so that I 
 - Conversational queries continue to use the existing chat flow
 - Semantic search results are displayed in the same grouped-by-type format as keyword results, with each result showing the record's display name, auto-number (if available), and a brief AI-generated reason for the match
 - Results are clickable and navigate to the record's detail page
-- An "AI Search Results" indicator with AutoAwesomeIcon distinguishes AI results from keyword results
+- An "AI Search Results" indicator with a sparkle icon distinguishes AI results from keyword results
 - If the AI returns malformed JSON, the system falls back gracefully (empty results, no crash)
 - Short keyword queries (1-3 words without question words) continue to use the existing debounced keyword substring search
 
@@ -482,7 +482,7 @@ As a manager, I want to see a cross-object timeline of my team's activities and 
 - The timeline is filterable by team member, date range, and activity type
 - The timeline is a dedicated page at `/team-timeline`, accessible via a button on the Profile page for team managers
 - Permission gate: only team managers (Team.manager_id == user) and admins can access
-- Team members are loaded via `UserProfile.team_id`, activities via Firestore `in` operator on `owner_id`
+- Team members are loaded via `UserProfile.team_id`, activities by matching `owner_id` against that set of members
 
 ## Gamification & Motivation Engine
 
@@ -695,12 +695,12 @@ As a user, I want the CRM interface to be displayed in my preferred language so 
 - An admin can add target languages from a predefined list of ~30 common ISO languages
 - An admin can manage translations for each language in Settings: view all labels in a two-column table (English | Target Language) and edit translations inline
 - An admin can use an AI button to batch-translate all untranslated labels into a target language
-- The AI translation shows progress per batch and saves results to Firestore
+- The AI translation shows progress per batch and saves results to the database
 - Each user can select their preferred language on their Profile page
 - When a user selects a language, all UI labels switch immediately to that language
-- The language preference persists across sessions (stored on UserProfile in Firestore)
-- Enum values (e.g., "Active", "Draft") display translated but store English values in Firestore
-- Translations are stored in Firestore as one document per language for efficient loading (single read per session)
+- The language preference persists across sessions (stored on UserProfile)
+- Enum values (e.g., "Active", "Draft") display translated but store English values in the database
+- Translations are stored as one record per language for efficient loading (single read per session)
 - If a translation is missing for a label, the English default is shown as fallback
 - All page components (HomePage, LoginPage, SettingsPage, ObjectListPage, ObjectDetailPage, ObjectCreatePage, App.jsx) wrap hardcoded English strings with `t(key, fallback)` calls from TranslationService
 
@@ -721,7 +721,7 @@ As an admin, I want to replicate data from external web services into CRMThree s
 As a user, I want records to be locked while another user is editing them so that we do not overwrite each other's changes.
 
 **Acceptance Criteria:**
-- When a user enters edit mode on a record, a lock is acquired in Firestore
+- When a user enters edit mode on a record, a lock is acquired in the database
 - Other users viewing the same record see a lock indicator showing who is editing and cannot enter edit mode
 - The lock is released when the editing user saves or cancels
 - Locks have a TTL (15 minutes) to handle browser crashes or abandoned sessions

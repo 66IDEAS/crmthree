@@ -15,3 +15,8 @@ implementations/firebase/app/.env.local
 # Firebase cache
 .firebase/
 *.log
+
+# Task tracking lives in specs/ for convenience but is project state, not product spec.
+# The public repo ships blueprints only.
+specs/tasks.md
+specs/*.tasks.md
