@@ -157,13 +157,17 @@ REST API, not only for users of the web UI.
 
 ### P9. Record locking
 
-A `record_locks` table with primary key `(object_type, record_id)` and columns `locked_by`,
-`locked_by_name`, `locked_at`, `expires_at`. Clients subscribe to it for live indication, and
-an expired lock is one whose `expires_at` has passed.
+A `record_lock` table, unique on `(object_type, record_id)`, with `locked_by`,
+`locked_by_name`, `locked_at` and `expires_at`. It is infrastructure rather than domain data,
+so like the auth tables it is not part of `data-model.json`. Acquiring is an upsert whose
+update arm only fires for the holder, so the same call is also the heartbeat; a lock held by
+someone else answers 409. An expired lock reads as unlocked and may be deleted by anyone,
+which is how a lock left by a crashed session is taken over, without any scheduled reaper.
+The change-notification trigger publishes lock changes, so other viewers of the record see
+the indicator appear and disappear live.
 
 Postgres advisory locks are deliberately not used: they are scoped to a database session,
 whereas these locks must outlive a stateless HTTP request and be visible to other users.
-Expired rows are reaped by a scheduled job rather than being left for clients to ignore.
 
 ## Server-side compute
 
@@ -286,7 +290,11 @@ These are the findings the proof exists to produce.
    product.
 9. **Realtime carries ids, not rows.** Clients re-read through the authorised path, so the
    push channel cannot become a hole in the authorization model.
-10. **Auto-numbers have gaps.** Sequences do not roll back, so a failed insert consumes a
+10. **Line item ordering lives in `item_number`.** The pre-reconciliation specification
+    carried a separate `sort_order`; the reference implementation never had it and instead
+    auto-numbers items 10, 20, 30 in SAP style, which the merged model keeps. One field
+    fewer, and the ordering survives an export to SAP unchanged.
+11. **Auto-numbers have gaps.** Sequences do not roll back, so a failed insert consumes a
     number. The reference implementation derives the next number by counting, which produces
     contiguous values but races under concurrency. Uniqueness and gaps were preferred to
     contiguity and a race.
