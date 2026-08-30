@@ -5,6 +5,7 @@
 	import FieldInput from '$lib/components/FieldInput.svelte';
 	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
 	import { onChange } from '$lib/realtime-client';
+	import RelatedCard from '$lib/components/RelatedCard.svelte';
 
 	let { data } = $props();
 
@@ -175,4 +176,10 @@
 			· Updated {formatValue({ type: 'datetime' }, data.record.updated_at)}
 		</p>
 	{/if}
+
+{#if !editing}
+	{#each data.related as card (card.name)}
+		<RelatedCard {card} columns={data.cardColumns[card.name] ?? []} linkOptions={data.linkOptions[card.name] ?? []} />
+	{/each}
+{/if}
 </div>

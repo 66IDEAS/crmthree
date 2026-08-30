@@ -213,6 +213,12 @@ Unchanged in principle and essential to the product: generic list, detail and cr
 driven by `ModelRegistry` reading `data-model.json`, not hand-written per object type. Only the
 rendering primitives differ.
 
+Related records follow the same rule. The cards on a detail page are derived entirely from the
+model's relationship definitions: one-to-many via the declared foreign key, polymorphic
+one-to-many via the declared condition (line items, documents), many-to-many via the junction
+object with link and unlink writing ordinary junction rows through the same validated API. A
+relationship added to the model becomes a card without any code.
+
 ### P14. Design system and data grid
 
 Tailwind with a small set of hand-rolled components, on the product's brand system rather

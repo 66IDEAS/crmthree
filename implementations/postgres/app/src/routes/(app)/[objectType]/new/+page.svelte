@@ -6,9 +6,10 @@
 
 	let { data } = $props();
 	// Model defaults prefill the form, so a required field with a default is one less click.
-	let values = $state<Record<string, unknown>>(
-		Object.fromEntries(data.fields.filter((f) => f.default !== undefined).map((f) => [f.name, f.default]))
-	);
+	let values = $state<Record<string, unknown>>({
+		...Object.fromEntries(data.fields.filter((f) => f.default !== undefined).map((f) => [f.name, f.default])),
+		...data.prefill
+	});
 	let problem = $state('');
 	let busy = $state(false);
 
