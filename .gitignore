@@ -20,3 +20,6 @@ implementations/firebase/app/.env.local
 # The public repo ships blueprints only.
 specs/tasks.md
 specs/*.tasks.md
+
+# Scratch/tooling workspace, never shipped
+tmp/
