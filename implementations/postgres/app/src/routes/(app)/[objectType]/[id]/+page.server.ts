@@ -5,6 +5,7 @@ import PostgresMapper from '$lib/server/PostgresMapper';
 import { referenceOptions, resolveReferences } from '$lib/server/references';
 import { relatedCards } from '$lib/server/related';
 import { DOCUMENT_CONVERSIONS } from '$lib/server/conversions';
+import { activeConfig } from '$lib/server/ai';
 import { listColumns, displayName } from '$lib/display';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -48,6 +49,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		related,
 		conversions: (DOCUMENT_CONVERSIONS[objectType] ?? []).map(({ targetType, label }) => ({ targetType, label })),
 		commentable: (ModelRegistry.getFieldDefinition('Comment', 'parent_type')?.values ?? []).includes(objectType),
+		// The briefing card exists only for supported types AND a configured provider.
+		aiBriefing:
+			['Account', 'Contact', 'Lead', 'Opportunity', 'Ticket', 'Quotation', 'SalesOrder', 'Invoice'].includes(objectType) &&
+			(await activeConfig().then(Boolean).catch(() => false)),
 		isLead: objectType === 'Lead',
 		cardColumns,
 		linkOptions,

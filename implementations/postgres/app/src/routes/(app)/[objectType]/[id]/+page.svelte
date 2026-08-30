@@ -8,6 +8,7 @@
 	import RelatedCard from '$lib/components/RelatedCard.svelte';
 	import ConvertLeadDialog from '$lib/components/ConvertLeadDialog.svelte';
 	import CommentThread from '$lib/components/CommentThread.svelte';
+	import AiBriefing from '$lib/components/AiBriefing.svelte';
 
 	let { data } = $props();
 
@@ -213,6 +214,9 @@
 {/if}
 
 {#if !editing}
+	{#if data.aiBriefing}
+		<AiBriefing objectType={data.objectType} recordId={String(data.record.id)} />
+	{/if}
 	{#each data.related as card (card.name)}
 		<RelatedCard {card} columns={data.cardColumns[card.name] ?? []} linkOptions={data.linkOptions[card.name] ?? []} />
 	{/each}
