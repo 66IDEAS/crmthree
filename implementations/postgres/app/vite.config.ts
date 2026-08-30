@@ -2,8 +2,21 @@ import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+	resolve: {
+		alias: {
+			// The data model is read from specs/, never forked into the implementation. See
+			// src/lib/model/ModelRegistry.js.
+			$model: fileURLToPath(new URL('../../../specs/data-model.json', import.meta.url))
+		}
+	},
+	server: {
+		// Vite refuses to serve files outside the project root unless told otherwise, and the
+		// data model deliberately lives outside it.
+		fs: { allow: ['..', '../../../specs'] }
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({

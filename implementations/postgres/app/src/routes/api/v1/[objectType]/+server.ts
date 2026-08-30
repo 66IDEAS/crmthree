@@ -1,0 +1,51 @@
+import { json, error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import PostgresMapper from '$lib/server/PostgresMapper';
+
+/**
+ * Collection endpoint (R9, P6). The browser reaches data only through here; there is no
+ * client-side database driver, which is the structural difference from the reference
+ * implementation where the SPA talks to Firestore directly.
+ *
+ * Every call runs under the caller's identity, so row level security decides what comes
+ * back. The API therefore cannot return more than the same user would see in the UI.
+ */
+function requireProfile(locals: App.Locals) {
+	if (!locals.profile) throw error(401, 'Not provisioned');
+	return locals.profile.id;
+}
+
+export const GET: RequestHandler = async ({ params, url, locals }) => {
+	const profileId = requireProfile(locals);
+	const objectType = params.objectType as string;
+
+	const sortField = url.searchParams.get('sort');
+	const options = {
+		pageSize: Number(url.searchParams.get('pageSize') ?? 25),
+		sort: sortField
+			? { field: sortField, direction: (url.searchParams.get('direction') ?? 'asc') as 'asc' | 'desc' }
+			: undefined,
+		cursor: url.searchParams.get('cursorId')
+			? { sort: url.searchParams.get('cursorSort'), id: url.searchParams.get('cursorId') as string }
+			: null
+	};
+
+	try {
+		if (url.searchParams.get('count') === 'true') {
+			return json({ total: await PostgresMapper.count(profileId, objectType, options) });
+		}
+		return json(await PostgresMapper.listPage(profileId, objectType, options));
+	} catch (e) {
+		throw error(400, (e as Error).message);
+	}
+};
+
+export const POST: RequestHandler = async ({ params, request, locals }) => {
+	const profileId = requireProfile(locals);
+	try {
+		const created = await PostgresMapper.create(profileId, params.objectType as string, await request.json());
+		return json(created, { status: 201 });
+	} catch (e) {
+		throw error(400, (e as Error).message);
+	}
+};

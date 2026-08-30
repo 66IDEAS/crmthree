@@ -84,10 +84,24 @@ Two consequences worth noting against the reference implementation:
 
 ### P5. Pluggable data source layer
 
-`ModelRegistry`, `DataService` and `DataSourceRouter` are framework-agnostic modules in the
-reference implementation and port across almost unchanged. Only the mapper is rewritten:
-`FirestoreMapper` becomes `PostgresMapper`, exposing the same interface (`list`, `listPage`,
-`count`, `get`, `create`, `update`, `remove`).
+`ModelRegistry` and the validators are framework-agnostic and port across unchanged.
+`FirestoreMapper` becomes `PostgresMapper` behind the same operation names (`getById`,
+`list`, `listPage`, `count`, `create`, `update`, `remove`).
+
+`DataService` is the qualification. Its *interface* ports; its implementation does not. In
+the reference stack the browser holds a database client and DataService talks to Firestore
+directly. A browser cannot hold a Postgres connection, so the same interface becomes an HTTP
+client and the mapper moves to the server. The seam is real, but it sits one layer lower than
+a reading of the reference implementation suggests.
+
+That split is an improvement rather than a tax: every read and write now crosses a server
+boundary that establishes identity, so the UI and the public API reach data by the same
+authorised path instead of the UI having a private one.
+
+`listPage` also changes shape. The reference returns `{ data, lastDoc }` where `lastDoc` is a
+Firestore `DocumentSnapshot`, an object that cannot leave the server. Here it returns
+`{ data, cursor }` where the cursor is the last row's sort value and id, plain values that
+survive a round trip to the browser and back.
 
 This is a deliberate structural point. The seam that story 30 introduced for external systems
 of record turns out to be the same seam that makes a second implementation cheap, which is
@@ -272,6 +286,10 @@ These are the findings the proof exists to produce.
    product.
 9. **Realtime carries ids, not rows.** Clients re-read through the authorised path, so the
    push channel cannot become a hole in the authorization model.
+10. **Auto-numbers have gaps.** Sequences do not roll back, so a failed insert consumes a
+    number. The reference implementation derives the next number by counting, which produces
+    contiguous values but races under concurrency. Uniqueness and gaps were preferred to
+    contiguity and a race.
 
 Items 1, 2 and 5 are improvements the reference implementation could adopt. That is a useful
 result: the second implementation is not only a proof of portability but a source of feedback
