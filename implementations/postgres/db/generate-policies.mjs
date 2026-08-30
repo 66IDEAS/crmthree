@@ -101,7 +101,7 @@ const OWNED = new Set(
 );
 
 // Tables needing something other than the generic role-driven treatment.
-const SPECIAL = new Set(['AIProviderConfig', 'AuditLog', 'UserProfile']);
+const SPECIAL = new Set(['AIProviderConfig', 'AuditLog', 'UserProfile', 'Notification']);
 
 p('-- Generic per-object policies, driven by Role.permissions.');
 for (const obj of Object.keys(model.objects)) {
@@ -126,6 +126,16 @@ create policy user_profile_insert on user_profile for insert with check (app.is_
 create policy user_profile_update on user_profile for update
   using (app.is_admin() or id = app.current_profile_id());
 create policy user_profile_delete on user_profile for delete using (app.is_admin());
+
+-- Notifications are personal. You read, mark and delete your own, whatever your role says
+-- about the Notification object; creation happens in SECURITY DEFINER triggers, so no
+-- client insert policy exists at all.
+create policy notification_select on notification for select
+  using (user_id = app.current_profile_id());
+create policy notification_update on notification for update
+  using (user_id = app.current_profile_id());
+create policy notification_delete on notification for delete
+  using (user_id = app.current_profile_id());
 
 -- AuditLog is append-only. Anyone may write an entry, only admins may read the trail, and
 -- nobody may alter or remove one.

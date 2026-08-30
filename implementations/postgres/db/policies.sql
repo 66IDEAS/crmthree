@@ -195,11 +195,6 @@ create policy team_insert on team for insert with check (app.can('Team', 'create
 create policy team_update on team for update using (app.can('Team', 'update'));
 create policy team_delete on team for delete using (app.can('Team', 'delete'));
 
-create policy notification_select on notification for select using (app.can('Notification', 'read'));
-create policy notification_insert on notification for insert with check (app.can('Notification', 'create'));
-create policy notification_update on notification for update using (app.can('Notification', 'update'));
-create policy notification_delete on notification for delete using (app.can('Notification', 'delete'));
-
 create policy dashboard_config_select on dashboard_config for select using (app.can('DashboardConfig', 'read'));
 create policy dashboard_config_insert on dashboard_config for insert with check (app.can('DashboardConfig', 'create'));
 create policy dashboard_config_update on dashboard_config for update using (app.can('DashboardConfig', 'update'));
@@ -253,6 +248,16 @@ create policy user_profile_insert on user_profile for insert with check (app.is_
 create policy user_profile_update on user_profile for update
   using (app.is_admin() or id = app.current_profile_id());
 create policy user_profile_delete on user_profile for delete using (app.is_admin());
+
+-- Notifications are personal. You read, mark and delete your own, whatever your role says
+-- about the Notification object; creation happens in SECURITY DEFINER triggers, so no
+-- client insert policy exists at all.
+create policy notification_select on notification for select
+  using (user_id = app.current_profile_id());
+create policy notification_update on notification for update
+  using (user_id = app.current_profile_id());
+create policy notification_delete on notification for delete
+  using (user_id = app.current_profile_id());
 
 -- AuditLog is append-only. Anyone may write an entry, only admins may read the trail, and
 -- nobody may alter or remove one.

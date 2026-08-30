@@ -20,7 +20,17 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const objectType = params.objectType as string;
 
 	const sortField = url.searchParams.get('sort');
+	// Optional filters, JSON-encoded: [{"field":"status","op":"eq","value":"Active"}].
+	// Field names are validated against the model inside the mapper; RLS still applies on
+	// top, so a filter can only narrow what the caller could see anyway.
+	let filters;
+	try {
+		filters = JSON.parse(url.searchParams.get('filters') ?? '[]');
+	} catch {
+		throw error(400, 'filters must be valid JSON');
+	}
 	const options = {
+		filters,
 		pageSize: Number(url.searchParams.get('pageSize') ?? 25),
 		sort: sortField
 			? { field: sortField, direction: (url.searchParams.get('direction') ?? 'asc') as 'asc' | 'desc' }
