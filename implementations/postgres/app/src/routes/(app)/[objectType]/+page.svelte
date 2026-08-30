@@ -3,6 +3,31 @@
 	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
 
 	let { data } = $props();
+	let importing = $state(false);
+	let importResult = $state('');
+
+	async function importCsv(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		importing = true;
+		importResult = '';
+		const response = await fetch(`/api/csv/${data.objectType}`, {
+			method: 'POST',
+			headers: { 'content-type': 'text/csv' },
+			body: await file.text()
+		});
+		importing = false;
+		input.value = '';
+		const result = await response.json().catch(() => null);
+		if (!response.ok) {
+			importResult = result?.message ?? 'Import failed';
+			return;
+		}
+		importResult = `Imported ${result.created} record${result.created === 1 ? '' : 's'}`
+			+ (result.failed ? `, ${result.failed} failed (first: line ${result.problems[0]?.line}: ${result.problems[0]?.error})` : '');
+		if (result.created) window.location.reload();
+	}
 
 	function sortHref(field: string): string {
 		const params = new URLSearchParams();
@@ -31,11 +56,20 @@
 		{objectLabel(data.objectType, true)}
 		<span class="ml-2 text-sm font-normal text-steel/70">{data.total} record{data.total === 1 ? '' : 's'}</span>
 	</h1>
-	<a href={`/${data.objectType}/new`}
-		class="rounded bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-500">
-		New {objectLabel(data.objectType)}
-	</a>
+	<div class="flex items-center gap-2">
+		<a href={`/api/csv/${data.objectType}`} download
+			class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-white">Export CSV</a>
+		<label class="cursor-pointer rounded border border-rule px-3 py-1.5 text-sm hover:bg-white">
+			{importing ? 'Importing…' : 'Import CSV'}
+			<input type="file" accept=".csv,text/csv" class="hidden" onchange={importCsv} disabled={importing} />
+		</label>
+		<a href={`/${data.objectType}/new`}
+			class="rounded bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-500">
+			New {objectLabel(data.objectType)}
+		</a>
+	</div>
 </div>
+{#if importResult}<p class="mt-2 rounded bg-accent-50 px-3 py-2 text-sm">{importResult}</p>{/if}
 
 <div class="mt-4 overflow-x-auto rounded-lg border border-rule bg-white">
 	<table class="w-full text-sm">
