@@ -95,6 +95,11 @@ create policy opportunity_contact_insert on opportunity_contact for insert with 
 create policy opportunity_contact_update on opportunity_contact for update using (app.can('OpportunityContact', 'update'));
 create policy opportunity_contact_delete on opportunity_contact for delete using (app.can('OpportunityContact', 'delete'));
 
+create policy deal_room_select on deal_room for select using (app.can('DealRoom', 'read') and (app.can('DealRoom', 'read_all') or owner_id = app.current_profile_id()));
+create policy deal_room_insert on deal_room for insert with check (app.can('DealRoom', 'create'));
+create policy deal_room_update on deal_room for update using (app.can('DealRoom', 'update'));
+create policy deal_room_delete on deal_room for delete using (app.can('DealRoom', 'delete'));
+
 create policy pipeline_stage_select on pipeline_stage for select using (app.can('PipelineStage', 'read'));
 create policy pipeline_stage_insert on pipeline_stage for insert with check (app.can('PipelineStage', 'create'));
 create policy pipeline_stage_update on pipeline_stage for update using (app.can('PipelineStage', 'update'));

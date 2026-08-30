@@ -51,7 +51,8 @@
         { "name": "status", "type": "enum", "values": ["Active", "Inactive"], "required": true, "default": "Active", "description": "Account status" }
       ],
       "relationships": [
-        { "name": "contacts", "type": "many-to-many", "target": "Contact", "through": "ContactAccount" },
+        { "name": "contacts", "type": "one-to-many", "target": "Contact", "foreign_key": "account_id" },
+        { "name": "additional_contacts", "type": "many-to-many", "target": "Contact", "through": "ContactAccount" },
         { "name": "child_accounts", "type": "one-to-many", "target": "Account", "foreign_key": "parent_account_id" },
         { "name": "leads", "type": "one-to-many", "target": "Lead", "foreign_key": "account_id" },
         { "name": "opportunities", "type": "one-to-many", "target": "Opportunity", "foreign_key": "account_id" },
@@ -84,6 +85,7 @@
         { "name": "postal_code", "type": "string", "length": 10, "required": false, "description": "Postal code", "sap_field": "POST_CODE1", "sap_type": "CHAR 10" },
         { "name": "city", "type": "string", "length": 40, "required": false, "description": "City", "sap_field": "CITY1", "sap_type": "CHAR 40" },
         { "name": "country", "type": "string", "length": 3, "required": false, "description": "Country code (ISO 3166)", "sap_field": "COUNTRY", "sap_type": "CHAR 3" },
+        { "name": "account_id", "type": "reference", "target": "Account", "required": false, "description": "Primary account" },
         { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Contact owner (assigned user)" },
         { "name": "description", "type": "text", "required": false, "description": "Free-text notes about the contact" },
         { "name": "status", "type": "enum", "values": ["Active", "Inactive"], "required": true, "default": "Active", "description": "Contact status" }
@@ -157,8 +159,8 @@
         { "name": "description", "type": "text", "required": false, "description": "Free-text deal description" }
       ],
       "relationships": [
-        { "name": "contacts", "type": "many-to-many", "target": "Contact", "through": "OpportunityContact" },
         { "name": "line_items", "type": "one-to-many", "target": "LineItem", "foreign_key": "parent_id", "condition": "parent_type = 'Opportunity'" },
+        { "name": "contacts", "type": "many-to-many", "target": "Contact", "through": "OpportunityContact" },
         { "name": "quotations", "type": "one-to-many", "target": "Quotation", "foreign_key": "opportunity_id" },
         { "name": "sales_orders", "type": "one-to-many", "target": "SalesOrder", "foreign_key": "opportunity_id" },
         { "name": "activities", "type": "one-to-many", "target": "Activity", "foreign_key": "opportunity_id" },
@@ -172,6 +174,22 @@
         { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": true, "description": "Opportunity reference" },
         { "name": "contact_id", "type": "reference", "target": "Contact", "required": true, "description": "Contact reference" },
         { "name": "role", "type": "string", "length": 50, "required": false, "description": "Contact's role in the deal (e.g., Decision Maker, Influencer, Champion)" }
+      ]
+    },
+
+    "DealRoom": {
+      "description": "Optional purpose-built workspace for important opportunities",
+      "fields": [
+        { "name": "deal_room_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Deal room number" },
+        { "name": "name", "type": "string", "length": 120, "required": true, "description": "Deal room name" },
+        { "name": "description", "type": "text", "required": false, "description": "Deal room description" },
+        { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": true, "description": "Linked opportunity" },
+        { "name": "status", "type": "enum", "values": ["Active", "Closed"], "required": true, "default": "Active", "description": "Deal room status" },
+        { "name": "owner_id", "type": "reference", "target": "UserProfile", "required": true, "description": "Deal room owner" }
+      ],
+      "relationships": [
+        { "name": "comments", "type": "one-to-many", "target": "Comment", "foreign_key": "parent_id", "condition": "parent_type = 'DealRoom'" },
+        { "name": "documents", "type": "one-to-many", "target": "Document", "foreign_key": "parent_id", "condition": "parent_type = 'DealRoom'" }
       ]
     },
 
@@ -193,7 +211,6 @@
       "sap_equivalent": "Sales Quotation (VBAK/VBAP, doc type AG)",
       "fields": [
         { "name": "quotation_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Quotation number", "sap_field": "VBELN", "sap_type": "CHAR 10" },
-        { "name": "name", "type": "string", "length": 120, "required": true, "description": "Quotation title" },
         { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account", "sap_field": "KUNNR", "sap_type": "CHAR 10" },
         { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Customer contact" },
         { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": false, "description": "Related opportunity" },
@@ -217,7 +234,6 @@
       "sap_equivalent": "Sales Order (VBAK/VBAP, doc type TA)",
       "fields": [
         { "name": "order_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Sales order number", "sap_field": "VBELN", "sap_type": "CHAR 10" },
-        { "name": "name", "type": "string", "length": 120, "required": true, "description": "Order title" },
         { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account", "sap_field": "KUNNR", "sap_type": "CHAR 10" },
         { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Customer contact" },
         { "name": "opportunity_id", "type": "reference", "target": "Opportunity", "required": false, "description": "Related opportunity" },
@@ -241,7 +257,6 @@
       "sap_equivalent": "Billing Document (VBRK/VBRP)",
       "fields": [
         { "name": "invoice_number", "type": "string", "length": 10, "required": true, "unique": true, "auto_generated": true, "description": "Invoice number", "sap_field": "VBELN", "sap_type": "CHAR 10" },
-        { "name": "name", "type": "string", "length": 120, "required": true, "description": "Invoice title" },
         { "name": "account_id", "type": "reference", "target": "Account", "required": true, "description": "Customer account", "sap_field": "KUNAG", "sap_type": "CHAR 10" },
         { "name": "contact_id", "type": "reference", "target": "Contact", "required": false, "description": "Customer contact" },
         { "name": "sales_order_id", "type": "reference", "target": "SalesOrder", "required": false, "description": "Related sales order" },
@@ -266,16 +281,15 @@
       "fields": [
         { "name": "parent_type", "type": "enum", "values": ["Opportunity", "Quotation", "SalesOrder", "Invoice"], "required": true, "description": "Type of parent document" },
         { "name": "parent_id", "type": "uuid", "required": true, "description": "ID of the parent document" },
-        { "name": "item_number", "type": "string", "length": 6, "required": true, "description": "Item number within the document", "sap_field": "POSNR", "sap_type": "NUMC 6" },
-        { "name": "product_id", "type": "reference", "target": "Product", "required": false, "description": "Referenced product (optional for free-text items)", "sap_field": "MATNR", "sap_type": "CHAR 40" },
-        { "name": "description", "type": "string", "length": 40, "required": true, "description": "Line item short text", "sap_field": "ARKTX", "sap_type": "CHAR 40" },
+        { "name": "item_number", "type": "string", "length": 6, "required": true, "auto_generated": true, "description": "Item number within the document (auto: 10, 20, 30...)", "sap_field": "POSNR", "sap_type": "NUMC 6" },
+        { "name": "product_id", "type": "reference", "target": "Product", "required": true, "description": "Referenced product", "sap_field": "MATNR", "sap_type": "CHAR 40" },
         { "name": "quantity", "type": "decimal", "precision": 13, "scale": 3, "required": true, "default": 1, "description": "Quantity", "sap_field": "KWMENG", "sap_type": "QUAN 13.3" },
-        { "name": "unit_of_measure", "type": "string", "length": 3, "required": false, "description": "Sales unit of measure", "sap_field": "VRKME", "sap_type": "CHAR 3" },
         { "name": "unit_price", "type": "currency", "precision": 11, "scale": 2, "required": true, "description": "Net price per unit", "sap_field": "NETPR", "sap_type": "CURR 11.2" },
         { "name": "discount_percent", "type": "decimal", "precision": 5, "scale": 2, "required": false, "default": 0, "description": "Discount percentage (0-100)" },
-        { "name": "alternative_to", "type": "string", "length": 6, "required": false, "description": "Item number of the line item this is an alternative to. If set, this item does not count toward the document total.", "sap_field": "GRPOS", "sap_type": "NUMC 6" },
-        { "name": "total_price", "type": "currency", "precision": 15, "scale": 2, "required": true, "description": "Net value (quantity * unit_price - discount). Excluded from document total if alternative_to is set.", "sap_field": "NETWR", "sap_type": "CURR 15.2" },
-        { "name": "sort_order", "type": "integer", "required": true, "description": "Display position within the parent document" }
+        { "name": "total_price", "type": "currency", "precision": 15, "scale": 2, "required": false, "description": "Net value (auto-calculated: quantity × unit_price × (1 − discount/100))", "sap_field": "NETWR", "sap_type": "CURR 15.2" },
+        { "name": "unit_of_measure", "type": "string", "length": 3, "required": false, "description": "Sales unit of measure", "sap_field": "VRKME", "sap_type": "CHAR 3" },
+        { "name": "comment", "type": "string", "length": 40, "required": false, "description": "Optional comment", "sap_field": "ARKTX", "sap_type": "CHAR 40" },
+        { "name": "alternative_to", "type": "string", "length": 6, "required": false, "description": "Item number of the line item this is an alternative to. If set, this item does not count toward the document total.", "sap_field": "GRPOS", "sap_type": "NUMC 6" }
       ]
     },
 
@@ -470,7 +484,7 @@
         { "name": "file_path", "type": "string", "length": 500, "required": true, "description": "Storage path (e.g., Firebase Storage URL)" },
         { "name": "file_type", "type": "string", "length": 50, "required": false, "description": "MIME type" },
         { "name": "file_size", "type": "integer", "required": false, "description": "File size in bytes" },
-        { "name": "parent_type", "type": "enum", "values": ["Account", "Contact", "Opportunity", "Quotation", "SalesOrder", "Invoice", "Ticket", "KnowledgeArticle"], "required": true, "description": "Type of parent record" },
+        { "name": "parent_type", "type": "enum", "values": ["Account", "Contact", "Opportunity", "Quotation", "SalesOrder", "Invoice", "Ticket", "KnowledgeArticle", "DealRoom"], "required": true, "description": "Type of parent record" },
         { "name": "parent_id", "type": "uuid", "required": true, "description": "ID of the parent record" },
         { "name": "uploaded_by", "type": "reference", "target": "UserProfile", "required": true, "description": "User who uploaded the file" }
       ]
@@ -479,7 +493,7 @@
     "Comment": {
       "description": "User comment or note on any CRM record",
       "fields": [
-        { "name": "parent_type", "type": "enum", "values": ["Account", "Contact", "Lead", "Opportunity", "Quotation", "SalesOrder", "Invoice", "Ticket", "KnowledgeArticle", "Activity"], "required": true, "description": "Type of parent record" },
+        { "name": "parent_type", "type": "enum", "values": ["Account", "Contact", "Lead", "Opportunity", "Quotation", "SalesOrder", "Invoice", "Ticket", "KnowledgeArticle", "Activity", "DealRoom"], "required": true, "description": "Type of parent record" },
         { "name": "parent_id", "type": "uuid", "required": true, "description": "ID of the parent record" },
         { "name": "content", "type": "text", "required": true, "description": "Comment text" },
         { "name": "author_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User who wrote the comment" }
@@ -503,7 +517,8 @@
         { "name": "longest_streak_days", "type": "integer", "required": true, "default": 0, "description": "Longest streak ever achieved" },
         { "name": "active", "type": "boolean", "required": true, "default": true, "description": "Whether the user account is active" },
         { "name": "theme_preference", "type": "enum", "values": ["Light", "Dark", "System"], "required": true, "default": "System", "description": "Preferred UI theme" },
-        { "name": "notification_preferences", "type": "json", "required": false, "description": "User notification settings (which events trigger desktop/email notifications)" }
+        { "name": "notification_preferences", "type": "json", "required": false, "description": "User notification settings (which events trigger desktop/email notifications)" },
+        { "name": "language_preference", "type": "string", "length": 5, "required": false, "default": "en", "description": "Preferred UI language (ISO 639-1 code)" }
       ]
     },
 
@@ -632,7 +647,9 @@
         { "name": "old_value", "type": "text", "required": false, "description": "Previous value (serialized)" },
         { "name": "new_value", "type": "text", "required": false, "description": "New value (serialized)" },
         { "name": "user_id", "type": "reference", "target": "UserProfile", "required": true, "description": "User who made the change" },
-        { "name": "timestamp", "type": "datetime", "required": true, "description": "When the change occurred" }
+        { "name": "timestamp", "type": "datetime", "required": true, "description": "When the change occurred" },
+        { "name": "object_name", "type": "string", "length": 255, "required": false, "description": "Display name of the record at time of event" },
+        { "name": "summary", "type": "string", "length": 500, "required": false, "description": "Human-readable event description" }
       ]
     },
 
@@ -652,7 +669,7 @@
     "AIProviderConfig": {
       "description": "Configuration for the pluggable AI provider",
       "fields": [
-        { "name": "provider", "type": "enum", "values": ["OpenAI", "Google", "Anthropic"], "required": true, "description": "AI provider" },
+        { "name": "provider", "type": "enum", "values": ["OpenAI", "Google", "Anthropic", "Moonshot"], "required": true, "description": "AI provider" },
         { "name": "model", "type": "string", "length": 100, "required": true, "description": "Model identifier (e.g., gpt-4, gemini-pro, claude-sonnet)" },
         { "name": "api_key", "type": "string", "length": 500, "required": true, "description": "API key (encrypted at rest)" },
         { "name": "endpoint_url", "type": "string", "length": 500, "required": false, "description": "Custom endpoint URL (optional)" },

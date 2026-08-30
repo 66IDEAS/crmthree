@@ -1,6 +1,6 @@
 -- Generated from specs/data-model.json by db/generate-ddl.mjs. Do not edit by hand.
 -- Model version: 1.0
--- 38 objects
+-- 39 objects
 
 create extension if not exists "pgcrypto";
 
@@ -11,6 +11,7 @@ create type contact_status as enum ('Active', 'Inactive');
 create type lead_source as enum ('Web', 'Referral', 'Trade Show', 'Cold Call', 'Email Campaign', 'Social Media', 'Partner', 'Other');
 create type lead_status as enum ('New', 'Contacted', 'Qualified', 'Unqualified', 'Converted');
 create type opportunity_result as enum ('Open', 'Won', 'Lost');
+create type deal_room_status as enum ('Active', 'Closed');
 create type quotation_status as enum ('Draft', 'Sent', 'Accepted', 'Rejected', 'Expired');
 create type sales_order_status as enum ('Draft', 'Confirmed', 'In Progress', 'Shipped', 'Completed', 'Cancelled');
 create type invoice_status as enum ('Draft', 'Sent', 'Paid', 'Partially Paid', 'Overdue', 'Cancelled');
@@ -25,8 +26,8 @@ create type knowledge_article_status as enum ('Draft', 'In Review', 'Published',
 create type knowledge_article_source as enum ('Manual', 'AI Generated', 'Case Conversion');
 create type service_contract_status as enum ('Draft', 'Active', 'Expired', 'Terminated');
 create type asset_status as enum ('Active', 'Inactive', 'Retired', 'In Repair');
-create type document_parent_type as enum ('Account', 'Contact', 'Opportunity', 'Quotation', 'SalesOrder', 'Invoice', 'Ticket', 'KnowledgeArticle');
-create type comment_parent_type as enum ('Account', 'Contact', 'Lead', 'Opportunity', 'Quotation', 'SalesOrder', 'Invoice', 'Ticket', 'KnowledgeArticle', 'Activity');
+create type document_parent_type as enum ('Account', 'Contact', 'Opportunity', 'Quotation', 'SalesOrder', 'Invoice', 'Ticket', 'KnowledgeArticle', 'DealRoom');
+create type comment_parent_type as enum ('Account', 'Contact', 'Lead', 'Opportunity', 'Quotation', 'SalesOrder', 'Invoice', 'Ticket', 'KnowledgeArticle', 'Activity', 'DealRoom');
 create type user_profile_theme_preference as enum ('Light', 'Dark', 'System');
 create type notification_type as enum ('TicketAssigned', 'SLABreach', 'DealStageChange', 'MentionedInComment', 'LeadAssigned', 'ChallengeAssigned', 'BadgeEarned', 'LevelUp', 'PersonalBest', 'System');
 create type badge_category as enum ('Sales', 'Service', 'Data Quality', 'Collaboration', 'Milestone', 'Challenge', 'Special');
@@ -34,16 +35,18 @@ create type challenge_status as enum ('Active', 'Completed', 'Failed', 'Cancelle
 create type audit_log_action as enum ('Create', 'Update', 'Delete');
 create type data_source_config_source_type as enum ('Local', 'External');
 create type data_source_config_auth_type as enum ('None', 'BasicAuth', 'OAuth2', 'APIKey');
-create type ai_provider_config_provider as enum ('OpenAI', 'Google', 'Anthropic');
+create type ai_provider_config_provider as enum ('OpenAI', 'Google', 'Anthropic', 'Moonshot');
 
 -- Auto-number sequences. See P3: sequences replace zero-padded strings.
 create sequence account_account_number_seq start 1;
 create sequence contact_contact_number_seq start 1;
 create sequence lead_lead_number_seq start 1;
 create sequence opportunity_opportunity_number_seq start 1;
+create sequence deal_room_deal_room_number_seq start 1;
 create sequence quotation_quotation_number_seq start 1;
 create sequence sales_order_order_number_seq start 1;
 create sequence invoice_invoice_number_seq start 1;
+create sequence line_item_item_number_seq start 1;
 create sequence product_product_number_seq start 1;
 create sequence activity_activity_number_seq start 1;
 create sequence ticket_ticket_number_seq start 1;
@@ -103,6 +106,7 @@ create table contact (
   postal_code varchar(10),
   city varchar(40),
   country varchar(3),
+  account_id uuid,
   owner_id uuid not null,
   description text,
   status contact_status not null default 'Active'::contact_status
@@ -185,6 +189,21 @@ create table opportunity_contact (
   role varchar(50)
 );
 
+-- Optional purpose-built workspace for important opportunities
+create table deal_room (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null,
+  updated_at timestamptz not null,
+  created_by uuid not null,
+  updated_by uuid not null,
+  deal_room_number integer not null unique default nextval('deal_room_deal_room_number_seq'),
+  name varchar(120) not null,
+  description text,
+  opportunity_id uuid not null,
+  status deal_room_status not null default 'Active'::deal_room_status,
+  owner_id uuid not null
+);
+
 -- Configurable pipeline stage for opportunities
 create table pipeline_stage (
   id uuid primary key default gen_random_uuid(),
@@ -209,7 +228,6 @@ create table quotation (
   created_by uuid not null,
   updated_by uuid not null,
   quotation_number integer not null unique default nextval('quotation_quotation_number_seq'),
-  name varchar(120) not null,
   account_id uuid not null,
   contact_id uuid,
   opportunity_id uuid,
@@ -230,7 +248,6 @@ create table sales_order (
   created_by uuid not null,
   updated_by uuid not null,
   order_number integer not null unique default nextval('sales_order_order_number_seq'),
-  name varchar(120) not null,
   account_id uuid not null,
   contact_id uuid,
   opportunity_id uuid,
@@ -251,7 +268,6 @@ create table invoice (
   created_by uuid not null,
   updated_by uuid not null,
   invoice_number integer not null unique default nextval('invoice_invoice_number_seq'),
-  name varchar(120) not null,
   account_id uuid not null,
   contact_id uuid,
   sales_order_id uuid,
@@ -274,16 +290,15 @@ create table line_item (
   updated_by uuid not null,
   parent_type line_item_parent_type not null,
   parent_id uuid not null,
-  item_number varchar(6) not null,
-  product_id uuid,
-  description varchar(40) not null,
+  item_number integer not null default nextval('line_item_item_number_seq'),
+  product_id uuid not null,
   quantity numeric(13,3) not null default 1,
-  unit_of_measure varchar(3),
   unit_price numeric(11,2) not null,
   discount_percent numeric(5,2) default 0,
-  alternative_to varchar(6),
-  total_price numeric(15,2) not null,
-  sort_order integer not null
+  total_price numeric(15,2),
+  unit_of_measure varchar(3),
+  comment varchar(40),
+  alternative_to varchar(6)
 );
 
 -- Price book entry defining the price for a product, optionally per customer and/or quantity range. Supports: (1) base price per product, (2) customer-specific price, (3) quantity-based pricing with either a fixed price or a discount percentage.
@@ -532,7 +547,8 @@ create table user_profile (
   longest_streak_days integer not null default 0,
   active boolean not null default true,
   theme_preference user_profile_theme_preference not null default 'System'::user_profile_theme_preference,
-  notification_preferences jsonb
+  notification_preferences jsonb,
+  language_preference varchar(5) default 'en'
 );
 
 -- User role defining permissions and UI configuration
@@ -688,7 +704,9 @@ create table audit_log (
   old_value text,
   new_value text,
   user_id uuid not null,
-  timestamp timestamptz not null
+  timestamp timestamptz not null,
+  object_name varchar(255),
+  summary varchar(500)
 );
 
 -- Per-object configuration for the pluggable data source layer
@@ -755,6 +773,7 @@ alter table account add constraint account_parent_account_id_fk foreign key (par
 alter table account add constraint account_owner_id_fk foreign key (owner_id) references user_profile(id) deferrable initially deferred;
 alter table contact add constraint contact_created_by_fk foreign key (created_by) references user_profile(id) deferrable initially deferred;
 alter table contact add constraint contact_updated_by_fk foreign key (updated_by) references user_profile(id) deferrable initially deferred;
+alter table contact add constraint contact_account_id_fk foreign key (account_id) references account(id) deferrable initially deferred;
 alter table contact add constraint contact_owner_id_fk foreign key (owner_id) references user_profile(id) deferrable initially deferred;
 alter table contact_account add constraint contact_account_created_by_fk foreign key (created_by) references user_profile(id) deferrable initially deferred;
 alter table contact_account add constraint contact_account_updated_by_fk foreign key (updated_by) references user_profile(id) deferrable initially deferred;
@@ -778,6 +797,10 @@ alter table opportunity_contact add constraint opportunity_contact_created_by_fk
 alter table opportunity_contact add constraint opportunity_contact_updated_by_fk foreign key (updated_by) references user_profile(id) deferrable initially deferred;
 alter table opportunity_contact add constraint opportunity_contact_opportunity_id_fk foreign key (opportunity_id) references opportunity(id) deferrable initially deferred;
 alter table opportunity_contact add constraint opportunity_contact_contact_id_fk foreign key (contact_id) references contact(id) deferrable initially deferred;
+alter table deal_room add constraint deal_room_created_by_fk foreign key (created_by) references user_profile(id) deferrable initially deferred;
+alter table deal_room add constraint deal_room_updated_by_fk foreign key (updated_by) references user_profile(id) deferrable initially deferred;
+alter table deal_room add constraint deal_room_opportunity_id_fk foreign key (opportunity_id) references opportunity(id) deferrable initially deferred;
+alter table deal_room add constraint deal_room_owner_id_fk foreign key (owner_id) references user_profile(id) deferrable initially deferred;
 alter table pipeline_stage add constraint pipeline_stage_created_by_fk foreign key (created_by) references user_profile(id) deferrable initially deferred;
 alter table pipeline_stage add constraint pipeline_stage_updated_by_fk foreign key (updated_by) references user_profile(id) deferrable initially deferred;
 alter table quotation add constraint quotation_created_by_fk foreign key (created_by) references user_profile(id) deferrable initially deferred;
@@ -905,6 +928,7 @@ create index account_parent_account_id_idx on account (parent_account_id);
 create index account_owner_id_idx on account (owner_id);
 create index contact_created_by_idx on contact (created_by);
 create index contact_updated_by_idx on contact (updated_by);
+create index contact_account_id_idx on contact (account_id);
 create index contact_owner_id_idx on contact (owner_id);
 create index contact_account_created_by_idx on contact_account (created_by);
 create index contact_account_updated_by_idx on contact_account (updated_by);
@@ -928,6 +952,10 @@ create index opportunity_contact_created_by_idx on opportunity_contact (created_
 create index opportunity_contact_updated_by_idx on opportunity_contact (updated_by);
 create index opportunity_contact_opportunity_id_idx on opportunity_contact (opportunity_id);
 create index opportunity_contact_contact_id_idx on opportunity_contact (contact_id);
+create index deal_room_created_by_idx on deal_room (created_by);
+create index deal_room_updated_by_idx on deal_room (updated_by);
+create index deal_room_opportunity_id_idx on deal_room (opportunity_id);
+create index deal_room_owner_id_idx on deal_room (owner_id);
 create index pipeline_stage_created_by_idx on pipeline_stage (created_by);
 create index pipeline_stage_updated_by_idx on pipeline_stage (updated_by);
 create index quotation_created_by_idx on quotation (created_by);
@@ -1056,6 +1084,7 @@ alter table contact_account enable row level security;
 alter table lead enable row level security;
 alter table opportunity enable row level security;
 alter table opportunity_contact enable row level security;
+alter table deal_room enable row level security;
 alter table pipeline_stage enable row level security;
 alter table quotation enable row level security;
 alter table sales_order enable row level security;

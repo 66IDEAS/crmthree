@@ -1,4 +1,5 @@
-import dataModel from './dataModel.json';
+// Read from specs/data-model.json, the single source of truth, rather than a local copy.
+import dataModel from '$model';
 
 const ModelRegistry = {
   _model: dataModel,
