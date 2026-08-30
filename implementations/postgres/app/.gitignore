@@ -21,3 +21,6 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Uploaded files (R6). Bytes on disk, metadata in Document records.
+data/
