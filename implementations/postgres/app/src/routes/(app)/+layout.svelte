@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { NAV_OBJECTS, objectLabel, monogram } from '$lib/display';
+	import { NAV_OBJECTS, objectLabel } from '$lib/display';
+	import NavIcon from '$lib/components/NavIcon.svelte';
 	import NotificationBell from '$lib/components/NotificationBell.svelte';
 
 	let { data, children } = $props();
@@ -39,7 +40,6 @@
 				<img src="/logo.svg" alt="CRMTHREE" class="mx-auto h-8 w-8" />
 			{:else}
 				<img src="/crmthree-dark.svg" alt="CRMTHREE" class="ml-1 h-5 w-auto" />
-				<span class="mt-3 ml-2 rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-warm/50">postgres</span>
 			{/if}
 		</a>
 
@@ -63,12 +63,7 @@
 					class="flex items-center gap-3 rounded px-1.5 py-1.5 text-sm transition-colors
 						{active ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-warm'}"
 				>
-					<span
-						class="flex h-7 w-7 shrink-0 items-center justify-center rounded text-[10px] font-semibold tracking-wide
-							{active ? 'bg-accent-400/20 text-accent-400' : 'bg-white/5 text-warm/60'}"
-					>
-						{monogram(objectType)}
-					</span>
+					<NavIcon {objectType} {active} />
 					{#if !collapsed}<span class="truncate">{objectLabel(objectType, true)}</span>{/if}
 				</a>
 			{/each}

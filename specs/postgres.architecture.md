@@ -233,10 +233,10 @@ the full lockup with attribution on the login page, the wordmark in the expanded
 compact mark when the rail is collapsed and as the favicon.
 
 **Navigation rail.** Collapsible, following the shared UX intent: the toggle is the first
-item of the rail itself, not the top bar; expanded shows labels, collapsed shows per-object
-monogram tiles; the state persists per browser. Monograms rather than a hand-drawn icon set
-is a deliberate model-driven choice: an icon per object type cannot survive customers adding
-their own object types, a generated monogram can.
+item of the rail itself, not the top bar; expanded shows icons with labels, collapsed shows
+icons only; the state persists per browser. The built-in object types carry a curated icon
+set (Heroicons outline, MIT); an object type without an icon falls back to a generated
+monogram tile, so the rail survives customers adding their own object types to the model.
 
 Both shadcn-svelte and TanStack Table were considered and set aside once the pages took
 shape. The lists are server-rendered with sort and cursor in the URL, so the grid needs no

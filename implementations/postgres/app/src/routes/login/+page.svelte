@@ -27,7 +27,7 @@
 <div class="flex min-h-screen items-center justify-center bg-rail">
 	<div class="w-full max-w-sm rounded-lg bg-white p-8 shadow-xl">
 		<img src="/crmthree-by-light.svg" alt="CRMTHREE by 66IDEAS" class="mx-auto h-14 w-auto" />
-		<p class="mt-3 text-center text-sm text-steel">Postgres implementation · sign in to continue</p>
+		<p class="mt-3 text-center text-sm text-steel">Sign in to continue</p>
 
 		{#if data.unprovisioned}
 			<p class="mt-4 rounded bg-warning/10 p-3 text-sm text-warning">
