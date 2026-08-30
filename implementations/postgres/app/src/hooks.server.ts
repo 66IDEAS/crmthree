@@ -30,6 +30,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 			return result.rows;
 		});
 		event.locals.profile = rows[0] ?? null;
+
+		// The whitelist is evaluated on every sign-in, not only the first, and applies to
+		// users who already hold a profile (story 18b). An empty whitelist allows everyone.
+		if (event.locals.profile) {
+			const allowed = await withUser(null, (client) =>
+				client
+					.query('select app.email_allowed($1) as allowed', [event.locals.profile!.email])
+					.then((r) => r.rows[0]?.allowed === true)
+			).catch(() => true);
+			if (!allowed) event.locals.profile = null;
+		}
 	}
 
 	return svelteKitHandler({ auth, event, resolve, building });

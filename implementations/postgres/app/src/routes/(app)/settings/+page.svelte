@@ -6,7 +6,7 @@
 	let { data } = $props();
 
 	// ── User management (story 62) ──────────────────────────────────────────────
-	let open = $state<'users' | 'roles' | null>('users');
+	let open = $state<'users' | 'roles' | 'statuses' | 'whitelist' | 'ai' | null>('users');
 	let showInvite = $state(false);
 	let invite = $state({ email: '', password: '', firstName: '', lastName: '', roleName: 'User' });
 	let problem = $state('');
@@ -62,6 +62,60 @@
 		const map = { ...(editingRole.permissions[objectType] ?? {}) };
 		map[action] = !map[action];
 		editingRole.permissions = { ...editingRole.permissions, [objectType]: map };
+	}
+
+	// ── Ticket statuses ────────────────────────────────────────────────────────
+	let newStatus = $state({ name: '', is_closed: false, is_resolved: false });
+	async function addStatus(event: SubmitEvent) {
+		event.preventDefault();
+		problem = '';
+		try {
+			await DataService.create('TicketStatus', {
+				...newStatus,
+				sort_order: data.statuses.length + 1,
+				active: true
+			});
+			newStatus = { name: '', is_closed: false, is_resolved: false };
+			await invalidateAll();
+		} catch (e) { problem = (e as Error).message; }
+	}
+	async function toggleStatusActive(status: { id: string; active: boolean }) {
+		await DataService.update('TicketStatus', status.id, { active: !status.active });
+		await invalidateAll();
+	}
+
+	// ── Whitelist ──────────────────────────────────────────────────────────────
+	let newEntry = $state({ kind: 'domain', value: '' });
+	async function addEntry(event: SubmitEvent) {
+		event.preventDefault();
+		problem = '';
+		const response = await fetch('/api/whitelist', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(newEntry)
+		});
+		if (!response.ok) { problem = (await response.json().catch(() => null))?.message ?? 'Failed'; return; }
+		newEntry = { kind: 'domain', value: '' };
+		await invalidateAll();
+	}
+	async function removeEntry(id: string) {
+		await fetch(`/api/whitelist/${id}`, { method: 'DELETE' });
+		await invalidateAll();
+	}
+
+	// ── AI provider ────────────────────────────────────────────────────────────
+	let ai = $state({ provider: 'Anthropic', model: '', api_key: '', endpoint_url: '' });
+	async function saveAi(event: SubmitEvent) {
+		event.preventDefault();
+		problem = '';
+		const response = await fetch('/api/ai/config', {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ ...ai, endpoint_url: ai.endpoint_url || null, is_active: true })
+		});
+		if (!response.ok) { problem = (await response.json().catch(() => null))?.message ?? 'Failed'; return; }
+		ai = { provider: 'Anthropic', model: '', api_key: '', endpoint_url: '' };
+		await invalidateAll();
 	}
 
 	async function saveRole() {
@@ -207,6 +261,109 @@
 					</table>
 					<p class="mt-2 text-xs text-steel/80">Admins bypass the permission map entirely. These settings apply to every other role, and they are enforced in the database, not the browser.</p>
 				{/if}
+			</div>
+		{/if}
+	</section>
+
+	<!-- Ticket statuses -->
+	<section class="mt-4 rounded-lg border border-rule bg-white">
+		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'statuses' ? null : 'statuses')}>
+			<span class="text-sm font-semibold">Ticket Statuses <span class="ml-1 font-normal text-steel">{data.statuses.length}</span></span>
+			<span class="text-steel">{open === 'statuses' ? '−' : '+'}</span>
+		</button>
+		{#if open === 'statuses'}
+			<div class="border-t border-rule/50 px-4 pb-4">
+				<table class="mt-2 w-full text-sm">
+					<tbody>
+						{#each data.statuses as status (status.id)}
+							<tr class="border-t border-rule/40 first:border-0">
+								<td class="py-2 pr-4 font-medium">{status.name}</td>
+								<td class="py-2 pr-4 text-xs text-steel">
+									{status.is_closed ? 'closes the ticket' : status.is_resolved ? 'resolves' : 'open state'}</td>
+								<td class="py-2 text-right">
+									<button onclick={() => toggleStatusActive(status)} class="text-xs text-steel hover:text-ink">
+										{status.active ? 'Disable' : 'Enable'}</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+				<form onsubmit={addStatus} class="mt-3 flex items-center gap-2 text-sm">
+					<input required placeholder="New status name" bind:value={newStatus.name}
+						class="flex-1 rounded border border-steel/40 px-2 py-1.5" />
+					<label class="flex items-center gap-1 text-xs"><input type="checkbox" bind:checked={newStatus.is_resolved} class="accent-accent-600" /> resolves</label>
+					<label class="flex items-center gap-1 text-xs"><input type="checkbox" bind:checked={newStatus.is_closed} class="accent-accent-600" /> closes</label>
+					<button type="submit" class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">Add</button>
+				</form>
+			</div>
+		{/if}
+	</section>
+
+	<!-- Email whitelist -->
+	<section class="mt-4 rounded-lg border border-rule bg-white">
+		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'whitelist' ? null : 'whitelist')}>
+			<span class="text-sm font-semibold">Access Whitelist <span class="ml-1 font-normal text-steel">{data.whitelist.length}</span></span>
+			<span class="text-steel">{open === 'whitelist' ? '−' : '+'}</span>
+		</button>
+		{#if open === 'whitelist'}
+			<div class="border-t border-rule/50 px-4 pb-4">
+				<p class="mt-2 text-xs text-steel">An empty list allows everyone. Entries apply on every sign-in, including users who already hold a profile.</p>
+				<table class="mt-2 w-full text-sm">
+					<tbody>
+						{#each data.whitelist as entry (entry.id)}
+							<tr class="border-t border-rule/40 first:border-0">
+								<td class="py-2 pr-4"><span class="rounded bg-rule/40 px-1.5 py-0.5 text-xs">{entry.kind}</span></td>
+								<td class="py-2 pr-4 font-medium">{entry.value}</td>
+								<td class="py-2 text-right"><button onclick={() => removeEntry(entry.id)} class="text-xs text-steel hover:text-error">Remove</button></td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+				<form onsubmit={addEntry} class="mt-3 flex items-center gap-2 text-sm">
+					<select bind:value={newEntry.kind} class="rounded border border-steel/40 px-2 py-1.5">
+						<option value="domain">Domain</option><option value="email">Email</option>
+					</select>
+					<input required placeholder={newEntry.kind === 'domain' ? 'example.com' : 'person@example.com'}
+						bind:value={newEntry.value} class="flex-1 rounded border border-steel/40 px-2 py-1.5" />
+					<button type="submit" class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">Add</button>
+				</form>
+			</div>
+		{/if}
+	</section>
+
+	<!-- AI provider -->
+	<section class="mt-4 rounded-lg border border-rule bg-white">
+		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'ai' ? null : 'ai')}>
+			<span class="text-sm font-semibold">AI Provider <span class="ml-1 font-normal text-steel">{data.aiConfigs.filter((c) => c.is_active).length ? 'active' : 'not configured'}</span></span>
+			<span class="text-steel">{open === 'ai' ? '−' : '+'}</span>
+		</button>
+		{#if open === 'ai'}
+			<div class="border-t border-rule/50 px-4 pb-4">
+				{#if data.aiConfigs.length}
+					<table class="mt-2 w-full text-sm">
+						<tbody>
+							{#each data.aiConfigs as config (config.id)}
+								<tr class="border-t border-rule/40 first:border-0">
+									<td class="py-2 pr-4 font-medium">{config.provider}</td>
+									<td class="py-2 pr-4">{config.model}</td>
+									<td class="py-2 pr-4 text-xs text-steel">{config.has_key ? 'key stored (write-only)' : 'no key'}</td>
+									<td class="py-2 text-right">
+										{#if config.is_active}<span class="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">Active</span>{/if}
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				{/if}
+				<form onsubmit={saveAi} class="mt-3 grid grid-cols-2 gap-2 text-sm">
+					<select bind:value={ai.provider} class="rounded border border-steel/40 px-2 py-1.5">
+						<option>Anthropic</option><option>OpenAI</option><option>Google</option><option>Moonshot</option>
+					</select>
+					<input required placeholder="Model (e.g. claude-sonnet-5)" bind:value={ai.model} class="rounded border border-steel/40 px-2 py-1.5" />
+					<input type="password" placeholder="API key (encrypted at rest, never shown again)" bind:value={ai.api_key} class="rounded border border-steel/40 px-2 py-1.5" />
+					<input placeholder="Endpoint URL (optional)" bind:value={ai.endpoint_url} class="rounded border border-steel/40 px-2 py-1.5" />
+					<button type="submit" class="col-span-2 rounded bg-accent-600 py-1.5 font-medium text-white hover:bg-accent-500">Save & Activate</button>
+				</form>
 			</div>
 		{/if}
 	</section>
