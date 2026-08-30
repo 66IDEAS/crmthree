@@ -10,8 +10,11 @@ requirements. Where this implementation could imitate the Firebase one but a nat
 approach is better, it takes the native approach and records the divergence in the final
 section. Those divergences are the evidence.
 
-Named for the technology rather than the platform. Postgres here is hosted on Supabase,
-but the architecture survives a move to Neon or a self-hosted cluster.
+Named for the technology rather than the platform, and it depends on no vendor at all.
+The only infrastructure it requires is a Postgres server and a Node runtime, both of which
+run on a laptop. There is no managed backend, no platform SDK and no hosting account. That
+independence is itself part of the proof: the specification needs a database, not a
+Backend-as-a-Service.
 
 ## Stack
 
@@ -22,24 +25,24 @@ but the architecture survives a move to Neon or a self-hosted cluster.
 | Frontend | Svelte 5 (runes), SvelteKit, TypeScript |
 | Styling | Tailwind CSS with shadcn-svelte, deliberately not Material |
 | Data grid | TanStack Table, Svelte adapter, headless |
-| Hosting | Cloudflare Pages and Workers, `adapter-cloudflare` |
-| Database | Postgres, hosted on Supabase |
-| Authentication | Supabase Auth, cookie sessions via `@supabase/ssr` |
-| Real-time | Supabase Realtime over Postgres logical replication |
-| File storage | Supabase Storage |
-| Server compute | SvelteKit server routes running on the Workers runtime |
+| Hosting | Self-hosted Node server, `adapter-node`. Runs locally or on any machine |
+| Database | Postgres, any instance, local by default |
+| Authentication | Better Auth, sessions stored in Postgres |
+| Real-time | Postgres `listen` / `notify`, delivered to clients over server-sent events |
+| File storage | Filesystem behind a server route, S3-compatible optional |
+| Server compute | SvelteKit server routes on Node |
 | AI integration | Same pluggable provider set, proxied through server routes |
 
 ### P2. How the requirements are met
 
 | Req | Mechanism | Contrast with Firebase |
 |---|---|---|
-| R1 | SvelteKit server-rendered, on Cloudflare Pages | Firebase serves a static SPA |
-| R2 | Supabase Auth, cookie-based server sessions | Firebase holds the token client-side |
+| R1 | SvelteKit server-rendered on a self-hosted Node server | Firebase serves a static SPA |
+| R2 | Better Auth, sessions in Postgres, cookie-based | Firebase holds the token client-side |
 | R3 | Postgres with keyset pagination and `count(*)` | Firestore cursor snapshots and `getCountFromServer` |
-| R4 | Supabase Realtime channels | Firestore `onSnapshot` |
-| R5 | SvelteKit server routes with secret bindings | Separate Cloud Functions |
-| R6 | Supabase Storage buckets with policies | Firebase Storage |
+| R4 | Postgres `listen` / `notify` bridged to server-sent events | Firestore `onSnapshot` |
+| R5 | SvelteKit server routes reading process environment | Separate Cloud Functions |
+| R6 | Filesystem behind an authorising server route | Firebase Storage |
 | R7 | Row Level Security in the database | Firestore security rules |
 | R8 | Outbound `fetch` from server routes | Callable Cloud Functions |
 | R9 | Server routes under `/api/v1` | An Express app inside a Cloud Function |
@@ -94,19 +97,22 @@ itself a finding about the architecture.
 
 Server routes under `/api/v1/:objectType[/:id]` mirror the route shape and payloads of the
 reference implementation, so existing API consumers are unaffected. Requests authenticate
-with a bearer JWT, verified server-side, and then run under the caller's RLS context so the
-API cannot return more than the user could see in the UI.
+with a bearer token, verified server-side against the session store, and then run under the
+caller's RLS context so the API cannot return more than the user could see in the UI.
 
-Supabase also exposes PostgREST over the same schema for free. It is not used as the public
-interface, because the specification fixes the route shape, but it remains available for
-ad-hoc integration work.
+No generated API layer is used. The specification fixes the route shape, and a hand-written
+route also keeps the API inside the same authorization path as the UI.
 
 ## Authorization
 
 ### P7. Row Level Security
 
-Authorization moves into the database. Every table carries policies keyed to `auth.uid()`,
-resolved to a role through `user_profiles`, with a `stable` helper function returning the
+Authorization moves into the database. Identity reaches Postgres as a per-request session
+setting: the server route opens a transaction and calls
+`set_config('app.user_id', <profile id>, true)` before touching data, so the value is scoped
+to that transaction and cannot leak between pooled connections. Every table carries policies
+reading that setting, resolved to a role through `user_profile`, with a `stable` helper
+function returning the
 current user's role name.
 
 This is the most significant improvement over the reference implementation, whose rules
@@ -119,10 +125,16 @@ Postgres. One authorization model instead of one rule set plus client-side conve
 
 ### P8. Realtime subscriptions
 
-Tables that need pushing are added to the `supabase_realtime` publication, and clients
-subscribe with `postgres_changes` filters, for example `user_id=eq.<id>` for notifications.
-Supabase Realtime enforces RLS on the replication stream, so a subscription cannot deliver a
-row the subscriber could not select.
+Postgres already ships the mechanism. A trigger on each watched table calls `pg_notify` on a
+channel named for the object type, carrying the row id and the operation. One dedicated
+connection in the Node server holds `listen` on those channels and fans events out to
+connected browsers over server-sent events, which need no extra protocol and reconnect on
+their own.
+
+Authorization is preserved because the notification payload carries only an id. The browser
+re-reads the row through the normal authorised path, so a client is never handed data its
+policies would refuse. That is a deliberate trade of one extra round trip for the guarantee
+that the realtime path cannot become a hole in the authorization model.
 
 Notification triggers move server-side. The reference implementation compares field values in
 the browser after a save and writes the notification from the client; here a Postgres trigger
@@ -146,17 +158,25 @@ Expired rows are reaped by a scheduled job rather than being left for clients to
 Requirements R5, R8 and R9 are met inside the web framework rather than beside it. There is no
 separate functions deployment, no second runtime and no second deploy step. The AI proxy, the
 replication proxy, the external data source adapter and the REST API are all `+server.ts`
-endpoints on the Workers runtime.
+endpoints in the same Node process.
 
 ### P11. AI provider proxy and secret handling
 
 Provider, model and active flag live in a configuration table and stay administrator-editable
 through the UI, as story 20 requires. The API key does not sit in the database in clear text.
-It is stored as ciphertext, and the key material that decrypts it is a Cloudflare secret
-binding available only to the server route. Decryption happens in the Worker, so the
-encryption key is never sent to the database and the provider key never reaches the browser.
+It is stored as ciphertext, and the key material that decrypts it comes from the server
+process environment, never from the database. Decryption happens in the server route, so the
+encryption key is never sent to Postgres and the provider key never reaches the browser.
 
-The Supabase service role key is likewise a secret binding, never a client-visible variable.
+The key column is additionally made **write-only for clients** through column privileges: an
+administrator can set it, and no client role can read it back. This needs care, because a
+column-level `revoke select` is silently a no-op while the role still holds table-level
+`select`. The application connects as a restricted role holding exactly the privileges it
+needs, and the migration that creates it grants no blanket table access. The table grant is
+therefore
+withdrawn and rebuilt column by column, omitting the key from `select` while keeping it in
+`insert` and `update`. Server routes read it with the service role, which bypasses both RLS
+and these grants.
 
 ## Frontend
 
@@ -191,22 +211,45 @@ preference stored on the user profile.
 
 ## User provisioning
 
-Self-service registration is disabled in Supabase Auth, matching the reference implementation.
-Accounts are created by an administrator through a server route that calls the Supabase admin
-API with the service role key.
+Self-service registration is disabled, matching the reference implementation. Accounts are
+created by an administrator through a server route, which writes directly to the account and
+profile tables inside one transaction.
 
 The Firebase implementation is constrained here: its Auth user list is readable only through
-the Admin SDK, so a user-management screen needs a Cloud Function. The same constraint exists
-in Supabase, but since server routes are already part of this stack it costs nothing extra.
+the Admin SDK, so a user-management screen needs a privileged backend. That constraint
+disappears entirely when the identity store is a table in the same database. The
+user-management screen can list, search and join accounts to profiles with ordinary SQL, and
+the profile-claiming indirection exists only because the reference stack could not do this.
 
 First sign-in claims a pending profile by matching email, and deactivated users are refused at
 sign-in.
 
+**Table namespacing.** The authentication tables are named `auth_user`, `auth_session`,
+`auth_account` and `auth_verification`. This is not cosmetic: `data-model.json` defines an
+Account object, so an auth library defaulting to a table called `account` targets the customer
+accounts table. Left unnamespaced, schema generation emits
+`alter table "account" add column "password"` against live CRM data. Renaming also sidesteps
+`user`, which is a reserved word in SQL.
+
+**Bootstrap is privileged.** An empty instance cannot create its first user through the
+ordinary path, because every insert policy asks what the caller may do and there is no caller
+yet. Rather than carve a permanent hole in the policies for a state that occurs once in an
+instance's lifetime, the bootstrap runs on a separate owner connection, which is exempt from
+row level security. Nothing else uses that connection.
+
+**Session resolution runs ahead of identity.** Resolving a profile from an authentication id,
+and asking whether the instance is empty, both happen before any identity exists, so ordinary
+queries would be filtered to nothing by the very policies they are establishing identity for.
+Both go through narrow `security definer` functions. The second matters for more than
+convenience: an unauthenticated caller sees no profiles under RLS, so a plain count reports
+every instance as empty and offers the bootstrap path to anyone who asks.
+
 ## Instance deployment
 
-One Supabase project and one Cloudflare Pages project per instance, as section 26 requires of
-any implementation. Instances share no data. All per-instance values are environment variables
-and secret bindings; no instance identifier appears in source.
+One Postgres database and one Node process per instance, as section 26 requires of any
+implementation. Instances share no data. All per-instance values are environment variables; no
+instance identifier appears in source. An instance is a connection string and a port, so
+running several side by side on one machine is routine rather than an act of provisioning.
 
 ## Deliberate divergences from the Firebase implementation
 
@@ -223,6 +266,12 @@ These are the findings the proof exists to produce.
 5. **Secrets left the database**, held as platform secret bindings with only ciphertext stored.
 6. **No index configuration file**, because arbitrary sorting needs no declared composite index.
 7. **Server-side rendering**, so first paint carries data rather than a spinner.
+8. **No vendor and no platform SDK.** The stack is a Postgres server and a Node process. The
+   whole system runs on a laptop with no account, no cloud project and no network dependency,
+   which is the strongest available evidence that the specification, not a platform, is the
+   product.
+9. **Realtime carries ids, not rows.** Clients re-read through the authorised path, so the
+   push channel cannot become a hole in the authorization model.
 
 Items 1, 2 and 5 are improvements the reference implementation could adopt. That is a useful
 result: the second implementation is not only a proof of portability but a source of feedback

@@ -489,7 +489,7 @@
     "UserProfile": {
       "description": "CRM user profile extending the authentication identity",
       "fields": [
-        { "name": "auth_uid", "type": "string", "length": 128, "required": true, "unique": true, "description": "Authentication provider UID (e.g., Firebase Auth UID)" },
+        { "name": "auth_uid", "type": "string", "length": 128, "required": false, "unique": true, "description": "Authentication provider UID. Absent until the profile is claimed on first sign-in. Each implementation represents absence natively, so a store enforcing uniqueness must use a value it treats as distinct" },
         { "name": "email", "type": "string", "length": 241, "required": true, "unique": true, "description": "User email address" },
         { "name": "first_name", "type": "string", "length": 40, "required": true, "description": "First name" },
         { "name": "last_name", "type": "string", "length": 40, "required": true, "description": "Last name" },
