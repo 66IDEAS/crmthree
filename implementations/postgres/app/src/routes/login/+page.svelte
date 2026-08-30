@@ -24,15 +24,13 @@
 	}
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-slate-900">
+<div class="flex min-h-screen items-center justify-center bg-rail">
 	<div class="w-full max-w-sm rounded-lg bg-white p-8 shadow-xl">
-		<h1 class="text-center text-2xl font-semibold tracking-tight">
-			CRM<span class="text-accent-600">THREE</span>
-		</h1>
-		<p class="mt-1 text-center text-sm text-zinc-500">Postgres implementation · sign in to continue</p>
+		<img src="/crmthree-by-light.svg" alt="CRMTHREE by 66IDEAS" class="mx-auto h-14 w-auto" />
+		<p class="mt-3 text-center text-sm text-steel">Postgres implementation · sign in to continue</p>
 
 		{#if data.unprovisioned}
-			<p class="mt-4 rounded bg-amber-50 p-3 text-sm text-amber-800">
+			<p class="mt-4 rounded bg-warning/10 p-3 text-sm text-warning">
 				Your account exists but has no CRM profile yet. Ask an administrator to provision you.
 			</p>
 		{/if}
@@ -41,18 +39,18 @@
 			<label class="flex flex-col gap-1 text-sm">
 				<span class="font-medium">Email</span>
 				<input type="email" bind:value={email} required autocomplete="email"
-					class="rounded border border-zinc-300 px-3 py-2 outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600" />
+					class="rounded border border-rule px-3 py-2 outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600" />
 			</label>
 			<label class="flex flex-col gap-1 text-sm">
 				<span class="font-medium">Password</span>
 				<input type="password" bind:value={password} required autocomplete="current-password"
-					class="rounded border border-zinc-300 px-3 py-2 outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600" />
+					class="rounded border border-rule px-3 py-2 outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600" />
 			</label>
 			{#if error}
-				<p class="rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>
+				<p class="rounded bg-error/10 p-2 text-sm text-error">{error}</p>
 			{/if}
 			<button type="submit" disabled={busy}
-				class="rounded bg-accent-600 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50">
+				class="rounded bg-accent-600 py-2 font-medium text-white transition-colors hover:bg-accent-500 disabled:opacity-50">
 				{busy ? 'Signing in…' : 'Sign in'}
 			</button>
 		</form>

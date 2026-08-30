@@ -1,19 +1,37 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/outfit';
 
 /*
- * CRMTHREE Postgres implementation. Deliberately not Material and visibly not the Firebase
- * app: teal accent instead of orange, dark slate rail, system font stack, square-ish
- * corners. No webfont fetch; the stack stays vendor-free down to the typography.
+ * CRMTHREE Postgres implementation, on the product brand system (see P14 in
+ * specs/postgres.architecture.md). One accent colour, warm neutrals, Outfit self-hosted
+ * via npm so the runtime stays vendor-free. Colour lives on interactive elements and the
+ * numbers, never as decoration.
  */
 @theme {
-	--font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--color-accent-50: #f0fdfa;
-	--color-accent-100: #ccfbf1;
-	--color-accent-500: #14b8a6;
-	--color-accent-600: #0d9488;
-	--color-accent-700: #0f766e;
+	--font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+
+	/* The one accent. 500 hover, 600 base, 700 pressed; 50/100 tints for hovers and dots. */
+	--color-accent-50: #eff3fd;
+	--color-accent-100: #dce5fb;
+	--color-accent-400: #7a99f5; /* accent on dark grounds */
+	--color-accent-500: #4e7bec;
+	--color-accent-600: #2e62e8;
+	--color-accent-700: #2450c4;
+
+	/* Warm neutrals. */
+	--color-ink: #16181d;
+	--color-paper: #faf7f0;
+	--color-rail: #14161a;
+	--color-warm: #f2efe7; /* text on dark grounds */
+	--color-steel: #6a6e76;
+	--color-rule: #dad5ca;
+
+	/* Semantic, application UI only. */
+	--color-success: #0b7a3e;
+	--color-warning: #b07a1e;
+	--color-error: #c03a2e;
 }
 
 body {
-	@apply bg-zinc-50 text-zinc-900 antialiased;
+	@apply bg-paper text-ink antialiased;
 }

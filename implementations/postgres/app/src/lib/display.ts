@@ -30,12 +30,18 @@ const GOOD = new Set(['Active', 'Won', 'Paid', 'Completed', 'Published', 'Accept
 const BAD = new Set(['Lost', 'Cancelled', 'Overdue', 'Inactive', 'Rejected', 'Expired', 'Critical', 'Terminated', 'Retired', 'Unqualified']);
 const WARN = new Set(['High', 'In Progress', 'In Review', 'Sent', 'Contacted', 'In Repair', 'Partially Paid', 'Shipped']);
 
-/** Tailwind classes for an enum chip; filled, per the product convention. */
+/** Tailwind classes for an enum chip; filled tints of the brand's semantic colours. */
 export function enumChipClass(value: string): string {
-	if (GOOD.has(value)) return 'bg-emerald-100 text-emerald-800';
-	if (BAD.has(value)) return 'bg-red-100 text-red-700';
-	if (WARN.has(value)) return 'bg-amber-100 text-amber-800';
-	return 'bg-zinc-200 text-zinc-700';
+	if (GOOD.has(value)) return 'bg-success/10 text-success';
+	if (BAD.has(value)) return 'bg-error/10 text-error';
+	if (WARN.has(value)) return 'bg-warning/10 text-warning';
+	return 'bg-rule/40 text-ink/70';
+}
+
+/** Monogram for the collapsed navigation rail: initials of the words in the type name. */
+export function monogram(objectType: string): string {
+	const words = objectType.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ');
+	return (words.length > 1 ? words[0][0] + words[1][0] : objectType.slice(0, 2)).toUpperCase();
 }
 
 export function formatValue(field: { type: string }, value: unknown): string {

@@ -33,26 +33,26 @@
 <div class="mx-auto max-w-2xl">
 	<h1 class="text-xl font-semibold tracking-tight">New {objectLabel(data.objectType)}</h1>
 
-	<form onsubmit={create} class="mt-5 rounded-lg border border-zinc-200 bg-white p-6">
+	<form onsubmit={create} class="mt-5 rounded-lg border border-rule bg-white p-6">
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			{#each data.fields as field (field.name)}
 				<label class="flex flex-col gap-1 text-sm {field.type === 'text' ? 'md:col-span-2' : ''}">
-					<span class="font-medium text-zinc-700">
-						{fieldLabel(field.name)}{#if field.required}<span class="text-red-500"> *</span>{/if}
+					<span class="font-medium text-ink/80">
+						{fieldLabel(field.name)}{#if field.required}<span class="text-error"> *</span>{/if}
 					</span>
 					<FieldInput {field} bind:value={values[field.name]} options={data.options[field.name] ?? []} />
 				</label>
 			{/each}
 		</div>
 		{#if problem}
-			<p class="mt-4 rounded bg-red-50 p-2 text-sm text-red-700">{problem}</p>
+			<p class="mt-4 rounded bg-error/10 p-2 text-sm text-error">{problem}</p>
 		{/if}
 		<div class="mt-6 flex gap-2">
 			<button type="submit" disabled={busy}
-				class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-700 disabled:opacity-50">
+				class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500 disabled:opacity-50">
 				{busy ? 'Creating…' : 'Create'}
 			</button>
-			<a href={`/${data.objectType}`} class="rounded border border-zinc-300 px-4 py-1.5 text-sm hover:bg-zinc-50">Cancel</a>
+			<a href={`/${data.objectType}`} class="rounded border border-steel/40 px-4 py-1.5 text-sm hover:bg-paper">Cancel</a>
 		</div>
 	</form>
 </div>

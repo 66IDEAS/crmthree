@@ -9,7 +9,7 @@
 	}: { field: FieldDefinition; value: unknown; options?: ReferenceOption[] } = $props();
 
 	const base =
-		'w-full rounded border border-zinc-300 px-3 py-1.5 text-sm outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600';
+		'w-full rounded border border-steel/40 px-3 py-1.5 text-sm outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600';
 </script>
 
 {#if field.type === 'enum'}

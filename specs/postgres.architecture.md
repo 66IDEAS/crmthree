@@ -213,10 +213,30 @@ rendering primitives differ.
 
 ### P14. Design system and data grid
 
-Tailwind with a small set of hand-rolled components, visibly not the reference
-implementation: dark slate rail with a teal accent instead of the orange-on-light Material
-ribbon, square-ish corners, filled enum chips, and a system font stack, so the UI is
-vendor-free down to the typography.
+Tailwind with a small set of hand-rolled components, on the product's brand system rather
+than Material:
+
+| Token | Value | Role |
+|---|---|---|
+| accent | `#2E62E8` (`#7A99F5` on dark grounds) | CTAs, links, active states - the one colour |
+| accent hover / active | `#4E7BEC` / `#2450C4` | Hover and pressed |
+| ink | `#16181D` | Primary text |
+| paper | `#FAF7F0` | Light ground |
+| rail | `#14161A` | Dark ground: navigation rail, login backdrop |
+| steel | `#6A6E76` | Secondary text |
+| rule | `#DAD5CA` | Borders and dividers |
+| success / warning / error | `#0B7A3E` / `#B07A1E` / `#C03A2E` | Semantic chips only |
+
+The typeface is Outfit, self-hosted through an npm package rather than fetched from a CDN,
+so the runtime stays vendor-free. The logo set is shared with the reference implementation:
+the full lockup with attribution on the login page, the wordmark in the expanded rail, the
+compact mark when the rail is collapsed and as the favicon.
+
+**Navigation rail.** Collapsible, following the shared UX intent: the toggle is the first
+item of the rail itself, not the top bar; expanded shows labels, collapsed shows per-object
+monogram tiles; the state persists per browser. Monograms rather than a hand-drawn icon set
+is a deliberate model-driven choice: an icon per object type cannot survive customers adding
+their own object types, a generated monogram can.
 
 Both shadcn-svelte and TanStack Table were considered and set aside once the pages took
 shape. The lists are server-rendered with sort and cursor in the URL, so the grid needs no
