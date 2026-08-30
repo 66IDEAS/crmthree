@@ -4,10 +4,26 @@ import { createLocalAccountIssuer } from '@better-auth/core/db';
 import { auth } from './auth';
 import { withUser, withOwner } from './db';
 
+import ModelRegistry from '$lib/model/ModelRegistry';
+
+/**
+ * Default roles carry real permission maps, because the generated policies read
+ * Role.permissions and an empty map means a non-admin sees nothing at all. Admin bypasses
+ * the map entirely via app.is_admin(); these two exist so the demo has a graduated scheme.
+ */
+function defaultPermissions(canDelete: boolean) {
+	return Object.fromEntries(
+		ModelRegistry.getObjectTypes().map((objectType) => [
+			objectType,
+			{ read: true, read_all: true, create: true, update: true, delete: canDelete }
+		])
+	);
+}
+
 const DEFAULT_ROLES = [
 	{ name: 'Admin', description: 'Full access', permissions: {} },
-	{ name: 'Manager', description: 'Team oversight', permissions: {} },
-	{ name: 'User', description: 'Standard access', permissions: {} }
+	{ name: 'Manager', description: 'Team oversight', permissions: defaultPermissions(true) },
+	{ name: 'User', description: 'Standard access', permissions: defaultPermissions(false) }
 ];
 
 /**

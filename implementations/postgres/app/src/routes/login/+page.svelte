@@ -1,0 +1,60 @@
+<script lang="ts">
+	let { data } = $props();
+	let email = $state('');
+	let password = $state('');
+	let error = $state('');
+	let busy = $state(false);
+
+	async function signIn(event: SubmitEvent) {
+		event.preventDefault();
+		busy = true;
+		error = '';
+		const response = await fetch('/api/auth/sign-in/email', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ email, password })
+		});
+		busy = false;
+		if (response.ok) {
+			window.location.href = '/';
+		} else {
+			const body = await response.json().catch(() => null);
+			error = body?.message ?? 'Sign-in failed';
+		}
+	}
+</script>
+
+<div class="flex min-h-screen items-center justify-center bg-slate-900">
+	<div class="w-full max-w-sm rounded-lg bg-white p-8 shadow-xl">
+		<h1 class="text-center text-2xl font-semibold tracking-tight">
+			CRM<span class="text-accent-600">THREE</span>
+		</h1>
+		<p class="mt-1 text-center text-sm text-zinc-500">Postgres implementation · sign in to continue</p>
+
+		{#if data.unprovisioned}
+			<p class="mt-4 rounded bg-amber-50 p-3 text-sm text-amber-800">
+				Your account exists but has no CRM profile yet. Ask an administrator to provision you.
+			</p>
+		{/if}
+
+		<form onsubmit={signIn} class="mt-6 flex flex-col gap-4">
+			<label class="flex flex-col gap-1 text-sm">
+				<span class="font-medium">Email</span>
+				<input type="email" bind:value={email} required autocomplete="email"
+					class="rounded border border-zinc-300 px-3 py-2 outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600" />
+			</label>
+			<label class="flex flex-col gap-1 text-sm">
+				<span class="font-medium">Password</span>
+				<input type="password" bind:value={password} required autocomplete="current-password"
+					class="rounded border border-zinc-300 px-3 py-2 outline-none focus:border-accent-600 focus:ring-1 focus:ring-accent-600" />
+			</label>
+			{#if error}
+				<p class="rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>
+			{/if}
+			<button type="submit" disabled={busy}
+				class="rounded bg-accent-600 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50">
+				{busy ? 'Signing in…' : 'Sign in'}
+			</button>
+		</form>
+	</div>
+</div>
