@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import DataService from '$lib/DataService';
 	import { NAV_OBJECTS, objectLabel } from '$lib/display';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 
@@ -181,11 +182,11 @@
 	}
 </script>
 <svelte:head>
-	<title>Settings · CRMTHREE</title>
+	<title>{t('settings.title', 'Settings')} · CRMTHREE</title>
 </svelte:head>
 
 
-<h1 class="text-xl font-semibold tracking-tight">Settings</h1>
+<h1 class="text-xl font-semibold tracking-tight">{t('settings.title', 'Settings')}</h1>
 
 {#if !data.isAdmin}
 	<p class="mt-4 rounded bg-rule/30 p-4 text-sm text-steel">Administrator settings are not available for your role.</p>
@@ -213,7 +214,7 @@
 						<select bind:value={invite.roleName} class="rounded border border-steel/40 px-2 py-1.5">
 							{#each data.roles as role (role.id)}<option value={role.name}>{role.name}</option>{/each}
 						</select>
-						<button type="submit" class="rounded bg-accent-600 py-1.5 font-medium text-white hover:bg-accent-500">Create</button>
+						<button type="submit" class="rounded bg-accent-600 py-1.5 font-medium text-white hover:bg-accent-500">{t('ui.create', 'Create')}</button>
 					</form>
 				{/if}
 				<table class="w-full text-sm">
@@ -240,7 +241,7 @@
 								<td class="py-2 text-right text-xs">
 									<button onclick={() => setActive(user, !user.active)} class="text-steel hover:text-ink">
 										{user.active ? 'Deactivate' : 'Reactivate'}</button>
-									<button onclick={() => removeUser(user)} class="ml-2 text-steel hover:text-error">Delete</button>
+									<button onclick={() => removeUser(user)} class="ml-2 text-steel hover:text-error">{t('ui.delete', 'Delete')}</button>
 								</td>
 							</tr>
 						{/each}
@@ -269,7 +270,7 @@
 						<div class="mt-3 overflow-x-auto">
 							<table class="w-full text-xs">
 								<thead><tr class="text-left uppercase tracking-wider text-steel/80">
-									<th class="py-1 pr-3 font-medium">Object</th>
+									<th class="py-1 pr-3 font-medium">{t('settings.list_sort.object', 'Object')}</th>
 									{#each ACTIONS as action}<th class="px-2 py-1 text-center font-medium">{action}</th>{/each}
 								</tr></thead>
 								<tbody>
@@ -289,7 +290,7 @@
 							</table>
 						</div>
 						<div class="mt-3 flex justify-end gap-2">
-							<button onclick={() => (editingRole = null)} class="rounded border border-rule px-3 py-1.5 text-xs hover:bg-paper">Cancel</button>
+							<button onclick={() => (editingRole = null)} class="rounded border border-rule px-3 py-1.5 text-xs hover:bg-paper">{t('ui.cancel', 'Cancel')}</button>
 							<button onclick={saveRole} class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">Save Role</button>
 						</div>
 					</div>
@@ -318,7 +319,7 @@
 	<!-- Ticket statuses -->
 	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'statuses' ? null : 'statuses')}>
-			<span class="text-sm font-semibold">Ticket Statuses <span class="ml-1 font-normal text-steel">{data.statuses.length}</span></span>
+			<span class="text-sm font-semibold">{t('settings.ticket.title', 'Ticket Statuses')} <span class="ml-1 font-normal text-steel">{data.statuses.length}</span></span>
 			<span class="text-steel">{open === 'statuses' ? '−' : '+'}</span>
 		</button>
 		{#if open === 'statuses'}
@@ -339,11 +340,11 @@
 					</tbody>
 				</table>
 				<form onsubmit={addStatus} class="mt-3 flex items-center gap-2 text-sm">
-					<input required placeholder="New status name" bind:value={newStatus.name}
+					<input required placeholder={t('settings.ticket.name_placeholder', 'Status name')} bind:value={newStatus.name}
 						class="flex-1 rounded border border-steel/40 px-2 py-1.5" />
-					<label class="flex items-center gap-1 text-xs"><input type="checkbox" bind:checked={newStatus.is_resolved} class="accent-accent-600" /> resolves</label>
-					<label class="flex items-center gap-1 text-xs"><input type="checkbox" bind:checked={newStatus.is_closed} class="accent-accent-600" /> closes</label>
-					<button type="submit" class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">Add</button>
+					<label class="flex items-center gap-1 text-xs"><input type="checkbox" bind:checked={newStatus.is_resolved} class="accent-accent-600" /> {t('settings.ticket.resolved', 'Resolved').toLowerCase()}</label>
+					<label class="flex items-center gap-1 text-xs"><input type="checkbox" bind:checked={newStatus.is_closed} class="accent-accent-600" /> {t('settings.ticket.closed', 'Closed').toLowerCase()}</label>
+					<button type="submit" class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">{t('ui.add', 'Add')}</button>
 				</form>
 			</div>
 		{/if}
@@ -352,7 +353,7 @@
 	<!-- Email whitelist -->
 	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'whitelist' ? null : 'whitelist')}>
-			<span class="text-sm font-semibold">Access Whitelist <span class="ml-1 font-normal text-steel">{data.whitelist.length}</span></span>
+			<span class="text-sm font-semibold">{t('settings.access.title', 'Access Control')} <span class="ml-1 font-normal text-steel">{data.whitelist.length}</span></span>
 			<span class="text-steel">{open === 'whitelist' ? '−' : '+'}</span>
 		</button>
 		{#if open === 'whitelist'}
@@ -364,18 +365,18 @@
 							<tr class="border-t border-rule/40 first:border-0">
 								<td class="py-2 pr-4"><span class="rounded bg-rule/40 px-1.5 py-0.5 text-xs">{entry.kind}</span></td>
 								<td class="py-2 pr-4 font-medium">{entry.value}</td>
-								<td class="py-2 text-right"><button onclick={() => removeEntry(entry.id)} class="text-xs text-steel hover:text-error">Remove</button></td>
+								<td class="py-2 text-right"><button onclick={() => removeEntry(entry.id)} class="text-xs text-steel hover:text-error">{t('ui.remove', 'Remove')}</button></td>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 				<form onsubmit={addEntry} class="mt-3 flex items-center gap-2 text-sm">
 					<select bind:value={newEntry.kind} class="rounded border border-steel/40 px-2 py-1.5">
-						<option value="domain">Domain</option><option value="email">Email</option>
+						<option value="domain">{t('settings.access.domain', 'Domain')}</option><option value="email">{t('settings.access.email', 'Email')}</option>
 					</select>
-					<input required placeholder={newEntry.kind === 'domain' ? 'example.com' : 'person@example.com'}
+					<input required placeholder={newEntry.kind === 'domain' ? t('settings.access.domain_placeholder', 'example.com') : t('settings.access.email_placeholder', 'john@example.com')}
 						bind:value={newEntry.value} class="flex-1 rounded border border-steel/40 px-2 py-1.5" />
-					<button type="submit" class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">Add</button>
+					<button type="submit" class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">{t('ui.add', 'Add')}</button>
 				</form>
 			</div>
 		{/if}
@@ -384,7 +385,7 @@
 	<!-- AI provider -->
 	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'ai' ? null : 'ai')}>
-			<span class="text-sm font-semibold">AI Provider <span class="ml-1 font-normal text-steel">{data.aiConfigs.filter((c) => c.is_active).length ? 'active' : 'not configured'}</span></span>
+			<span class="text-sm font-semibold">{t('settings.ai.title', 'AI Provider')} <span class="ml-1 font-normal text-steel">{data.aiConfigs.filter((c) => c.is_active).length ? 'active' : 'not configured'}</span></span>
 			<span class="text-steel">{open === 'ai' ? '−' : '+'}</span>
 		</button>
 		{#if open === 'ai'}
@@ -398,7 +399,7 @@
 									<td class="py-2 pr-4">{config.model}</td>
 									<td class="py-2 pr-4 text-xs text-steel">{config.has_key ? 'key stored (write-only)' : 'no key'}</td>
 									<td class="py-2 text-right">
-										{#if config.is_active}<span class="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">Active</span>{/if}
+										{#if config.is_active}<span class="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">{t('ui.active', 'Active')}</span>{/if}
 									</td>
 								</tr>
 							{/each}
@@ -411,7 +412,7 @@
 					</select>
 					<input required placeholder="Model (e.g. claude-sonnet-5)" bind:value={ai.model} class="rounded border border-steel/40 px-2 py-1.5" />
 					<input type="password" placeholder="API key (encrypted at rest, never shown again)" bind:value={ai.api_key} class="rounded border border-steel/40 px-2 py-1.5" />
-					<input placeholder="Endpoint URL (optional)" bind:value={ai.endpoint_url} class="rounded border border-steel/40 px-2 py-1.5" />
+					<input placeholder={t('settings.ai.endpoint', 'Endpoint URL (optional)')} bind:value={ai.endpoint_url} class="rounded border border-steel/40 px-2 py-1.5" />
 					<button type="submit" class="col-span-2 rounded bg-accent-600 py-1.5 font-medium text-white hover:bg-accent-500">Save & Activate</button>
 				</form>
 			</div>
@@ -451,7 +452,7 @@
 	<!-- Languages -->
 	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'languages' ? null : 'languages')}>
-			<span class="text-sm font-semibold">Languages <span class="ml-1 font-normal text-steel">{data.languages.length + 1}</span></span>
+			<span class="text-sm font-semibold">{t('settings.language.title', 'Language Management')} <span class="ml-1 font-normal text-steel">{data.languages.length + 1}</span></span>
 			<span class="text-steel">{open === 'languages' ? '−' : '+'}</span>
 		</button>
 		{#if open === 'languages'}
@@ -463,7 +464,7 @@
 							<tr class="border-t border-rule/40">
 								<td class="py-2 pr-4 font-medium">{language.language_name}</td>
 								<td class="py-2 pr-4 text-xs text-steel">{language.code}</td>
-								<td class="py-2 text-right"><button onclick={() => removeLanguage(language.code)} class="text-xs text-steel hover:text-error">Remove</button></td>
+								<td class="py-2 text-right"><button onclick={() => removeLanguage(language.code)} class="text-xs text-steel hover:text-error">{t('ui.remove', 'Remove')}</button></td>
 							</tr>
 						{/each}
 					</tbody>
@@ -473,7 +474,7 @@
 					<input required placeholder="Language name (Deutsch)" bind:value={newLang.language_name} class="flex-1 rounded border border-steel/40 px-2 py-1.5" />
 					<button type="submit" disabled={translating}
 						class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500 disabled:opacity-50">
-						{translating ? 'Translating…' : 'Add & AI-translate'}</button>
+						{translating ? t('settings.language.translating', 'Translating...') : 'Add & AI-translate'}</button>
 				</form>
 				<p class="mt-2 text-xs text-steel">Translation runs the full label catalog through the configured AI provider in batches; users pick their language on the profile page.</p>
 			</div>
@@ -483,7 +484,7 @@
 	<!-- Data sources -->
 	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'sources' ? null : 'sources')}>
-			<span class="text-sm font-semibold">Data Sources <span class="ml-1 font-normal text-steel">{data.sources.filter((s) => s.active).length} active</span></span>
+			<span class="text-sm font-semibold">{t('settings.datasource.title', 'Data Sources')} <span class="ml-1 font-normal text-steel">{data.sources.filter((s) => s.active).length} active</span></span>
 			<span class="text-steel">{open === 'sources' ? '−' : '+'}</span>
 		</button>
 		{#if open === 'sources'}
@@ -510,7 +511,7 @@
 	<!-- Replication -->
 	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'replication' ? null : 'replication')}>
-			<span class="text-sm font-semibold">Replication <span class="ml-1 font-normal text-steel">{data.replications.length}</span></span>
+			<span class="text-sm font-semibold">{t('settings.replication.title', 'Data Replication')} <span class="ml-1 font-normal text-steel">{data.replications.length}</span></span>
 			<span class="text-steel">{open === 'replication' ? '−' : '+'}</span>
 		</button>
 		{#if open === 'replication'}
@@ -523,11 +524,11 @@
 								<td class="py-2 pr-4 font-medium">{replication.name}</td>
 								<td class="py-2 pr-4 text-xs text-steel">{replication.object_type} · key {replication.key_field}</td>
 								<td class="py-2 pr-4 text-xs text-steel">
-									{replication.last_run_at ? `${new Date(replication.last_run_at).toLocaleString()}: ${replication.last_result}` : 'never run'}</td>
+									{replication.last_run_at ? `${new Date(replication.last_run_at).toLocaleString()}: ${replication.last_result}` : t('ui.never', 'Never')}</td>
 								<td class="py-2 text-right whitespace-nowrap">
 									<button onclick={() => runReplication(replication.id)}
 										class="rounded bg-accent-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-accent-500">Run now</button>
-									<button onclick={() => removeReplication(replication.id)} class="ml-2 text-xs text-steel hover:text-error">Remove</button>
+									<button onclick={() => removeReplication(replication.id)} class="ml-2 text-xs text-steel hover:text-error">{t('ui.remove', 'Remove')}</button>
 								</td>
 							</tr>
 						{:else}

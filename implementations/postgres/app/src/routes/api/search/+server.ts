@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import ModelRegistry from '$lib/model/ModelRegistry';
 import { tableName } from '$lib/server/PostgresMapper';
 import { withUser } from '$lib/server/db';
-import { displayName, NAV_OBJECTS, NAV_VIRTUAL, objectLabel } from '$lib/display';
+import { displayName, NAV_OBJECTS, NAV_VIRTUAL } from '$lib/display';
 
 /**
  * Global search (story 16). One ILIKE query per navigable object type over its name-like,
@@ -41,7 +41,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			if (rows.length === 0) return null;
 			return {
 				objectType,
-				label: objectLabel(objectType, true),
 				matches: rows.map((row: Record<string, unknown>) => ({
 					id: row.id,
 					display: displayName(row),

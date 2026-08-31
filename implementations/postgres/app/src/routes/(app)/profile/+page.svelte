@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import DataService from '$lib/DataService';
-	import { fieldLabel } from '$lib/display';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 
@@ -43,12 +43,12 @@
 	}
 </script>
 <svelte:head>
-	<title>Profile · CRMTHREE</title>
+	<title>{t('profile.title', 'Profile')} · CRMTHREE</title>
 </svelte:head>
 
 
 <div class="mx-auto max-w-2xl">
-	<h1 class="text-xl font-semibold tracking-tight">Profile</h1>
+	<h1 class="text-xl font-semibold tracking-tight">{t('profile.title', 'Profile')}</h1>
 
 	<section class="mt-5 rounded-lg border border-rule bg-surface p-6">
 		<div class="flex items-center gap-4">
@@ -74,16 +74,16 @@
 	</section>
 
 	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
-		<h2 class="text-sm font-semibold">Appearance & Language</h2>
+		<h2 class="text-sm font-semibold">{t('settings.appearance', 'Appearance')} & {t('profile.language', 'Language')}</h2>
 		<div class="mt-3 grid grid-cols-2 gap-4 text-sm">
 			<label class="flex flex-col gap-1">
-				<span class="font-medium text-ink/80">Theme</span>
+				<span class="font-medium text-ink/80">{t('settings.theme', 'Theme')}</span>
 				<select bind:value={theme} class="rounded border border-steel/40 px-2 py-1.5">
-					<option>Light</option><option>Dark</option><option>System</option>
+					<option value="Light">{t('settings.light', 'Light')}</option><option value="Dark">{t('settings.dark', 'Dark')}</option><option value="System">{t('settings.system', 'System')}</option>
 				</select>
 			</label>
 			<label class="flex flex-col gap-1">
-				<span class="font-medium text-ink/80">Language</span>
+				<span class="font-medium text-ink/80">{t('profile.language', 'Language')}</span>
 				<select bind:value={language} class="rounded border border-steel/40 px-2 py-1.5">
 					<option value="en">English</option>
 					{#each data.languages as lang (lang.code)}
@@ -95,21 +95,21 @@
 	</section>
 
 	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
-		<h2 class="text-sm font-semibold">Notifications</h2>
+		<h2 class="text-sm font-semibold">{t('settings.notifications.title', 'Notification Preferences')}</h2>
 		<p class="mt-1 text-xs text-steel">Applies at the source: a disabled type is never created for you, whoever the writer is.</p>
 		<div class="mt-3 grid grid-cols-2 gap-2">
 			{#each data.notificationTypes as type (type)}
 				<label class="flex items-center gap-2 text-sm">
 					<input type="checkbox" class="h-4 w-4 accent-accent-600"
 						checked={prefs[type] !== false} onchange={() => toggle(type)} />
-					{fieldLabel(type)}
+					{t(`settings.notifications.${type}`, type.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '))}
 				</label>
 			{/each}
 		</div>
 	</section>
 
 	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
-		<h2 class="text-sm font-semibold">Badges</h2>
+		<h2 class="text-sm font-semibold">{t('menu.badges', 'Badges & Achievements')}</h2>
 		{#if data.badges.length === 0}
 			<p class="mt-2 text-sm text-steel/70">No badges earned yet.</p>
 		{:else}
@@ -146,7 +146,7 @@
 
 	<div class="mt-4 flex items-center gap-3">
 		<button onclick={save}
-			class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500">Save</button>
+			class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500">{t('ui.save', 'Save')}</button>
 		{#if saved}<span class="text-sm text-success">Saved</span>{/if}
 	</div>
 </div>

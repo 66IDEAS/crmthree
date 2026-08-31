@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import DataService from '$lib/DataService';
 	import { onChange } from '$lib/realtime-client';
+	import { t } from '$lib/i18n';
 
 	/**
 	 * Team discussion on a record (stories 33/34). Live: the comment trigger publishes ids
@@ -65,7 +66,7 @@
 
 <section class="rounded-lg border border-rule bg-surface">
 	<h2 class="border-b border-rule/50 px-4 py-2.5 text-sm font-semibold">
-		Comments <span class="ml-1 font-normal text-steel">{comments.length}</span>
+		{t('ui.comments', 'Comments')} <span class="ml-1 font-normal text-steel">{comments.length}</span>
 	</h2>
 	<div class="flex max-h-80 flex-col gap-3 overflow-y-auto px-4 py-3">
 		{#each comments as comment (comment.id)}

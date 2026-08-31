@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import ModelRegistry from '$lib/model/ModelRegistry';
 import PostgresMapper from '$lib/server/PostgresMapper';
-import { fieldLabel } from '$lib/display';
+import { fieldEnglish } from '$lib/display';
 import { validateObject } from '$lib/model/validators';
 
 /**
@@ -31,7 +31,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	if (!ModelRegistry.hasObject(objectType)) throw error(404, 'Unknown object type');
 
 	const fields = ModelRegistry.getObjectSchema(objectType).fields;
-	const header = fields.map((f) => csvEscape(fieldLabel(f.name))).join(',');
+	const header = fields.map((f) => csvEscape(fieldEnglish(f))).join(',');
 
 	const lines: string[] = [header];
 	let cursor: { sort: unknown; id: string } | null = null;
@@ -98,7 +98,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const byKey = new Map<string, string>();
 	for (const field of fields) {
 		byKey.set(field.name.toLowerCase(), field.name);
-		byKey.set(fieldLabel(field.name).toLowerCase(), field.name);
+		byKey.set(fieldEnglish(field).toLowerCase(), field.name);
 	}
 	const skip = new Set(['id', 'created_at', 'updated_at', 'created_by', 'updated_by']);
 	const mapping = rows[0].map((cell) => {

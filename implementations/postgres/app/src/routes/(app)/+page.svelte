@@ -1,15 +1,18 @@
 <script lang="ts">
+	import { t } from '$lib/i18n';
+	import { enumLabel } from '$lib/display';
+
 	let { data } = $props();
 
 	const money = (value: unknown) =>
 		new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Number(value ?? 0));
 
 	const tiles = $derived([
-		{ label: 'Pipeline value', value: money(data.kpis.pipeline_value), unit: '€' },
-		{ label: 'Open opportunities', value: String(data.kpis.open_opportunities) },
-		{ label: 'Open tickets', value: String(data.kpis.open_tickets) },
-		{ label: 'Open leads', value: String(data.kpis.open_leads) },
-		{ label: 'Activities this week', value: String(data.kpis.activities_this_week) }
+		{ label: t('dashboard.pipeline_value', 'Pipeline Value'), value: money(data.kpis.pipeline_value), unit: '€' },
+		{ label: t('dashboard.open_opportunities', 'Open Opportunities'), value: String(data.kpis.open_opportunities) },
+		{ label: t('dashboard.open_tickets', 'Open Tickets'), value: String(data.kpis.open_tickets) },
+		{ label: t('dashboard.open_leads', 'Open Leads'), value: String(data.kpis.open_leads) },
+		{ label: t('dashboard.activities_this_week', 'Activities This Week'), value: String(data.kpis.activities_this_week) }
 	]);
 
 	const maxStage = $derived(Math.max(1, ...data.pipeline.map((s) => Number(s.value))));
@@ -28,7 +31,7 @@
 </svelte:head>
 
 
-<h1 class="text-xl font-semibold tracking-tight">Welcome back</h1>
+<h1 class="text-xl font-semibold tracking-tight">{t('dashboard.welcome_back', 'Welcome back')}</h1>
 <p class="mt-1 text-sm text-steel">Everything below is aggregated in Postgres under your permissions.</p>
 
 <!-- Stat tiles: headline numbers are not charts. Colour lives on the numbers. -->
@@ -46,11 +49,11 @@
 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
 	<!-- Pipeline by stage: single-series magnitude comparison, one hue, one axis. -->
 	<section class="rounded-lg border border-rule bg-surface p-5">
-		<h2 class="text-sm font-semibold">Open pipeline by stage</h2>
+		<h2 class="text-sm font-semibold">{t('dashboard.opp_by_stage', 'Opportunities by Stage')}</h2>
 		<div class="mt-4 flex flex-col gap-2">
 			{#each data.pipeline as stage (stage.name)}
 				<div class="group relative flex items-center gap-3">
-					<span class="w-36 shrink-0 truncate text-right text-xs text-steel">{stage.name}</span>
+					<span class="w-36 shrink-0 truncate text-right text-xs text-steel">{enumLabel(stage.name)}</span>
 					<div class="relative h-6 flex-1">
 						<div class="absolute inset-y-0 left-0 rounded-r bg-accent-600 transition-opacity group-hover:opacity-80"
 							style="width: {Math.max(Number(stage.value) / maxStage * 100, stage.deals ? 1.5 : 0)}%"></div>
@@ -60,7 +63,7 @@
 						</span>
 					</div>
 					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
-						{stage.name}: €{money(stage.value)} across {stage.deals} deal{stage.deals === 1 ? '' : 's'}
+						{enumLabel(stage.name)}: €{money(stage.value)} across {stage.deals} deal{stage.deals === 1 ? '' : 's'}
 					</div>
 				</div>
 			{/each}
@@ -69,11 +72,11 @@
 
 	<!-- Tickets by priority: ordered severity, sequential ramp light to dark. -->
 	<section class="rounded-lg border border-rule bg-surface p-5">
-		<h2 class="text-sm font-semibold">Tickets by priority</h2>
+		<h2 class="text-sm font-semibold">{t('dashboard.tickets_by_priority', 'Tickets by Priority')}</h2>
 		<div class="mt-4 flex flex-col gap-2">
 			{#each data.priorities as row (row.priority)}
 				<div class="group relative flex items-center gap-3">
-					<span class="w-36 shrink-0 truncate text-right text-xs text-steel">{row.priority}</span>
+					<span class="w-36 shrink-0 truncate text-right text-xs text-steel">{enumLabel(row.priority)}</span>
 					<div class="relative h-6 flex-1">
 						<div class="absolute inset-y-0 left-0 rounded-r transition-opacity group-hover:opacity-80"
 							style="width: {Math.max(row.tickets / maxPriority * 100, 1.5)}%; background: {PRIORITY_RAMP[row.priority] ?? '#2E62E8'}"></div>
@@ -81,7 +84,7 @@
 							style="left: {Math.max(row.tickets / maxPriority * 100, 1.5)}%">{row.tickets}</span>
 					</div>
 					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
-						{row.priority}: {row.tickets} ticket{row.tickets === 1 ? '' : 's'}
+						{enumLabel(row.priority)}: {row.tickets} ticket{row.tickets === 1 ? '' : 's'}
 					</div>
 				</div>
 			{/each}

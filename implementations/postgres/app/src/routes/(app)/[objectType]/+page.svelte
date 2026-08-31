@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
-	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel, isoDate } from '$lib/display';
+	import { displayName, fieldLabel, formatValue, enumChipClass, enumLabel, objectLabel, isoDate } from '$lib/display';
 
 	import DataService from '$lib/DataService';
 	import { invalidateAll } from '$app/navigation';
@@ -172,7 +172,7 @@
 							<input type="checkbox" class="h-3.5 w-3.5 accent-accent-600"
 								checked={data.columns.some((c) => c.name === field.name)}
 								onchange={() => toggleColumn(field.name)} />
-							{fieldLabel(field.name)}
+							{fieldLabel(field, data.objectType)}
 						</label>
 					{/each}
 				</div>
@@ -185,7 +185,7 @@
 		<a href={`/api/csv/${data.objectType}`} download
 			class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">{t('ui.export_csv', 'Export CSV')}</a>
 		<label class="cursor-pointer rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">
-			{importing ? 'Importing…' : t('ui.import_csv', 'Import CSV')}
+			{importing ? t('dialog.importing', 'Importing records...') : t('ui.import_csv', 'Import CSV')}
 			<input type="file" accept=".csv,text/csv" class="hidden" onchange={importCsv} disabled={importing} />
 		</label>
 		{#if data.objectType === 'Lead'}
@@ -209,7 +209,7 @@
 				{#each data.columns as column (column.name)}
 					<th class="px-4 pt-2.5 pb-1 font-medium">
 						<a href={sortHref(column.name)} class="hover:text-ink">
-							{fieldLabel(column.name)}
+							{fieldLabel(column, data.objectType)}
 							{#if data.sortField === column.name}
 								<span class="text-accent-600">{data.direction === 'asc' ? '↑' : '↓'}</span>
 							{/if}
@@ -225,14 +225,14 @@
 							<select value={filterValue(column.name)}
 								onchange={(e) => setFilter(column.name, e.currentTarget.value)}
 								class="w-full rounded border border-rule bg-paper px-1.5 py-1 text-xs font-normal normal-case tracking-normal">
-								<option value="">All</option>
-								{#each column.values ?? [] as option}<option value={option}>{option}</option>{/each}
+								<option value="">{t('settings.language.all', 'All')}</option>
+								{#each column.values ?? [] as option}<option value={option}>{enumLabel(option)}</option>{/each}
 							</select>
 						{:else if column.type === 'boolean'}
 							<select value={filterValue(column.name)}
 								onchange={(e) => setFilter(column.name, e.currentTarget.value)}
 								class="w-full rounded border border-rule bg-paper px-1.5 py-1 text-xs font-normal normal-case tracking-normal">
-								<option value="">All</option><option value="true">Yes</option><option value="false">No</option>
+								<option value="">{t('settings.language.all', 'All')}</option><option value="true">{t('ui.yes', 'Yes')}</option><option value="false">{t('ui.no', 'No')}</option>
 							</select>
 						{:else if column.type === 'string'}
 							<input value={filterValue(column.name)}
@@ -261,12 +261,12 @@
 										<!-- svelte-ignore a11y_autofocus -->
 										<select bind:value={editValue} onchange={commitEdit} autofocus
 											class="rounded border border-accent-600 bg-surface px-1.5 py-1 text-xs">
-											{#each column.values ?? [] as option}<option value={option}>{option}</option>{/each}
+											{#each column.values ?? [] as option}<option value={option}>{enumLabel(option)}</option>{/each}
 										</select>
 									{:else if column.type === 'boolean'}
 										<select bind:value={editValue} onchange={commitEdit} autofocus
 											class="rounded border border-accent-600 bg-surface px-1.5 py-1 text-xs">
-											<option value={true}>Yes</option><option value={false}>No</option>
+											<option value={true}>{t('ui.yes', 'Yes')}</option><option value={false}>{t('ui.no', 'No')}</option>
 										</select>
 									{:else}
 										<!-- svelte-ignore a11y_autofocus -->
@@ -278,7 +278,7 @@
 								</span>
 							{:else if column.type === 'enum' && row[column.name]}
 								<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(row[column.name]))}">
-									{row[column.name]}
+									{enumLabel(String(row[column.name]))}
 								</span>
 							{:else if column.type === 'currency'}
 								<span class="tabular-nums">{formatValue(column, row[column.name])}</span>

@@ -2,7 +2,8 @@
 	import { invalidateAll } from '$app/navigation';
 	import CommentThread from '$lib/components/CommentThread.svelte';
 	import DataService from '$lib/DataService';
-	import { enumChipClass, formatValue } from '$lib/display';
+	import { t } from '$lib/i18n';
+	import { enumChipClass, enumLabel, fieldLabel, objectLabel, formatValue } from '$lib/display';
 	import AiBriefing from '$lib/components/AiBriefing.svelte';
 
 	let { data } = $props();
@@ -31,10 +32,10 @@
 <div class="mx-auto max-w-5xl">
 	<div class="flex items-center justify-between">
 		<div>
-			<a href="/DealRoom" class="text-sm text-steel hover:text-ink">← Deal Rooms</a>
+			<a href="/DealRoom" class="text-sm text-steel hover:text-ink">← {objectLabel('DealRoom', true)}</a>
 			<h1 class="mt-1 flex items-center gap-2 text-xl font-semibold tracking-tight">
 				{data.room.name}
-				<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(data.room.status))}">{data.room.status}</span>
+				<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(data.room.status))}">{enumLabel(String(data.room.status))}</span>
 			</h1>
 		</div>
 		<div class="flex gap-2">
@@ -82,7 +83,7 @@
 				<div class="flex flex-col">
 					{#each data.activities as activity (activity.id)}
 						<a href={`/Activity/${activity.id}`} class="flex items-center gap-3 border-b border-rule/40 px-4 py-2.5 last:border-0 hover:bg-paper">
-							<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(activity.status))}">{activity.type}</span>
+							<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(activity.status))}">{enumLabel(String(activity.type))}</span>
 							<span class="min-w-0 flex-1 truncate text-sm">{activity.subject}</span>
 							<span class="text-xs text-steel">{formatValue({ type: 'date' }, activity.due_date ?? activity.start_date)}</span>
 						</a>
@@ -99,16 +100,16 @@
 				<section class="rounded-lg border border-rule bg-surface p-4">
 					<h2 class="text-sm font-semibold">Deal Info</h2>
 					<dl class="mt-3 flex flex-col gap-2 text-sm">
-						<div class="flex justify-between"><dt class="text-steel">Amount</dt>
+						<div class="flex justify-between"><dt class="text-steel">{fieldLabel('amount', 'Opportunity')}</dt>
 							<dd class="tabular-nums font-medium">{formatValue({ type: 'currency' }, data.opportunity.amount)}</dd></div>
-						<div class="flex justify-between"><dt class="text-steel">Probability</dt>
+						<div class="flex justify-between"><dt class="text-steel">{fieldLabel('probability', 'Opportunity')}</dt>
 							<dd>{data.opportunity.probability ?? '—'}%</dd></div>
-						<div class="flex justify-between"><dt class="text-steel">Expected close</dt>
+						<div class="flex justify-between"><dt class="text-steel">{fieldLabel('expected_close_date', 'Opportunity')}</dt>
 							<dd>{formatValue({ type: 'date' }, data.opportunity.expected_close_date)}</dd></div>
-						<div class="flex justify-between"><dt class="text-steel">Result</dt>
-							<dd><span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(data.opportunity.result))}">{data.opportunity.result}</span></dd></div>
+						<div class="flex justify-between"><dt class="text-steel">{fieldLabel('result', 'Opportunity')}</dt>
+							<dd><span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(data.opportunity.result))}">{enumLabel(String(data.opportunity.result))}</span></dd></div>
 						{#if data.account}
-							<div class="flex justify-between"><dt class="text-steel">Account</dt>
+							<div class="flex justify-between"><dt class="text-steel">{t('dialog.account', 'Account')}</dt>
 								<dd><a class="text-accent-600 hover:underline" href={`/Account/${data.account.id}`}>{data.account.name1}</a></dd></div>
 						{/if}
 						{#if data.owner}
@@ -119,7 +120,7 @@
 				</section>
 			{/if}
 			<section class="rounded-lg border border-rule bg-surface p-4">
-				<h2 class="text-sm font-semibold">Contacts</h2>
+				<h2 class="text-sm font-semibold">{objectLabel('Contact', true)}</h2>
 				<div class="mt-2 flex flex-col gap-2">
 					{#each data.contacts as contact (contact.id)}
 						<a href={`/Contact/${contact.id}`} class="flex items-baseline justify-between text-sm hover:text-accent-600">
@@ -127,7 +128,7 @@
 							<span class="text-xs text-steel">{contact.role ?? ''}</span>
 						</a>
 					{:else}
-						<p class="text-sm text-steel/70">No contacts linked</p>
+						<p class="text-sm text-steel/70">{t('misc.no_linked_records', 'No linked records.')}</p>
 					{/each}
 				</div>
 			</section>

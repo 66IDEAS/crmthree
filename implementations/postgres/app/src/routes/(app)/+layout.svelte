@@ -134,7 +134,7 @@
 				<span class="font-medium">{data.profile.first_name} {data.profile.last_name}</span>
 				<span class="ml-1.5 rounded bg-rule/40 px-1.5 py-0.5 text-xs text-steel">{data.profile.role_name}</span>
 			</a>
-			<button onclick={signOut} class="text-sm text-steel hover:text-ink">{t('ui.sign_out', 'Sign out')}</button>
+			<button onclick={signOut} class="text-sm text-steel hover:text-ink">{t('ui.sign_out', 'Sign Out')}</button>
 			</div>
 		</header>
 		{#if mobileOpen}

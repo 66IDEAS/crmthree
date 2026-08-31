@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import DataService from '$lib/DataService';
 	import { onChange } from '$lib/realtime-client';
+	import { t } from '$lib/i18n';
 
 	type Notification = {
 		id: string; type: string; title: string; message: string | null;
@@ -36,7 +37,7 @@
 </script>
 
 <div class="relative">
-	<button onclick={() => (open = !open)} aria-label="Notifications"
+	<button onclick={() => (open = !open)} aria-label={t('menu.notifications', 'Notifications')}
 		class="relative rounded p-1.5 text-steel hover:bg-rule/30 hover:text-ink">
 		<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
 			<path stroke-linecap="round" stroke-linejoin="round"
@@ -49,9 +50,9 @@
 
 	{#if open}
 		<div class="absolute right-0 z-20 mt-2 w-80 rounded-lg border border-rule bg-surface shadow-lg">
-			<div class="border-b border-rule/50 px-4 py-2 text-sm font-semibold">Notifications</div>
+			<div class="border-b border-rule/50 px-4 py-2 text-sm font-semibold">{t('menu.notifications', 'Notifications')}</div>
 			{#if items.length === 0}
-				<p class="px-4 py-6 text-center text-sm text-steel/70">No notifications</p>
+				<p class="px-4 py-6 text-center text-sm text-steel/70">{t('menu.no_notifications', 'No notifications')}</p>
 			{:else}
 				<ul class="max-h-96 overflow-y-auto">
 					{#each items as item (item.id)}

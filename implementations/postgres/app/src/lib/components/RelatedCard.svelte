@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RelatedCard } from '$lib/server/related';
-	import { fieldLabel, formatValue, enumChipClass, objectLabel, monogram } from '$lib/display';
+	import { t } from '$lib/i18n';
+	import { fieldLabel, formatValue, enumChipClass, enumLabel, relLabel, objectLabel, monogram } from '$lib/display';
 	import type { FieldDefinition } from '$model';
 	import DataService from '$lib/DataService';
 	import { invalidateAll } from '$app/navigation';
@@ -60,7 +61,7 @@
 			window.location.href = `/${card.target}/${row.id}`;
 		}
 	}
-	const title = $derived(fieldLabel(card.name));
+	const title = $derived(relLabel(card.name));
 	const alreadyLinked = $derived(new Set(card.rows.map((r) => String(r.id))));
 
 	function newHref(): string {
@@ -105,15 +106,15 @@
 		</h2>
 		{#if isDocuments}
 			<label class="cursor-pointer rounded border border-rule px-2.5 py-1 text-xs font-medium hover:bg-paper">
-				{uploading ? 'Uploading…' : 'Upload'}
+				{uploading ? t('ui.saving', 'Saving...') : t('ui.choose_file', 'Choose File')}
 				<input type="file" class="hidden" onchange={uploadDocument} disabled={uploading} />
 			</label>
 		{:else if card.kind === 'many-to-many'}
 			<button onclick={() => (linking = !linking)}
-				class="rounded border border-rule px-2.5 py-1 text-xs font-medium hover:bg-paper">Link</button>
+				class="rounded border border-rule px-2.5 py-1 text-xs font-medium hover:bg-paper">{t('ui.link', 'Link')}</button>
 		{:else if card.prefill}
 			<a href={newHref()} class="rounded border border-rule px-2.5 py-1 text-xs font-medium hover:bg-paper">
-				New {objectLabel(card.target)}
+				{t('ui.new', 'New')} {objectLabel(card.target)}
 			</a>
 		{/if}
 	</header>
@@ -131,19 +132,19 @@
 				{/each}
 			</select>
 			<button onclick={link} disabled={!selected}
-				class="rounded bg-accent-600 px-3 py-1 text-xs font-medium text-white hover:bg-accent-500 disabled:opacity-50">Add</button>
+				class="rounded bg-accent-600 px-3 py-1 text-xs font-medium text-white hover:bg-accent-500 disabled:opacity-50">{t('ui.add', 'Add')}</button>
 			{#if problem}<span class="text-xs text-error">{problem}</span>{/if}
 		</div>
 	{/if}
 
 	{#if card.rows.length === 0}
-		<p class="px-4 py-5 text-center text-sm text-steel/70">No {objectLabel(card.target, true).toLowerCase()} yet</p>
+		<p class="px-4 py-5 text-center text-sm text-steel/70">{t('misc.no_linked_records', 'No linked records.')}</p>
 	{:else}
 		<table class="w-full text-sm">
 			<thead>
 				<tr class="text-left text-[11px] uppercase tracking-wider text-steel/80">
 					<th class="px-4 py-1.5 font-medium">Name</th>
-					{#each columns as column}<th class="px-4 py-1.5 font-medium">{fieldLabel(column.name)}</th>{/each}
+					{#each columns as column}<th class="px-4 py-1.5 font-medium">{fieldLabel(column, card.target)}</th>{/each}
 					{#if card.kind === 'many-to-many'}<th></th>{/if}
 				</tr>
 			</thead>
@@ -158,7 +159,7 @@
 						{#each columns as column}
 							<td class="px-4 py-2">
 								{#if column.type === 'enum' && row[column.name]}
-									<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(row[column.name]))}">{row[column.name]}</span>
+									<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(row[column.name]))}">{enumLabel(String(row[column.name]))}</span>
 								{:else}
 									{formatValue(column, row[column.name])}
 								{/if}
@@ -167,7 +168,7 @@
 						{#if card.kind === 'many-to-many'}
 							<td class="px-4 py-2 text-right">
 								<button onclick={(e) => { e.stopPropagation(); unlink(row); }}
-									class="text-xs text-steel hover:text-error" title="Unlink">✕</button>
+									class="text-xs text-steel hover:text-error" title={t('ui.unlink', 'Unlink')}>✕</button>
 							</td>
 						{/if}
 					</tr>

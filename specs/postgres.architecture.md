@@ -265,6 +265,18 @@ the grid.
 Unchanged in approach: one row per language holding the label map, one read per session,
 preference stored on the user profile.
 
+The catalog is the shared one (shared architecture, section 13). This implementation
+originally keyed its labels its own way - global field keys like `field.first_name`,
+singular plus plural object keys - and was re-keyed to the reference catalog so that one
+set of language packs serves every implementation: per-object field keys
+(`field.Contact.first_name`), enum values (`enum.Open`), relationship names, navigation
+labels and the reference's static UI keys. `label-catalog.ts` generates the identical key
+set from the same rules, and parity with the reference exporter's output is asserted rather
+than assumed. `scripts/import-translations.mjs` upserts the packs from `specs/translations/`
+into the `translation` table over the migration connection, replacing stored label maps
+wholesale. Singular object type names are not in the shared catalog - the reference never
+translates them - so they stay English.
+
 ## User provisioning
 
 Self-service registration is disabled, matching the reference implementation. Accounts are

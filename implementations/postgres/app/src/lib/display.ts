@@ -21,14 +21,52 @@ export function displayName(record: Record<string, unknown> | null | undefined):
 	return String(record.id ?? '');
 }
 
-/** Human label for a field name: account_id -> Account, first_name -> First Name. */
-export function fieldLabel(name: string): string {
-	const fallback = name
-		.replace(/_id$/, '')
-		.split('_')
-		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-		.join(' ');
-	return t(`field.${name}`, fallback);
+/** The reference navigation labels; they define the object.* keys of the shared catalog. */
+export const NAV_LABELS: Record<string, string> = {
+	Account: 'Accounts', Contact: 'Contacts', Lead: 'Leads', Opportunity: 'Opportunities',
+	DealRoom: 'Deal Rooms', Quotation: 'Quotes', SalesOrder: 'Sales Orders', Invoice: 'Invoices',
+	Product: 'Products', Activity: 'Activities', Ticket: 'Tickets', CaseRoom: 'Case Rooms',
+	KnowledgeArticle: 'Knowledge', Asset: 'Assets', SLA: 'SLAs', ServiceContract: 'Contracts'
+};
+
+const capWords = (name: string) =>
+	name.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+/** English default for a field, the reference rule: model description, else the capitalised name. */
+export function fieldEnglish(field: { name: string; description?: string }): string {
+	return field.description || capWords(field.name);
+}
+
+const COMMON_FIELDS = new Set(['id', 'created_at', 'updated_at', 'created_by', 'updated_by']);
+
+/**
+ * Human label for a field, keyed to the shared catalog: `field.<ObjectType>.<name>` for
+ * object fields, `field._common.<name>` for the five common fields. Mirrors the reference
+ * implementation's formatFieldLabel, including its English defaults.
+ */
+export function fieldLabel(
+	field: string | { name: string; description?: string },
+	objectType?: string
+): string {
+	let def = typeof field === 'string' ? undefined : field;
+	const name = typeof field === 'string' ? field : field.name;
+	if (!def && objectType && ModelRegistry.hasObject(objectType)) {
+		def = ModelRegistry.getObjectSchema(objectType).fields.find((f) => f.name === name);
+	}
+	const english = fieldEnglish(def ?? { name });
+	if (COMMON_FIELDS.has(name)) return t(`field._common.${name}`, english);
+	if (objectType) return t(`field.${objectType}.${name}`, english);
+	return t(`field._.${name}`, english);
+}
+
+/** Translated enum value for display; the stored value stays English (story 60). */
+export function enumLabel(value: string): string {
+	return t(`enum.${value}`, value);
+}
+
+/** Translated relationship name: `child_accounts` -> "Child Accounts". */
+export function relLabel(name: string): string {
+	return t(`rel.${name}`, capWords(name));
 }
 
 const GOOD = new Set(['Active', 'Won', 'Paid', 'Completed', 'Published', 'Accepted', 'Confirmed', 'Qualified', 'Converted']);
@@ -76,7 +114,9 @@ export function formatValue(field: { type: string; auto_generated?: boolean }, v
 		case 'datetime':
 			return new Date(String(value)).toLocaleString();
 		case 'boolean':
-			return value ? 'Yes' : 'No';
+			return value ? t('ui.yes', 'Yes') : t('ui.no', 'No');
+		case 'enum':
+			return enumLabel(String(value));
 		default:
 			return String(value);
 	}
@@ -120,14 +160,20 @@ export const NAV_OBJECTS = [
 /** Nav entries that are workspaces over another type rather than model objects. */
 export const NAV_VIRTUAL = new Set(['CaseRoom', 'Timeline']);
 
-/** Object -> human plural for nav and headings, only where naive pluralisation fails. */
+/**
+ * Object type label. Plural uses the shared catalog's `object.<Type>` key, whose values are
+ * the reference navigation labels. The singular form is not in the shared catalog - the
+ * reference never translates it - so it stays English.
+ */
 export function objectLabel(objectType: string, plural = false): string {
 	const spaced = objectType.replace(/([a-z])([A-Z])/g, '$1 $2');
-	if (!plural) return t(`object.${objectType}`, spaced);
-	let fallback;
-	if (objectType === 'SLA') fallback = 'SLAs';
-	else if (objectType === 'Timeline') fallback = 'Team Timeline';
-	else if (spaced.endsWith('y')) fallback = spaced.slice(0, -1) + 'ies';
-	else fallback = spaced + 's';
-	return t(`object.${objectType}.plural`, fallback);
+	if (!plural) return spaced;
+	let fallback = NAV_LABELS[objectType];
+	if (!fallback) {
+		if (objectType === 'Timeline') fallback = 'Team Timeline';
+		else if (spaced.endsWith('y')) fallback = spaced.slice(0, -1) + 'ies';
+		else if (spaced.endsWith('s')) fallback = spaced;
+		else fallback = spaced + 's';
+	}
+	return t(`object.${objectType}`, fallback);
 }

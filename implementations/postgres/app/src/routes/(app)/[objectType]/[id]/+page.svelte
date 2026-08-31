@@ -4,7 +4,7 @@
 	import DataService from '$lib/DataService';
 	import FieldInput from '$lib/components/FieldInput.svelte';
 	import { t } from '$lib/i18n';
-	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel, isoDate, isoDateTime } from '$lib/display';
+	import { displayName, fieldLabel, formatValue, enumChipClass, enumLabel, objectLabel, isoDate, isoDateTime } from '$lib/display';
 	import { onChange } from '$lib/realtime-client';
 	import RelatedCard from '$lib/components/RelatedCard.svelte';
 	import ConvertLeadDialog from '$lib/components/ConvertLeadDialog.svelte';
@@ -98,15 +98,18 @@
 
 	let convertingLead = $state(false);
 
-	async function runConversion(targetType: string, label: string) {
-		if (!confirm(`${label} from this ${objectLabel(data.objectType)}? Line items are copied along.`)) return;
+	async function runConversion(targetType: string) {
+		const message = t('dialog.doc_convert_description', 'This will create a new {target} based on this {source}.')
+			.replace('{target}', objectLabel(targetType))
+			.replace('{source}', objectLabel(data.objectType));
+		if (!confirm(message)) return;
 		const response = await fetch('/api/conversions', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ kind: 'document', sourceType: data.objectType, sourceId: data.record.id, targetType })
 		});
 		if (!response.ok) {
-			problem = (await response.json().catch(() => null))?.message ?? 'Conversion failed';
+			problem = (await response.json().catch(() => null))?.message ?? t('dialog.conversion_failed', 'Conversion failed. Please try again.');
 			return;
 		}
 		const result = await response.json();
@@ -145,11 +148,11 @@
 				{#if data.isLead && data.record.status !== 'Converted'}
 					<button onclick={() => (convertingLead = true)}
 						class="rounded border border-accent-600 px-4 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50">
-						Convert
+						{t('ui.convert', 'Convert')}
 					</button>
 				{/if}
 				{#each data.conversions as conversion (conversion.targetType)}
-					<button onclick={() => runConversion(conversion.targetType, conversion.label)}
+					<button onclick={() => runConversion(conversion.targetType)}
 						class="rounded border border-accent-600 px-4 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50">
 						{conversion.label}
 					</button>
@@ -178,7 +181,7 @@
 				{#each data.fields.filter((f) => !f.auto_generated) as field (field.name)}
 					<label class="flex flex-col gap-1 text-sm {field.type === 'text' ? 'md:col-span-2' : ''}">
 						<span class="font-medium text-ink/80">
-							{fieldLabel(field.name)}{#if field.required}<span class="text-error"> *</span>{/if}
+							{fieldLabel(field, data.objectType)}{#if field.required}<span class="text-error"> *</span>{/if}
 						</span>
 						<FieldInput {field} bind:value={values[field.name]} options={data.options[field.name] ?? []} />
 					</label>
@@ -188,7 +191,7 @@
 			<div class="mt-6 flex gap-2">
 				<button type="submit" disabled={busy}
 					class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500 disabled:opacity-50">
-					{busy ? 'Saving…' : t('ui.save', 'Save')}
+					{busy ? t('ui.saving', 'Saving...') : t('ui.save', 'Save')}
 				</button>
 				<button type="button" onclick={stopEdit} class="rounded border border-steel/40 px-4 py-1.5 text-sm hover:bg-paper">{t('ui.cancel', 'Cancel')}</button>
 			</div>
@@ -197,13 +200,13 @@
 		<dl class="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 rounded-lg border border-rule bg-surface p-6 md:grid-cols-2">
 			{#each data.fields as field (field.name)}
 				<div class="flex flex-col gap-0.5 {field.type === 'text' ? 'md:col-span-2' : ''}">
-					<dt class="text-xs font-medium uppercase tracking-wider text-steel/70">{fieldLabel(field.name)}</dt>
+					<dt class="text-xs font-medium uppercase tracking-wider text-steel/70">{fieldLabel(field, data.objectType)}</dt>
 					<dd class="text-sm">
 						{#if field.type === 'reference' && data.record[field.name]}
 							{data.referenceNames[field.name] ?? data.record[field.name]}
 						{:else if field.type === 'enum' && data.record[field.name]}
 							<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(data.record[field.name]))}">
-								{data.record[field.name]}
+								{enumLabel(String(data.record[field.name]))}
 							</span>
 						{:else}
 							{formatValue(field, data.record[field.name])}

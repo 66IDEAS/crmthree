@@ -2,7 +2,8 @@
 	import { invalidateAll } from '$app/navigation';
 	import CommentThread from '$lib/components/CommentThread.svelte';
 	import DataService from '$lib/DataService';
-	import { enumChipClass, formatValue } from '$lib/display';
+	import { t } from '$lib/i18n';
+	import { enumChipClass, enumLabel, fieldLabel, objectLabel, formatValue } from '$lib/display';
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
@@ -50,10 +51,10 @@
 <div class="mx-auto max-w-5xl">
 	<div class="flex items-center justify-between">
 		<div>
-			<a href="/CaseRoom" class="text-sm text-steel hover:text-ink">← Case Rooms</a>
+			<a href="/CaseRoom" class="text-sm text-steel hover:text-ink">← {objectLabel('CaseRoom', true)}</a>
 			<h1 class="mt-1 flex items-center gap-2 text-xl font-semibold tracking-tight">
 				{data.ticket.subject}
-				<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(data.ticket.priority))}">{data.ticket.priority}</span>
+				<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(data.ticket.priority))}">{enumLabel(String(data.ticket.priority))}</span>
 			</h1>
 		</div>
 		<div class="flex items-center gap-2">
@@ -82,7 +83,7 @@
 				<div class="flex flex-col">
 					{#each data.activities as activity (activity.id)}
 						<a href={`/Activity/${activity.id}`} class="flex items-center gap-3 border-b border-rule/40 px-4 py-2.5 last:border-0 hover:bg-paper">
-							<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(activity.status))}">{activity.type}</span>
+							<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(activity.status))}">{enumLabel(String(activity.type))}</span>
 							<span class="min-w-0 flex-1 truncate text-sm">{activity.subject}</span>
 							<span class="text-xs text-steel">{formatValue({ type: 'date' }, activity.due_date ?? activity.start_date)}</span>
 						</a>
@@ -98,21 +99,21 @@
 			<section class="rounded-lg border border-rule bg-surface p-4">
 				<h2 class="text-sm font-semibold">Case Info</h2>
 				<dl class="mt-3 flex flex-col gap-2 text-sm">
-					<div class="flex justify-between"><dt class="text-steel">Ticket</dt>
+					<div class="flex justify-between"><dt class="text-steel">{fieldLabel('ticket_number', 'Ticket')}</dt>
 						<dd class="tabular-nums">#{Number(data.ticket.ticket_number) || data.ticket.ticket_number}</dd></div>
 					{#if data.account}
-						<div class="flex justify-between"><dt class="text-steel">Account</dt>
+						<div class="flex justify-between"><dt class="text-steel">{t('dialog.account', 'Account')}</dt>
 							<dd><a class="text-accent-600 hover:underline" href={`/Account/${data.account.id}`}>{data.account.name1}</a></dd></div>
 					{/if}
 					{#if data.contact}
-						<div class="flex justify-between"><dt class="text-steel">Contact</dt>
+						<div class="flex justify-between"><dt class="text-steel">{t('dialog.contact', 'Contact')}</dt>
 							<dd><a class="text-accent-600 hover:underline" href={`/Contact/${data.contact.id}`}>{data.contact.first_name} {data.contact.last_name}</a></dd></div>
 					{/if}
 					{#if data.assignee}
 						<div class="flex justify-between"><dt class="text-steel">Assigned to</dt>
 							<dd>{data.assignee.first_name} {data.assignee.last_name}</dd></div>
 					{/if}
-					<div class="flex justify-between"><dt class="text-steel">Category</dt><dd>{data.ticket.category ?? '—'}</dd></div>
+					<div class="flex justify-between"><dt class="text-steel">{fieldLabel('category', 'Ticket')}</dt><dd>{data.ticket.category ?? '—'}</dd></div>
 				</dl>
 			</section>
 			<section class="rounded-lg border border-rule bg-surface p-4">
@@ -129,15 +130,15 @@
 				</dl>
 			</section>
 			<section class="rounded-lg border border-rule bg-surface p-4">
-				<h2 class="text-sm font-semibold">Knowledge Articles</h2>
+				<h2 class="text-sm font-semibold">{objectLabel('KnowledgeArticle', true)}</h2>
 				<div class="mt-2 flex flex-col gap-2">
 					{#each data.articles as article (article.id)}
 						<a href={`/KnowledgeArticle/${article.id}`} class="flex items-baseline justify-between text-sm hover:text-accent-600">
 							<span class="min-w-0 truncate">{article.title}</span>
-							<span class="ml-2 shrink-0 rounded-full px-2 py-0.5 text-xs {enumChipClass(String(article.status))}">{article.status}</span>
+							<span class="ml-2 shrink-0 rounded-full px-2 py-0.5 text-xs {enumChipClass(String(article.status))}">{enumLabel(String(article.status))}</span>
 						</a>
 					{:else}
-						<p class="text-sm text-steel/70">No linked articles</p>
+						<p class="text-sm text-steel/70">{t('misc.no_linked_records', 'No linked records.')}</p>
 					{/each}
 				</div>
 			</section>

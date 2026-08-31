@@ -46,6 +46,19 @@ Each architecture template includes test protocols and test templates. Tests are
 ### 12. The Skill
 A single Claude Code skill that orchestrates the entire customer journey: blueprint selection, customization, build, deployment, and updates. The skill is trained to generate correct implementations for each architecture template.
 
+### 13. Language Packs
+The label catalog - every translatable key with its English default - is part of the product,
+not of any one implementation: static UI keys defined in the reference catalog plus keys
+generated from `data-model.json` (per-object field labels, enum values, object type labels,
+relationship names). Every implementation keys its interface to this one catalog, so
+translations are portable across stacks. Pre-translated packs ship for eight languages
+(German, French, Spanish, Dutch, Portuguese, Italian, Japanese, Simplified Chinese) in
+`specs/translations/<code>.json`, one file per ISO 639-1 code containing
+`{ code, language_name, labels }`. Each implementation provides an importer that loads the
+packs into its translation store; the reference implementation additionally provides the
+catalog exporter the packs are generated from (AI-assisted translation, then review). English
+is the built-in fallback in code and is never shipped as a pack.
+
 ## Data Architecture
 
 ### 14. Database-Agnostic Data Model

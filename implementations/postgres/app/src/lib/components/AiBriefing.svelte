@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '$lib/i18n';
 	/**
 	 * On-demand AI briefing card (story 21). Never generated on page load; the card is
 	 * absent entirely when no provider is configured.
@@ -35,14 +36,14 @@
 					d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
 			</svg>
 		</span>
-		<h2 class="flex-1 text-sm font-semibold">AI Briefing</h2>
+		<h2 class="flex-1 text-sm font-semibold">{t('ai.briefing', 'AI Briefing')}</h2>
 		{#if content}
-			<button onclick={generate} class="text-xs text-steel hover:text-ink" title="Regenerate">↻</button>
+			<button onclick={generate} class="text-xs text-steel hover:text-ink" title={t('ai.regenerate', 'Regenerate')}>↻</button>
 			<button onclick={() => (collapsed = !collapsed)} class="text-xs text-steel hover:text-ink">{collapsed ? '+' : '−'}</button>
 		{:else}
 			<button onclick={generate} disabled={busy}
 				class="rounded border border-accent-600 px-3 py-1 text-xs font-medium text-accent-600 hover:bg-accent-50 disabled:opacity-50">
-				{busy ? 'Generating…' : 'Generate Briefing'}
+				{busy ? t('ai.generating', 'Generating briefing...') : t('ai.generate', 'Generate Briefing')}
 			</button>
 		{/if}
 	</header>

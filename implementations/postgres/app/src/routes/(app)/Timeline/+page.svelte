@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enumChipClass } from '$lib/display';
+	import { enumChipClass, enumLabel } from '$lib/display';
 	let { data } = $props();
 </script>
 <svelte:head>
@@ -22,7 +22,7 @@
 						<span class="block truncate text-sm">{item.subject}</span>
 						<span class="block text-xs text-steel">{item.first_name ?? 'Unknown'} {item.last_name ?? ''} · {new Date(item.at).toLocaleDateString()}</span>
 					</span>
-					<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(item.status))}">{item.type}</span>
+					<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(item.status))}">{enumLabel(String(item.type))}</span>
 				</a>
 			{:else}
 				<p class="px-4 py-6 text-center text-sm text-steel/70">No activities yet</p>

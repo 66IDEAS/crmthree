@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { FieldDefinition } from '$model';
+	import { enumLabel } from '$lib/display';
 	import type { ReferenceOption } from '$lib/server/references';
 
 	let {
@@ -15,7 +16,7 @@
 {#if field.type === 'enum'}
 	<select bind:value class={base}>
 		{#if !field.required}<option value={null}>—</option>{/if}
-		{#each field.values ?? [] as option}<option value={option}>{option}</option>{/each}
+		{#each field.values ?? [] as option}<option value={option}>{enumLabel(option)}</option>{/each}
 	</select>
 {:else if field.type === 'reference'}
 	<select bind:value class={base}>
