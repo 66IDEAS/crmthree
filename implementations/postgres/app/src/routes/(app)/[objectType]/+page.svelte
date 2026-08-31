@@ -4,8 +4,41 @@
 	import { t } from '$lib/i18n';
 	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
 
+	import DataService from '$lib/DataService';
+	import { invalidateAll } from '$app/navigation';
+
 	let { data } = $props();
 	let importing = $state(false);
+
+	// Inline editing (story 42): double-click a cell, Enter saves, Escape cancels.
+	let editing = $state<{ rowId: string; field: string } | null>(null);
+	let editValue = $state<unknown>('');
+	let editProblem = $state('');
+
+	function startEdit(row: Record<string, unknown>, column: { name: string; type: string }, event: Event) {
+		event.stopPropagation();
+		editing = { rowId: String(row.id), field: column.name };
+		editValue = row[column.name] ?? '';
+		editProblem = '';
+	}
+
+	async function commitEdit() {
+		if (!editing) return;
+		try {
+			await DataService.update(data.objectType, editing.rowId, {
+				[editing.field]: editValue === '' ? null : editValue
+			});
+			editing = null;
+			await invalidateAll();
+		} catch (e) {
+			editProblem = (e as Error).message;
+		}
+	}
+
+	function editKey(event: KeyboardEvent) {
+		if (event.key === 'Enter') commitEdit();
+		if (event.key === 'Escape') editing = null;
+	}
 	let importResult = $state('');
 	let columnsOpen = $state(false);
 	let filterTimer: ReturnType<typeof setTimeout> | null = null;
@@ -188,8 +221,32 @@
 					onclick={() => (window.location.href = `/${data.objectType}/${row.id}`)}
 				>
 					{#each data.columns as column (column.name)}
-						<td class="px-4 py-2.5">
-							{#if column.type === 'enum' && row[column.name]}
+						<td class="px-4 py-2.5"
+							ondblclick={(e) => startEdit(row, column, e)}
+							title="Double-click to edit">
+							{#if editing && editing.rowId === String(row.id) && editing.field === column.name}
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<span onclick={(e) => e.stopPropagation()} onkeydown={editKey}>
+									{#if column.type === 'enum'}
+										<!-- svelte-ignore a11y_autofocus -->
+										<select bind:value={editValue} onchange={commitEdit} autofocus
+											class="rounded border border-accent-600 bg-surface px-1.5 py-1 text-xs">
+											{#each column.values ?? [] as option}<option value={option}>{option}</option>{/each}
+										</select>
+									{:else if column.type === 'boolean'}
+										<select bind:value={editValue} onchange={commitEdit} autofocus
+											class="rounded border border-accent-600 bg-surface px-1.5 py-1 text-xs">
+											<option value={true}>Yes</option><option value={false}>No</option>
+										</select>
+									{:else}
+										<!-- svelte-ignore a11y_autofocus -->
+										<input bind:value={editValue} onblur={commitEdit} autofocus
+											type={['integer', 'decimal', 'currency'].includes(column.type) ? 'number' : column.type === 'date' ? 'date' : 'text'}
+											class="w-full min-w-24 rounded border border-accent-600 bg-surface px-1.5 py-1 text-sm" />
+									{/if}
+									{#if editProblem}<span class="ml-1 text-xs text-error">{editProblem}</span>{/if}
+								</span>
+							{:else if column.type === 'enum' && row[column.name]}
 								<span class="rounded-full px-2 py-0.5 text-xs font-medium {enumChipClass(String(row[column.name]))}">
 									{row[column.name]}
 								</span>
