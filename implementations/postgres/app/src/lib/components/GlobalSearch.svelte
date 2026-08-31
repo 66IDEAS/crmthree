@@ -46,7 +46,7 @@
 	}
 </script>
 
-<div class="relative w-72">
+<div class="relative w-full max-w-xl md:w-[36rem]">
 	<input
 		bind:value={query}
 		oninput={onInput}

@@ -4,7 +4,7 @@
 	import DataService from '$lib/DataService';
 	import FieldInput from '$lib/components/FieldInput.svelte';
 	import { t } from '$lib/i18n';
-	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
+	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel, isoDate, isoDateTime } from '$lib/display';
 	import { onChange } from '$lib/realtime-client';
 	import RelatedCard from '$lib/components/RelatedCard.svelte';
 	import ConvertLeadDialog from '$lib/components/ConvertLeadDialog.svelte';
@@ -63,8 +63,8 @@
 				.filter((f) => !f.auto_generated)
 				.map((f) => {
 					let value = data.record[f.name];
-					if (f.type === 'datetime' && value) value = String(value).slice(0, 16);
-					if (f.type === 'date' && value) value = String(value).slice(0, 10);
+					if (f.type === 'datetime' && value) value = isoDateTime(value);
+					if (f.type === 'date' && value) value = isoDate(value);
 					return [f.name, value];
 				})
 		);

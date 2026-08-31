@@ -8,11 +8,14 @@ import { t } from '$lib/i18n';
  */
 export function displayName(record: Record<string, unknown> | null | undefined): string {
 	if (!record) return '';
-	for (const key of ['name', 'name1', 'title', 'subject', 'label']) {
+	for (const key of ['name', 'name1']) {
 		if (record[key]) return String(record[key]);
 	}
 	const composite = [record.first_name, record.last_name].filter(Boolean).join(' ');
 	if (composite) return composite;
+	for (const key of ['subject', 'title', 'label']) {
+		if (record[key]) return String(record[key]);
+	}
 	const numberField = Object.keys(record).find((k) => k.endsWith('_number'));
 	if (numberField && record[numberField] != null) return `#${record[numberField]}`;
 	return String(record.id ?? '');
@@ -46,6 +49,18 @@ export function monogram(objectType: string): string {
 	return (words.length > 1 ? words[0][0] + words[1][0] : objectType.slice(0, 2)).toUpperCase();
 }
 
+/** A date-ish value as ISO YYYY-MM-DD, whether it arrives as Date or string. */
+export function isoDate(value: unknown): string {
+	if (value instanceof Date) return value.toISOString().slice(0, 10);
+	return String(value).slice(0, 10);
+}
+
+/** A datetime-ish value as an ISO minute string for datetime-local inputs. */
+export function isoDateTime(value: unknown): string {
+	const date = value instanceof Date ? value : new Date(String(value));
+	return isNaN(date.getTime()) ? String(value).slice(0, 16) : date.toISOString().slice(0, 16);
+}
+
 export function formatValue(field: { type: string; auto_generated?: boolean }, value: unknown): string {
 	if (value == null || value === '') return '—';
 	// Auto-numbers are stored in their SAP-compatible zero-padded form; purely numeric ones
@@ -57,7 +72,7 @@ export function formatValue(field: { type: string; auto_generated?: boolean }, v
 		case 'currency':
 			return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2 }).format(Number(value));
 		case 'date':
-			return String(value).slice(0, 10);
+			return isoDate(value);
 		case 'datetime':
 			return new Date(String(value)).toLocaleString();
 		case 'boolean':
@@ -67,13 +82,31 @@ export function formatValue(field: { type: string; auto_generated?: boolean }, v
 	}
 }
 
-/** Columns worth showing in a list: scalar, short, not references, model order. */
+/**
+ * Curated default columns where the model-order heuristic picks badly: Account would burn
+ * four slots on empty address fragments, Contact would lead with the salutation, Product
+ * would duplicate its group twice. Types not listed keep the heuristic.
+ */
+const LIST_COLUMN_DEFAULTS: Record<string, string[]> = {
+	Account: ['account_number', 'name1', 'city', 'country', 'industry_description', 'status'],
+	Contact: ['contact_number', 'first_name', 'last_name', 'email', 'phone', 'status'],
+	Lead: ['lead_number', 'first_name', 'last_name', 'company', 'email', 'status'],
+	Product: ['product_number', 'name', 'product_group', 'unit_of_measure', 'base_price', 'status'],
+	Ticket: ['ticket_number', 'subject', 'priority', 'category', 'sla_response_deadline']
+};
+
+/** Columns worth showing in a list: curated where needed, else scalar fields in model order. */
 export function listColumns(objectType: string) {
+	const curated = LIST_COLUMN_DEFAULTS[objectType];
+	const fields = ModelRegistry.getObjectSchema(objectType).fields;
+	if (curated) {
+		return curated
+			.map((name) => fields.find((f) => f.name === name))
+			.filter(Boolean) as typeof fields;
+	}
 	const skip = new Set(['id', 'created_at', 'updated_at', 'created_by', 'updated_by']);
-	return ModelRegistry.getObjectSchema(objectType)
-		.fields.filter(
-			(f) => !skip.has(f.name) && !['reference', 'json', 'text'].includes(f.type)
-		)
+	return fields
+		.filter((f) => !skip.has(f.name) && !['reference', 'json', 'text'].includes(f.type))
 		.slice(0, 6);
 }
 

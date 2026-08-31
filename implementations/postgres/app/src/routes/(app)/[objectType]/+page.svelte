@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
-	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
+	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel, isoDate } from '$lib/display';
 
 	import DataService from '$lib/DataService';
 	import { invalidateAll } from '$app/navigation';
@@ -38,7 +38,7 @@
 	function startEdit(row: Record<string, unknown>, column: { name: string; type: string }, event: Event) {
 		event.stopPropagation();
 		editing = { rowId: String(row.id), field: column.name };
-		editValue = row[column.name] ?? '';
+		editValue = column.type === 'date' && row[column.name] ? isoDate(row[column.name]) : (row[column.name] ?? '');
 		editProblem = '';
 	}
 
