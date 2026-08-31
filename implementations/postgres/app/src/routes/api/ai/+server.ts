@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { callProvider } from '$lib/server/ai';
 import { detectRelevantTypes, buildDataContext, buildRecordContext } from '$lib/server/ai-context';
+import { NAV_OBJECTS, NAV_VIRTUAL } from '$lib/display';
 import PostgresMapper from '$lib/server/PostgresMapper';
 
 /**
@@ -49,6 +50,30 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				{ role: 'user', content: context }
 			];
 			break;
+		}
+		case 'semanticSearch': {
+			// Story 23: intent search across every type. All context is read under the
+			// caller's identity, so the AI cannot surface a record the asker could not.
+			const searchTypes = NAV_OBJECTS.filter((t) => !NAV_VIRTUAL.has(t));
+			const context = await buildDataContext(profileId, [...searchTypes], 100);
+			messages = [
+				{
+					role: 'system' as const,
+					content:
+						'You match CRM records to a natural-language query by intent, not just keywords. ' +
+						'Return ONLY JSON: {"results":[{"type":"...","id":"...","name":"...","reason":"..."}]} ' +
+						'with at most 10 results, using ids from the data below.\n\n' + context
+				},
+				{ role: 'user' as const, content: String(body.params?.query ?? '') }
+			];
+			try {
+				const raw = await callProvider(messages);
+				const parsed = JSON.parse(raw.content.replace(/^```(json)?|```$/g, '').trim());
+				return json({ results: Array.isArray(parsed.results) ? parsed.results : [] });
+			} catch (e) {
+				if ((e as Error).message.includes('provider')) throw error(502, (e as Error).message);
+				return json({ results: [] });   // graceful fallback on unparseable output
+			}
 		}
 		case 'summarize':
 			messages = [

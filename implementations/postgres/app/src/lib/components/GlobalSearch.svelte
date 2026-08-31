@@ -6,6 +6,20 @@
 	let groups = $state<Group[]>([]);
 	let open = $state(false);
 	let timer: ReturnType<typeof setTimeout> | null = null;
+	let aiResults = $state<{ type: string; id: string; name: string; reason: string }[] | null>(null);
+	let asking = $state(false);
+
+	async function askAi() {
+		asking = true;
+		aiResults = null;
+		const response = await fetch('/api/ai', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ operation: 'semanticSearch', params: { query } })
+		});
+		asking = false;
+		aiResults = response.ok ? (await response.json()).results : [];
+	}
 
 	function onInput() {
 		if (timer) clearTimeout(timer);
@@ -43,6 +57,24 @@
 	/>
 	{#if open}
 		<div class="absolute left-0 right-0 z-20 mt-1 max-h-96 overflow-y-auto rounded-lg border border-rule bg-surface shadow-lg">
+			<button onmousedown={askAi} disabled={asking}
+				class="flex w-full items-center gap-2 border-b border-rule/40 px-3 py-2 text-left text-sm text-accent-600 hover:bg-accent-50/60 disabled:opacity-60">
+				<span>✦</span> {asking ? 'Asking AI…' : `Ask AI: "${query.trim()}"`}
+			</button>
+			{#if aiResults}
+				<div class="border-b border-rule/40">
+					<p class="px-3 pt-2 text-[10px] font-medium uppercase tracking-wider text-accent-600">AI results</p>
+					{#each aiResults as match (match.id)}
+						<button onmousedown={() => { open = false; window.location.href = `/${match.type}/${match.id}`; }}
+							class="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent-50/60">
+							<span class="font-medium">{match.name}</span>
+							<span class="ml-1.5 text-xs text-steel">{match.reason}</span>
+						</button>
+					{:else}
+						<p class="px-3 py-2 text-xs text-steel/70">No AI matches</p>
+					{/each}
+				</div>
+			{/if}
 			{#if groups.length === 0}
 				<p class="px-3 py-4 text-center text-sm text-steel/70">No matches</p>
 			{:else}
