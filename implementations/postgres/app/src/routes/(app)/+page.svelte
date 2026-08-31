@@ -53,16 +53,20 @@
 		<div class="mt-4 flex flex-col gap-2">
 			{#each data.pipeline as stage (stage.name)}
 				<div class="group relative flex items-center gap-3">
-					<span class="w-36 shrink-0 truncate text-right text-xs text-steel">{enumLabel(stage.name)}</span>
+					<span class="w-28 shrink-0 truncate text-right text-xs text-steel">{enumLabel(stage.name)}</span>
 					<div class="relative h-6 flex-1">
-						<div class="absolute inset-y-0 left-0 rounded-r bg-accent-600 transition-opacity group-hover:opacity-80"
-							style="width: {Math.max(Number(stage.value) / maxStage * 100, stage.deals ? 1.5 : 0)}%"></div>
-						<span class="absolute inset-y-0 flex items-center pl-2 text-xs tabular-nums text-ink"
-							style="left: {Math.max(Number(stage.value) / maxStage * 100, stage.deals ? 1.5 : 0)}%">
-							{#if stage.deals}€{money(stage.value)}{/if}
-						</span>
+						<!-- The track ends 88px before the row does, so the value label of a full-length
+						     bar still has room and never clips at the card edge. -->
+						<div class="absolute inset-y-0 left-0 right-22">
+							<div class="absolute inset-y-0 left-0 rounded-r bg-accent-600 transition-opacity group-hover:opacity-80"
+								style="width: {Math.max(Number(stage.value) / maxStage * 100, stage.deals ? 1.5 : 0)}%"></div>
+							<span class="absolute inset-y-0 flex items-center pl-2 text-xs whitespace-nowrap tabular-nums text-ink"
+								style="left: {Math.max(Number(stage.value) / maxStage * 100, stage.deals ? 1.5 : 0)}%">
+								{#if stage.deals}€{money(stage.value)}{/if}
+							</span>
+						</div>
 					</div>
-					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
+					<div class="pointer-events-none absolute -top-8 left-32 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
 						{enumLabel(stage.name)}: €{money(stage.value)} across {stage.deals} deal{stage.deals === 1 ? '' : 's'}
 					</div>
 				</div>
@@ -76,14 +80,16 @@
 		<div class="mt-4 flex flex-col gap-2">
 			{#each data.priorities as row (row.priority)}
 				<div class="group relative flex items-center gap-3">
-					<span class="w-36 shrink-0 truncate text-right text-xs text-steel">{enumLabel(row.priority)}</span>
+					<span class="w-28 shrink-0 truncate text-right text-xs text-steel">{enumLabel(row.priority)}</span>
 					<div class="relative h-6 flex-1">
-						<div class="absolute inset-y-0 left-0 rounded-r transition-opacity group-hover:opacity-80"
-							style="width: {Math.max(row.tickets / maxPriority * 100, 1.5)}%; background: {PRIORITY_RAMP[row.priority] ?? '#2E62E8'}"></div>
-						<span class="absolute inset-y-0 flex items-center pl-2 text-xs tabular-nums text-ink"
-							style="left: {Math.max(row.tickets / maxPriority * 100, 1.5)}%">{row.tickets}</span>
+						<div class="absolute inset-y-0 left-0 right-10">
+							<div class="absolute inset-y-0 left-0 rounded-r transition-opacity group-hover:opacity-80"
+								style="width: {Math.max(row.tickets / maxPriority * 100, 1.5)}%; background: {PRIORITY_RAMP[row.priority] ?? '#2E62E8'}"></div>
+							<span class="absolute inset-y-0 flex items-center pl-2 text-xs whitespace-nowrap tabular-nums text-ink"
+								style="left: {Math.max(row.tickets / maxPriority * 100, 1.5)}%">{row.tickets}</span>
+						</div>
 					</div>
-					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
+					<div class="pointer-events-none absolute -top-8 left-32 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
 						{enumLabel(row.priority)}: {row.tickets} ticket{row.tickets === 1 ? '' : 's'}
 					</div>
 				</div>
