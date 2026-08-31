@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+  plugins: [react()],
   resolve: {
     alias: {
       // The data model is read from specs/, not forked into the implementation. This folder
