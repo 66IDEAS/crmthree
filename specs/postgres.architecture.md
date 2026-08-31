@@ -57,6 +57,9 @@ section 7 of the shared architecture requires of every template.
 - One table per object type, snake_case, with a `uuid` primary key.
 - Relationships become real foreign keys with `on delete` behaviour stated per relationship,
   rather than loose id strings.
+- **`created_by` and `updated_by` stay required on every object** (decided, closing an open
+  question): audit provenance is part of the model's contract, and the cyclic bootstrap case
+  is handled by deferrable constraints rather than by weakening the columns.
 - Many-to-many relationships become junction tables (`contact_account`,
   `opportunity_contact`), which the relational model expresses natively.
 - Enumerations become Postgres `enum` types, so invalid values are rejected by the database
