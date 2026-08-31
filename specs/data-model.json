@@ -509,7 +509,7 @@
         { "name": "last_name", "type": "string", "length": 40, "required": true, "description": "Last name" },
         { "name": "role_id", "type": "reference", "target": "Role", "required": true, "description": "Assigned role" },
         { "name": "team_id", "type": "reference", "target": "Team", "required": false, "description": "Team membership" },
-        { "name": "avatar_url", "type": "string", "length": 500, "required": false, "description": "Profile picture URL" },
+        { "name": "avatar_url", "type": "string", "length": 2048, "required": false, "description": "Profile picture URL. Sized for real OAuth provider avatar URLs, which routinely exceed 500 characters" },
         { "name": "xp_total", "type": "integer", "required": true, "default": 0, "description": "Total experience points earned" },
         { "name": "level", "type": "integer", "required": true, "default": 1, "description": "Current gamification level" },
         { "name": "level_name", "type": "string", "length": 50, "required": true, "default": "Rookie", "description": "Current level display name" },

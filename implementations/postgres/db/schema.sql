@@ -539,7 +539,7 @@ create table user_profile (
   last_name varchar(40) not null,
   role_id uuid not null,
   team_id uuid,
-  avatar_url varchar(500),
+  avatar_url varchar(2048),
   xp_total integer not null default 0,
   level integer not null default 1,
   level_name varchar(50) not null default 'Rookie',
