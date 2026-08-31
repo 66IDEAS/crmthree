@@ -18,6 +18,48 @@
 	let linking = $state(false);
 	let selected = $state('');
 	let problem = $state('');
+	let uploading = $state(false);
+	const isDocuments = $derived(card.target === 'Document' && card.kind === 'one-to-many');
+
+	/** Documents upload a real file: bytes to storage, metadata as the Document record. */
+	async function uploadDocument(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file || !card.prefill) return;
+		uploading = true;
+		problem = '';
+		try {
+			const form = new FormData();
+			form.append('file', file);
+			const response = await fetch('/api/files', { method: 'POST', body: form });
+			if (!response.ok) throw new Error((await response.json()).message ?? 'Upload failed');
+			const stored = await response.json();
+			const me = await fetch('/api/me').then((r) => r.json());
+			await DataService.create('Document', {
+				name: stored.name,
+				file_path: stored.url,
+				file_type: stored.type,
+				file_size: stored.size,
+				...card.prefill,
+				uploaded_by: me.profile.id
+			});
+			await invalidateAll();
+		} catch (e) {
+			problem = (e as Error).message;
+		} finally {
+			uploading = false;
+			input.value = '';
+		}
+	}
+
+	function openRow(row: Record<string, unknown>) {
+		// A document row opens its file; everything else opens its record.
+		if (isDocuments && typeof row.file_path === 'string' && row.file_path.startsWith('/api/files/')) {
+			window.open(row.file_path, '_blank');
+		} else {
+			window.location.href = `/${card.target}/${row.id}`;
+		}
+	}
 	const title = $derived(fieldLabel(card.name));
 	const alreadyLinked = $derived(new Set(card.rows.map((r) => String(r.id))));
 
@@ -61,7 +103,12 @@
 			{title}
 			<span class="ml-1.5 font-normal text-steel">{card.total}</span>
 		</h2>
-		{#if card.kind === 'many-to-many'}
+		{#if isDocuments}
+			<label class="cursor-pointer rounded border border-rule px-2.5 py-1 text-xs font-medium hover:bg-paper">
+				{uploading ? 'Uploading…' : 'Upload'}
+				<input type="file" class="hidden" onchange={uploadDocument} disabled={uploading} />
+			</label>
+		{:else if card.kind === 'many-to-many'}
 			<button onclick={() => (linking = !linking)}
 				class="rounded border border-rule px-2.5 py-1 text-xs font-medium hover:bg-paper">Link</button>
 		{:else if card.prefill}
@@ -71,6 +118,9 @@
 		{/if}
 	</header>
 
+	{#if problem && isDocuments}
+		<p class="border-b border-rule/50 px-4 py-2 text-sm text-error">{problem}</p>
+	{/if}
 	{#if linking}
 		<div class="flex items-center gap-2 border-b border-rule/50 bg-paper px-4 py-2">
 			<select bind:value={selected}
@@ -100,7 +150,7 @@
 			<tbody>
 				{#each card.rows as row (row.id)}
 					<tr class="cursor-pointer border-t border-rule/40 hover:bg-accent-50/60"
-						onclick={() => (window.location.href = `/${card.target}/${row.id}`)}>
+						onclick={() => openRow(row)}>
 						<td class="flex items-center gap-2 px-4 py-2 font-medium">
 							<span class="flex h-5 w-5 items-center justify-center rounded bg-rule/40 text-[9px] font-semibold text-steel">{monogram(card.target)}</span>
 							{row._display}
