@@ -48,6 +48,10 @@
 		}
 	}
 </script>
+<svelte:head>
+	<title>New {objectLabel(data.objectType)} · CRMTHREE</title>
+</svelte:head>
+
 
 <div class="mx-auto max-w-2xl">
 	<h1 class="text-xl font-semibold tracking-tight">New {objectLabel(data.objectType)}</h1>

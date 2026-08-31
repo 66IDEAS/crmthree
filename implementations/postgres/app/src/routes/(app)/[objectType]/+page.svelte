@@ -146,6 +146,10 @@
 		if (result.created) window.location.reload();
 	}
 </script>
+<svelte:head>
+	<title>{objectLabel(data.objectType, true)} · CRMTHREE</title>
+</svelte:head>
+
 
 <div class="flex items-center justify-between">
 	<h1 class="text-xl font-semibold tracking-tight">

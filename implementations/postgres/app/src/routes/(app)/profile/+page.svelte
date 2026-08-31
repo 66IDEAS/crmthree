@@ -42,6 +42,10 @@
 		prefs = { ...prefs, [type]: prefs[type] === false ? true : false };
 	}
 </script>
+<svelte:head>
+	<title>Profile · CRMTHREE</title>
+</svelte:head>
+
 
 <div class="mx-auto max-w-2xl">
 	<h1 class="text-xl font-semibold tracking-tight">Profile</h1>

@@ -2,6 +2,10 @@
 	import { enumChipClass } from '$lib/display';
 	let { data } = $props();
 </script>
+<svelte:head>
+	<title>Team Timeline · CRMTHREE</title>
+</svelte:head>
+
 
 <h1 class="text-xl font-semibold tracking-tight">Team Timeline</h1>
 

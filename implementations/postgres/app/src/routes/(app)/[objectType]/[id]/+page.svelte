@@ -123,6 +123,10 @@
 		}
 	}
 </script>
+<svelte:head>
+	<title>{displayName(data.record)} · {objectLabel(data.objectType, true)} · CRMTHREE</title>
+</svelte:head>
+
 
 <div class="mx-auto max-w-3xl">
 	<div class="flex items-center justify-between">

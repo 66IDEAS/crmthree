@@ -42,6 +42,10 @@
 		return new Date(String(deadline)) < new Date() ? 'text-error font-medium' : 'text-success';
 	};
 </script>
+<svelte:head>
+	<title>{data.ticket.subject} · Case Room · CRMTHREE</title>
+</svelte:head>
+
 
 <div class="mx-auto max-w-5xl">
 	<div class="flex items-center justify-between">

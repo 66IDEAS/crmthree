@@ -2,6 +2,10 @@
 	import { enumChipClass } from '$lib/display';
 	let { data } = $props();
 </script>
+<svelte:head>
+	<title>Case Rooms · CRMTHREE</title>
+</svelte:head>
+
 
 <h1 class="text-xl font-semibold tracking-tight">Case Rooms
 	<span class="ml-2 text-sm font-normal text-steel/70">{data.rows.length} case{data.rows.length === 1 ? '' : 's'}</span>

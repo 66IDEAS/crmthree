@@ -180,6 +180,10 @@
 		}
 	}
 </script>
+<svelte:head>
+	<title>Settings · CRMTHREE</title>
+</svelte:head>
+
 
 <h1 class="text-xl font-semibold tracking-tight">Settings</h1>
 

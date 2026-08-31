@@ -23,6 +23,10 @@
 		}
 	}
 </script>
+<svelte:head>
+	<title>Sign in · CRMTHREE</title>
+</svelte:head>
+
 
 <div class="flex min-h-screen items-center justify-center bg-rail">
 	<div class="w-full max-w-sm rounded-lg bg-surface p-8 shadow-xl">

@@ -23,6 +23,10 @@
 		Low: '#8FA9FA', Medium: '#5A80EF', High: '#2450C4', Critical: '#132466'
 	};
 </script>
+<svelte:head>
+	<title>Dashboard · CRMTHREE</title>
+</svelte:head>
+
 
 <h1 class="text-xl font-semibold tracking-tight">Welcome back</h1>
 <p class="mt-1 text-sm text-steel">Everything below is aggregated in Postgres under your permissions.</p>

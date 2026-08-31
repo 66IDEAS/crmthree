@@ -23,6 +23,10 @@
 		await invalidateAll();
 	}
 </script>
+<svelte:head>
+	<title>{data.room.name} · Deal Room · CRMTHREE</title>
+</svelte:head>
+
 
 <div class="mx-auto max-w-5xl">
 	<div class="flex items-center justify-between">

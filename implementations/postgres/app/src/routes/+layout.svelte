@@ -4,6 +4,7 @@
 </script>
 
 <svelte:head>
+	<title>CRMTHREE</title>
 	<link rel="icon" href="/logo.svg" />
 </svelte:head>
 
