@@ -29,6 +29,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 function query(options: ListOptions = {}): string {
 	const params = new URLSearchParams();
 	if (options.pageSize) params.set('pageSize', String(options.pageSize));
+	if (options.filters?.length) params.set('filters', JSON.stringify(options.filters));
 	if (options.sort?.field) {
 		params.set('sort', options.sort.field);
 		params.set('direction', options.sort.direction ?? 'asc');
