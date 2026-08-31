@@ -6,7 +6,7 @@
 	let { data } = $props();
 
 	// ── User management (story 62) ──────────────────────────────────────────────
-	let open = $state<'users' | 'roles' | 'statuses' | 'whitelist' | 'ai' | null>('users');
+	let open = $state<'users' | 'roles' | 'statuses' | 'whitelist' | 'ai' | 'audit' | null>('users');
 	let showInvite = $state(false);
 	let invite = $state({ email: '', password: '', firstName: '', lastName: '', roleName: 'User' });
 	let problem = $state('');
@@ -364,6 +364,36 @@
 					<input placeholder="Endpoint URL (optional)" bind:value={ai.endpoint_url} class="rounded border border-steel/40 px-2 py-1.5" />
 					<button type="submit" class="col-span-2 rounded bg-accent-600 py-1.5 font-medium text-white hover:bg-accent-500">Save & Activate</button>
 				</form>
+			</div>
+		{/if}
+	</section>
+
+	<!-- Audit trail -->
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
+		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'audit' ? null : 'audit')}>
+			<span class="text-sm font-semibold">Audit Log <span class="ml-1 font-normal text-steel">last {data.audit.length}</span></span>
+			<span class="text-steel">{open === 'audit' ? '−' : '+'}</span>
+		</button>
+		{#if open === 'audit'}
+			<div class="max-h-96 overflow-y-auto border-t border-rule/50 px-4 pb-3">
+				<table class="mt-2 w-full text-sm">
+					<tbody>
+						{#each data.audit as entry (entry.id)}
+							<tr class="border-t border-rule/40 first:border-0">
+								<td class="py-1.5 pr-3 text-xs whitespace-nowrap text-steel">{new Date(entry.timestamp).toLocaleString()}</td>
+								<td class="py-1.5 pr-3 text-xs">{entry.first_name ?? '?'} {entry.last_name ?? ''}</td>
+								<td class="py-1.5 pr-3">
+									<span class="rounded-full px-2 py-0.5 text-xs font-medium
+										{entry.action === 'Create' ? 'bg-success/10 text-success' : entry.action === 'Delete' ? 'bg-error/10 text-error' : 'bg-accent-50 text-accent-600'}">
+										{entry.action}</span>
+								</td>
+								<td class="py-1.5 pr-3 text-xs">{entry.object_type}</td>
+								<td class="py-1.5 pr-3 text-xs font-medium">{entry.object_name ?? ''}</td>
+								<td class="py-1.5 text-xs text-steel">{entry.summary ?? ''}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
 		{/if}
 	</section>
