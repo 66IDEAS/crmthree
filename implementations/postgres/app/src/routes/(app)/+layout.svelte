@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { NAV_OBJECTS, objectLabel } from '$lib/display';
 	import NavIcon from '$lib/components/NavIcon.svelte';
@@ -42,22 +41,11 @@
 		}
 	});
 
-	// Collapsed is the shared UX default; the choice persists per browser.
+	// Collapsed is the shared UX default; the rail always opens collapsed, and expanding it
+	// lasts for the session only.
 	let collapsed = $state(true);
-	onMount(() => {
-		try {
-			collapsed = localStorage.getItem('crmthree-nav') !== 'expanded';
-		} catch {
-			/* keep default */
-		}
-	});
 	function toggle() {
 		collapsed = !collapsed;
-		try {
-			localStorage.setItem('crmthree-nav', collapsed ? 'collapsed' : 'expanded');
-		} catch {
-			/* non-fatal */
-		}
 	}
 
 	async function signOut() {

@@ -245,7 +245,8 @@ compact mark when the rail is collapsed and as the favicon.
 
 **Navigation rail.** Collapsible, following the shared UX intent: the toggle is the first
 item of the rail itself, not the top bar; expanded shows icons with labels, collapsed shows
-icons only; the state persists per browser. The built-in object types carry a curated icon
+icons only; the rail always opens collapsed (the shared UX default), and expanding it
+lasts for the browser session only. The built-in object types carry a curated icon
 set (Heroicons outline, MIT); an object type without an icon falls back to a generated
 monogram tile, so the rail survives customers adding their own object types to the model.
 
