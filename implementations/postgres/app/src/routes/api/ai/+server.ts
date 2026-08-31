@@ -3,7 +3,8 @@ import type { RequestHandler } from './$types';
 import { callProvider } from '$lib/server/ai';
 import { detectRelevantTypes, buildDataContext, buildRecordContext } from '$lib/server/ai-context';
 import { NAV_OBJECTS, NAV_VIRTUAL } from '$lib/display';
-import PostgresMapper from '$lib/server/PostgresMapper';
+import PostgresMapper, { createInTx } from '$lib/server/PostgresMapper';
+import { withUser } from '$lib/server/db';
 
 /**
  * The AI operations of the reference implementation's callAIProvider, as a server route.
@@ -74,6 +75,95 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				if ((e as Error).message.includes('provider')) throw error(502, (e as Error).message);
 				return json({ results: [] });   // graceful fallback on unparseable output
 			}
+		}
+		case 'caseToArticle': {
+			// Stories 25 and 51: a resolved case becomes a draft knowledge article, written by
+			// the AI from the ticket and its discussion, linked back to the case.
+			if (!body.params?.ticketId) throw error(400, 'params.ticketId required');
+			const article = await withUser(profileId, async (client) => {
+				const ticket = (
+					await client.query('select * from ticket where id = $1', [body.params.ticketId])
+				).rows[0];
+				if (!ticket) throw new Error('Ticket not found');
+				const comments = (
+					await client.query(
+						`select content from comment where parent_type = 'Ticket' and parent_id = $1 order by created_at`,
+						[ticket.id]
+					)
+				).rows;
+				const material = [
+					`Subject: ${ticket.subject}`,
+					ticket.description ? `Description: ${ticket.description}` : '',
+					ticket.resolution ? `Resolution: ${ticket.resolution}` : '',
+					...comments.map((c: { content: string }) => `Comment: ${c.content}`)
+				].filter(Boolean).join('\n');
+				const generated = await callProvider([
+					{
+						role: 'system',
+						content:
+							'Write a knowledge base article from this support case: a clear problem statement, cause if known, and the resolution steps. Plain text, no preamble.'
+					},
+					{ role: 'user', content: material }
+				]);
+				const created = await createInTx(client, profileId, 'KnowledgeArticle', {
+					title: String(ticket.subject).slice(0, 255),
+					content: generated.content,
+					category: ticket.category ?? undefined,
+					status: 'Draft',
+					source: 'Case Conversion',
+					author_id: profileId
+				});
+				await createInTx(client, profileId, 'TicketKnowledgeArticle', {
+					ticket_id: ticket.id,
+					article_id: created.id,
+					linked_at: new Date().toISOString(),
+					linked_by: profileId
+				});
+				return created;
+			});
+			return json({ id: article.id, objectType: 'KnowledgeArticle' }, { status: 201 });
+		}
+		case 'parseEmail': {
+			// Story 27: paste an email, get lead fields.
+			const parsed = await callProvider([
+				{
+					role: 'system',
+					content:
+						'Extract lead fields from this email. Return ONLY JSON: {"first_name":"","last_name":"","email":"","phone":"","company":"","position":""} with empty strings for unknowns.'
+				},
+				{ role: 'user', content: String(body.params?.text ?? '') }
+			]);
+			try {
+				return json({ fields: JSON.parse(parsed.content.replace(/^```(json)?|```$/g, '').trim()) });
+			} catch {
+				return json({ fields: {} });
+			}
+		}
+		case 'performance': {
+			// Story 28: a personal performance narrative from the caller's own numbers.
+			const stats = await withUser(profileId, (client) =>
+				client
+					.query(
+						`select
+							(select count(*) from opportunity where owner_id = $1 and result = 'Won') as deals_won,
+							(select coalesce(sum(amount),0) from opportunity where owner_id = $1 and result = 'Won') as won_value,
+							(select count(*) from activity where owner_id = $1) as activities,
+							(select count(*) from ticket where assigned_to = $1 and resolved_at is not null) as tickets_resolved,
+							(select xp_total from user_profile where id = $1) as xp,
+							(select current_streak_days from user_profile where id = $1) as streak`,
+						[profileId]
+					)
+					.then((r) => r.rows[0])
+			);
+			messages = [
+				{
+					role: 'system',
+					content:
+						'Write a short, encouraging first-person-addressed performance summary for a CRM user from their numbers. 3-4 sentences, concrete, no flattery padding.'
+				},
+				{ role: 'user', content: JSON.stringify(stats) }
+			];
+			break;
 		}
 		case 'summarize':
 			messages = [

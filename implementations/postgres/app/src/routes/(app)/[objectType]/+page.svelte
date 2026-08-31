@@ -10,6 +10,26 @@
 	let { data } = $props();
 	let importing = $state(false);
 
+	// New-from-email (story 27), leads only.
+	let emailOpen = $state(false);
+	let emailText = $state('');
+	let parsing = $state(false);
+
+	async function parseEmail() {
+		parsing = true;
+		const response = await fetch('/api/ai', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ operation: 'parseEmail', params: { text: emailText } })
+		});
+		parsing = false;
+		if (!response.ok) return;
+		const { fields } = await response.json();
+		const params = new URLSearchParams();
+		for (const [key, value] of Object.entries(fields)) if (value) params.set(key, String(value));
+		window.location.href = `/Lead/new?${params}`;
+	}
+
 	// Inline editing (story 42): double-click a cell, Enter saves, Escape cancels.
 	let editing = $state<{ rowId: string; field: string } | null>(null);
 	let editValue = $state<unknown>('');
@@ -164,6 +184,12 @@
 			{importing ? 'Importing…' : t('ui.import_csv', 'Import CSV')}
 			<input type="file" accept=".csv,text/csv" class="hidden" onchange={importCsv} disabled={importing} />
 		</label>
+		{#if data.objectType === 'Lead'}
+			<button onclick={() => (emailOpen = true)}
+				class="rounded border border-accent-600 px-3 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50">
+				✦ New from Email
+			</button>
+		{/if}
 		<a href={`/${data.objectType}/new`}
 			class="rounded bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-500">
 			{t('ui.new', 'New')} {objectLabel(data.objectType)}
@@ -279,3 +305,21 @@
 		<a href={nextHref()} class="rounded border border-steel/40 px-3 py-1 hover:bg-paper">Next →</a>
 	{/if}
 </div>
+
+{#if emailOpen}
+	<div class="fixed inset-0 z-30 flex items-center justify-center bg-ink/40" role="presentation" onclick={() => (emailOpen = false)}>
+		<div class="w-full max-w-lg rounded-lg bg-surface p-6 shadow-xl" role="dialog" onclick={(e) => e.stopPropagation()}>
+			<h2 class="text-lg font-semibold">New Lead from Email</h2>
+			<p class="mt-1 text-sm text-steel">Paste an email; the AI extracts name, company and contact details into a prefilled lead form.</p>
+			<textarea bind:value={emailText} rows="8" placeholder="Paste the email here…"
+				class="mt-3 w-full rounded border border-steel/40 px-3 py-2 text-sm outline-none focus:border-accent-600"></textarea>
+			<div class="mt-4 flex justify-end gap-2">
+				<button onclick={() => (emailOpen = false)} class="rounded border border-rule px-4 py-1.5 text-sm hover:bg-paper">Cancel</button>
+				<button onclick={parseEmail} disabled={parsing || !emailText.trim()}
+					class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500 disabled:opacity-50">
+					{parsing ? 'Extracting…' : 'Extract & Prefill'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

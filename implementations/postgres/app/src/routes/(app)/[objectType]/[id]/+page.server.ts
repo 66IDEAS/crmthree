@@ -53,7 +53,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		caseRoom: objectType === 'Ticket',
 		// The briefing card exists only for supported types AND a configured provider.
 		aiBriefing:
-			['Account', 'Contact', 'Lead', 'Opportunity', 'Ticket', 'Quotation', 'SalesOrder', 'Invoice'].includes(objectType) &&
+			['Account', 'Contact', 'Lead', 'Opportunity', 'Ticket', 'Quotation', 'SalesOrder', 'Invoice', 'Activity'].includes(objectType) &&
 			(await activeConfig().then(Boolean).catch(() => false)),
 		isLead: objectType === 'Lead',
 		cardColumns,

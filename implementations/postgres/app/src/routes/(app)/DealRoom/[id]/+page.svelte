@@ -3,6 +3,7 @@
 	import CommentThread from '$lib/components/CommentThread.svelte';
 	import DataService from '$lib/DataService';
 	import { enumChipClass, formatValue } from '$lib/display';
+	import AiBriefing from '$lib/components/AiBriefing.svelte';
 
 	let { data } = $props();
 
@@ -67,6 +68,10 @@
 
 	<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
 		<div class="flex flex-col gap-4 lg:col-span-2">
+			{#if data.aiConfigured && data.opportunity}
+				<!-- Pipeline coaching (story 24): the record briefing over the opportunity. -->
+				<div class="-mt-4"><AiBriefing objectType="Opportunity" recordId={String(data.opportunity.id)} /></div>
+			{/if}
 			<!-- Activity timeline -->
 			<section class="rounded-lg border border-rule bg-surface">
 				<h2 class="border-b border-rule/50 px-4 py-2.5 text-sm font-semibold">Activity Timeline</h2>

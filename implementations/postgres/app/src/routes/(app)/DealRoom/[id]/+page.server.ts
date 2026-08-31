@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import PostgresMapper from '$lib/server/PostgresMapper';
 import { withUser } from '$lib/server/db';
 import { displayName } from '$lib/display';
+import { activeConfig } from '$lib/server/ai';
 
 /**
  * Deal Room workspace (story 33): a purpose-built layout over the Opportunity, replacing
@@ -51,6 +52,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 
 	return {
+		aiConfigured: await activeConfig().then(Boolean).catch(() => false),
 		room,
 		opportunity,
 		opportunityName: displayName(opportunity ?? {}),

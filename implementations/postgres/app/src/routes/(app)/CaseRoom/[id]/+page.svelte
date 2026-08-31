@@ -3,8 +3,29 @@
 	import CommentThread from '$lib/components/CommentThread.svelte';
 	import DataService from '$lib/DataService';
 	import { enumChipClass, formatValue } from '$lib/display';
+	import { goto } from '$app/navigation';
 
 	let { data } = $props();
+	let drafting = $state(false);
+	let draftProblem = $state('');
+
+	// Stories 25/51: the case becomes a draft knowledge article, AI-written and linked.
+	async function draftArticle() {
+		drafting = true;
+		draftProblem = '';
+		const response = await fetch('/api/ai', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ operation: 'caseToArticle', params: { ticketId: data.ticket.id } })
+		});
+		drafting = false;
+		if (!response.ok) {
+			draftProblem = (await response.json().catch(() => null))?.message ?? 'Drafting failed';
+			return;
+		}
+		const result = await response.json();
+		await goto(`/KnowledgeArticle/${result.id}`);
+	}
 
 	async function updateStatus(statusId: string) {
 		const status = data.statuses.find((s: { id: string }) => s.id === statusId);
@@ -36,10 +57,17 @@
 				class="rounded border border-steel/40 bg-surface px-2 py-1.5 text-sm">
 				{#each data.statuses as status (status.id)}<option value={status.id}>{status.name}</option>{/each}
 			</select>
+			{#if data.aiConfigured}
+				<button onclick={draftArticle} disabled={drafting}
+					class="rounded border border-accent-600 px-4 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50 disabled:opacity-50">
+					{drafting ? 'Drafting…' : 'Draft KB Article'}
+				</button>
+			{/if}
 			<a href={`/Ticket/${data.ticket.id}`} class="rounded border border-rule px-4 py-1.5 text-sm hover:bg-paper">View Ticket</a>
 		</div>
 	</div>
 
+	{#if draftProblem}<p class="mt-3 rounded bg-error/10 p-2 text-sm text-error">{draftProblem}</p>{/if}
 	<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
 		<div class="flex flex-col gap-4 lg:col-span-2">
 			{#if data.ticket.description}

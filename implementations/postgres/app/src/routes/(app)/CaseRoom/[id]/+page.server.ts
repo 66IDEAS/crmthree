@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import PostgresMapper from '$lib/server/PostgresMapper';
 import { withUser } from '$lib/server/db';
+import { activeConfig } from '$lib/server/ai';
 
 /** Case Room workspace (story 34): the service twin of the Deal Room, a view over the Ticket. */
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -42,5 +43,5 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		};
 	});
 
-	return { ticket, ...extras, profileId };
+	return { ticket, ...extras, profileId, aiConfigured: await activeConfig().then(Boolean).catch(() => false) };
 };

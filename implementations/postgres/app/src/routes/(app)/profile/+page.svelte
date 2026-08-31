@@ -10,6 +10,22 @@
 	// Unset means enabled, exactly how the notification triggers read it.
 	let prefs = $state<Record<string, boolean>>({ ...(data.me.notification_preferences ?? {}) });
 	let saved = $state(false);
+	let narrative = $state('');
+	let narrating = $state(false);
+
+	// Story 28: a performance summary from one's own numbers.
+	async function generateNarrative() {
+		narrating = true;
+		const response = await fetch('/api/ai', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ operation: 'performance' })
+		});
+		narrating = false;
+		narrative = response.ok
+			? (await response.json()).content
+			: (await response.json().catch(() => null))?.message ?? 'Generation failed';
+	}
 
 	async function save() {
 		await DataService.update('UserProfile', String(data.me.id), {
@@ -43,7 +59,14 @@
 					{data.me.current_streak_days}-day streak
 				</p>
 			</div>
+			<button onclick={generateNarrative} disabled={narrating}
+				class="ml-auto rounded border border-accent-600 px-3 py-1.5 text-xs font-medium text-accent-600 hover:bg-accent-50 disabled:opacity-50">
+				{narrating ? 'Writing…' : '✦ Performance summary'}
+			</button>
 		</div>
+		{#if narrative}
+			<p class="mt-4 rounded bg-accent-50 p-3 text-sm leading-relaxed">{narrative}</p>
+		{/if}
 	</section>
 
 	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
