@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			client.query(`
 				select s.name, coalesce(sum(o.amount), 0)::numeric as value, count(o.id)::int as deals
 				  from pipeline_stage s
-				  left join opportunity o on o.stage_id = s.id and o.result = 'Open'
+				  left join opportunity o on o.stage_id = s.id
 				 group by s.name, s.sort_order
 				 order by s.sort_order
 			`),
