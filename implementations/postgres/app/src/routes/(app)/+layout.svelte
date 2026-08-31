@@ -8,6 +8,21 @@
 
 	let { data, children } = $props();
 
+	// Theme: the stored preference wins; System follows the OS. Applied as a class on the
+	// root element so the dark token set takes over; mirrored to localStorage so the early
+	// inline script in app.html can avoid a light flash on the next load.
+	$effect(() => {
+		const pref = data.prefs?.theme_preference ?? 'System';
+		const dark =
+			pref === 'Dark' || (pref === 'System' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+		document.documentElement.classList.toggle('dark', dark);
+		try {
+			localStorage.setItem('crmthree-theme', dark ? 'dark' : 'light');
+		} catch {
+			/* fine */
+		}
+	});
+
 	// Collapsed is the shared UX default; the choice persists per browser.
 	let collapsed = $state(true);
 	onMount(() => {
@@ -83,14 +98,14 @@
 	</aside>
 
 	<div class="flex min-w-0 flex-1 flex-col">
-		<header class="flex shrink-0 items-center justify-between gap-4 border-b border-rule bg-white px-6 py-3">
+		<header class="flex shrink-0 items-center justify-between gap-4 border-b border-rule bg-surface px-6 py-3">
 			<GlobalSearch />
 			<div class="flex items-center gap-4">
 			<NotificationBell />
-			<div class="text-sm">
+			<a href="/profile" class="text-sm hover:text-accent-600">
 				<span class="font-medium">{data.profile.first_name} {data.profile.last_name}</span>
 				<span class="ml-1.5 rounded bg-rule/40 px-1.5 py-0.5 text-xs text-steel">{data.profile.role_name}</span>
-			</div>
+			</a>
 			<button onclick={signOut} class="text-sm text-steel hover:text-ink">Sign out</button>
 			</div>
 		</header>

@@ -34,7 +34,7 @@
 <div class="mx-auto max-w-2xl">
 	<h1 class="text-xl font-semibold tracking-tight">New {objectLabel(data.objectType)}</h1>
 
-	<form onsubmit={create} class="mt-5 rounded-lg border border-rule bg-white p-6">
+	<form onsubmit={create} class="mt-5 rounded-lg border border-rule bg-surface p-6">
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			{#each data.fields as field (field.name)}
 				<label class="flex flex-col gap-1 text-sm {field.type === 'text' ? 'md:col-span-2' : ''}">

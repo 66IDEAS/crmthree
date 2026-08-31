@@ -55,7 +55,7 @@
 	}
 </script>
 
-<section class="mt-4 rounded-lg border border-rule bg-white">
+<section class="mt-4 rounded-lg border border-rule bg-surface">
 	<header class="flex items-center justify-between border-b border-rule/50 px-4 py-2.5">
 		<h2 class="text-sm font-semibold">
 			{title}

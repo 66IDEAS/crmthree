@@ -163,7 +163,7 @@
 	{/if}
 
 	{#if editing}
-		<form onsubmit={save} class="mt-5 rounded-lg border border-rule bg-white p-6">
+		<form onsubmit={save} class="mt-5 rounded-lg border border-rule bg-surface p-6">
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 				{#each data.fields.filter((f) => !f.auto_generated) as field (field.name)}
 					<label class="flex flex-col gap-1 text-sm {field.type === 'text' ? 'md:col-span-2' : ''}">
@@ -184,7 +184,7 @@
 			</div>
 		</form>
 	{:else}
-		<dl class="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 rounded-lg border border-rule bg-white p-6 md:grid-cols-2">
+		<dl class="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 rounded-lg border border-rule bg-surface p-6 md:grid-cols-2">
 			{#each data.fields as field (field.name)}
 				<div class="flex flex-col gap-0.5 {field.type === 'text' ? 'md:col-span-2' : ''}">
 					<dt class="text-xs font-medium uppercase tracking-wider text-steel/70">{fieldLabel(field.name)}</dt>

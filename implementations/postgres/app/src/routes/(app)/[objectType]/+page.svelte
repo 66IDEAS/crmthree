@@ -106,9 +106,9 @@
 	<div class="flex items-center gap-2">
 		<div class="relative">
 			<button onclick={() => (columnsOpen = !columnsOpen)}
-				class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-white">Columns</button>
+				class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">Columns</button>
 			{#if columnsOpen}
-				<div class="absolute right-0 z-20 mt-1 max-h-80 w-56 overflow-y-auto rounded-lg border border-rule bg-white p-2 shadow-lg">
+				<div class="absolute right-0 z-20 mt-1 max-h-80 w-56 overflow-y-auto rounded-lg border border-rule bg-surface p-2 shadow-lg">
 					{#each data.offerable as field (field.name)}
 						<label class="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-paper">
 							<input type="checkbox" class="h-3.5 w-3.5 accent-accent-600"
@@ -121,12 +121,12 @@
 			{/if}
 		</div>
 		<select value={String(data.pageSize)} onchange={setPageSize}
-			class="rounded border border-rule bg-white px-2 py-1.5 text-sm">
+			class="rounded border border-rule bg-surface px-2 py-1.5 text-sm">
 			<option value="25">25</option><option value="50">50</option><option value="100">100</option>
 		</select>
 		<a href={`/api/csv/${data.objectType}`} download
-			class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-white">Export CSV</a>
-		<label class="cursor-pointer rounded border border-rule px-3 py-1.5 text-sm hover:bg-white">
+			class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">Export CSV</a>
+		<label class="cursor-pointer rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">
 			{importing ? 'Importing…' : 'Import CSV'}
 			<input type="file" accept=".csv,text/csv" class="hidden" onchange={importCsv} disabled={importing} />
 		</label>
@@ -138,7 +138,7 @@
 </div>
 {#if importResult}<p class="mt-2 rounded bg-accent-50 px-3 py-2 text-sm">{importResult}</p>{/if}
 
-<div class="mt-4 overflow-x-auto rounded-lg border border-rule bg-white">
+<div class="mt-4 overflow-x-auto rounded-lg border border-rule bg-surface">
 	<table class="w-full text-sm">
 		<thead>
 			<tr class="border-b border-rule text-left text-xs uppercase tracking-wider text-steel">
@@ -215,9 +215,9 @@
 
 <div class="mt-3 flex items-center gap-2 text-sm">
 	{#if data.pageStart}
-		<a href={firstHref()} class="rounded border border-steel/40 px-3 py-1 hover:bg-white">First page</a>
+		<a href={firstHref()} class="rounded border border-steel/40 px-3 py-1 hover:bg-paper">First page</a>
 	{/if}
 	{#if data.cursor && data.rows.length === data.pageSize}
-		<a href={nextHref()} class="rounded border border-steel/40 px-3 py-1 hover:bg-white">Next →</a>
+		<a href={nextHref()} class="rounded border border-steel/40 px-3 py-1 hover:bg-paper">Next →</a>
 	{/if}
 </div>

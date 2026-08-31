@@ -29,7 +29,7 @@
 </script>
 
 <div class="fixed inset-0 z-30 flex items-center justify-center bg-ink/40" role="presentation" onclick={onclose}>
-	<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" role="dialog" onclick={(e) => e.stopPropagation()}>
+	<div class="w-full max-w-md rounded-lg bg-surface p-6 shadow-xl" role="dialog" onclick={(e) => e.stopPropagation()}>
 		<h2 class="text-lg font-semibold">Convert Lead</h2>
 		<p class="mt-1 text-sm text-steel">Creates an Account, a Contact linked to it, and optionally an Opportunity - in one transaction.</p>
 

@@ -25,11 +25,43 @@
 	--color-warm: #f2efe7; /* text on dark grounds */
 	--color-steel: #6a6e76;
 	--color-rule: #dad5ca;
+	--color-surface: #ffffff; /* cards, tables, the topbar */
 
 	/* Semantic, application UI only. */
 	--color-success: #0b7a3e;
 	--color-warning: #b07a1e;
 	--color-error: #c03a2e;
+}
+
+/*
+ * Dark is a first-class citizen of the brand, not an automatic flip: every token is its
+ * dark-ground value from the guide. Because the whole UI wears tokens, retinting the
+ * variables retints the application; the rail is already dark and stays put.
+ */
+:root.dark {
+	--color-ink: #f2efe7;
+	--color-paper: #14161a;
+	--color-surface: #1b1e24;
+	--color-steel: #9a9ea6;
+	--color-rule: #2c2f36;
+	--color-accent-50: #1d2333;
+	--color-accent-100: #22304f;
+	--color-accent-500: #93acf7;
+	--color-accent-600: #7a99f5;
+	--color-accent-700: #6383e0;
+	--color-success: #4fbf7e;
+	--color-warning: #d9a84e;
+	--color-error: #e76a5e;
+}
+:root.dark [class*='bg-accent-600'] {
+	/* Light-blue accent on dark ground carries dark text, per the guide's punch rules. */
+	color: var(--color-rail);
+}
+:root.dark select,
+:root.dark input,
+:root.dark textarea {
+	background-color: var(--color-surface);
+	color: var(--color-ink);
 }
 
 body {

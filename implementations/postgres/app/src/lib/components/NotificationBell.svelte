@@ -48,7 +48,7 @@
 	</button>
 
 	{#if open}
-		<div class="absolute right-0 z-20 mt-2 w-80 rounded-lg border border-rule bg-white shadow-lg">
+		<div class="absolute right-0 z-20 mt-2 w-80 rounded-lg border border-rule bg-surface shadow-lg">
 			<div class="border-b border-rule/50 px-4 py-2 text-sm font-semibold">Notifications</div>
 			{#if items.length === 0}
 				<p class="px-4 py-6 text-center text-sm text-steel/70">No notifications</p>

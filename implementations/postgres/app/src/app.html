@@ -4,6 +4,11 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<script>
+			// Applied before first paint from the mirror the app keeps; the real preference
+			// arrives with the session and corrects it if they ever disagree.
+			try { if (localStorage.getItem('crmthree-theme') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

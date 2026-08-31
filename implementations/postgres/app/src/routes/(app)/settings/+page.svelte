@@ -143,7 +143,7 @@
 	{#if problem}<p class="mt-3 rounded bg-error/10 p-2 text-sm text-error">{problem}</p>{/if}
 
 	<!-- Users -->
-	<section class="mt-5 rounded-lg border border-rule bg-white">
+	<section class="mt-5 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'users' ? null : 'users')}>
 			<span class="text-sm font-semibold">User Management <span class="ml-1 font-normal text-steel">{data.users.length}</span></span>
 			<span class="text-steel">{open === 'users' ? '−' : '+'}</span>
@@ -201,7 +201,7 @@
 	</section>
 
 	<!-- Roles -->
-	<section class="mt-4 rounded-lg border border-rule bg-white">
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'roles' ? null : 'roles')}>
 			<span class="text-sm font-semibold">Role Management <span class="ml-1 font-normal text-steel">{data.roles.length}</span></span>
 			<span class="text-steel">{open === 'roles' ? '−' : '+'}</span>
@@ -239,7 +239,7 @@
 							</table>
 						</div>
 						<div class="mt-3 flex justify-end gap-2">
-							<button onclick={() => (editingRole = null)} class="rounded border border-rule px-3 py-1.5 text-xs hover:bg-white">Cancel</button>
+							<button onclick={() => (editingRole = null)} class="rounded border border-rule px-3 py-1.5 text-xs hover:bg-paper">Cancel</button>
 							<button onclick={saveRole} class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500">Save Role</button>
 						</div>
 					</div>
@@ -266,7 +266,7 @@
 	</section>
 
 	<!-- Ticket statuses -->
-	<section class="mt-4 rounded-lg border border-rule bg-white">
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'statuses' ? null : 'statuses')}>
 			<span class="text-sm font-semibold">Ticket Statuses <span class="ml-1 font-normal text-steel">{data.statuses.length}</span></span>
 			<span class="text-steel">{open === 'statuses' ? '−' : '+'}</span>
@@ -300,7 +300,7 @@
 	</section>
 
 	<!-- Email whitelist -->
-	<section class="mt-4 rounded-lg border border-rule bg-white">
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'whitelist' ? null : 'whitelist')}>
 			<span class="text-sm font-semibold">Access Whitelist <span class="ml-1 font-normal text-steel">{data.whitelist.length}</span></span>
 			<span class="text-steel">{open === 'whitelist' ? '−' : '+'}</span>
@@ -332,7 +332,7 @@
 	</section>
 
 	<!-- AI provider -->
-	<section class="mt-4 rounded-lg border border-rule bg-white">
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
 		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'ai' ? null : 'ai')}>
 			<span class="text-sm font-semibold">AI Provider <span class="ml-1 font-normal text-steel">{data.aiConfigs.filter((c) => c.is_active).length ? 'active' : 'not configured'}</span></span>
 			<span class="text-steel">{open === 'ai' ? '−' : '+'}</span>

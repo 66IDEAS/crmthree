@@ -29,7 +29,7 @@
 <!-- Stat tiles: headline numbers are not charts. Colour lives on the numbers. -->
 <div class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-5">
 	{#each tiles as tile (tile.label)}
-		<div class="rounded-lg border border-rule bg-white p-4">
+		<div class="rounded-lg border border-rule bg-surface p-4">
 			<div class="text-2xl font-semibold tabular-nums text-accent-600">
 				{#if tile.unit}<span class="mr-0.5 text-base font-normal text-steel">{tile.unit}</span>{/if}{tile.value}
 			</div>
@@ -40,7 +40,7 @@
 
 <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
 	<!-- Pipeline by stage: single-series magnitude comparison, one hue, one axis. -->
-	<section class="rounded-lg border border-rule bg-white p-5">
+	<section class="rounded-lg border border-rule bg-surface p-5">
 		<h2 class="text-sm font-semibold">Open pipeline by stage</h2>
 		<div class="mt-4 flex flex-col gap-2">
 			{#each data.pipeline as stage (stage.name)}
@@ -54,7 +54,7 @@
 							{#if stage.deals}€{money(stage.value)}{/if}
 						</span>
 					</div>
-					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-white group-hover:block">
+					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
 						{stage.name}: €{money(stage.value)} across {stage.deals} deal{stage.deals === 1 ? '' : 's'}
 					</div>
 				</div>
@@ -63,7 +63,7 @@
 	</section>
 
 	<!-- Tickets by priority: ordered severity, sequential ramp light to dark. -->
-	<section class="rounded-lg border border-rule bg-white p-5">
+	<section class="rounded-lg border border-rule bg-surface p-5">
 		<h2 class="text-sm font-semibold">Tickets by priority</h2>
 		<div class="mt-4 flex flex-col gap-2">
 			{#each data.priorities as row (row.priority)}
@@ -75,7 +75,7 @@
 						<span class="absolute inset-y-0 flex items-center pl-2 text-xs tabular-nums text-ink"
 							style="left: {Math.max(row.tickets / maxPriority * 100, 1.5)}%">{row.tickets}</span>
 					</div>
-					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-white group-hover:block">
+					<div class="pointer-events-none absolute -top-8 left-40 z-10 hidden rounded bg-ink px-2 py-1 text-xs text-paper group-hover:block">
 						{row.priority}: {row.tickets} ticket{row.tickets === 1 ? '' : 's'}
 					</div>
 				</div>

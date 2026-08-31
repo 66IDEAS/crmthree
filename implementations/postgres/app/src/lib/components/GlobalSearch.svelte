@@ -38,10 +38,10 @@
 		onfocus={() => groups.length && (open = true)}
 		onblur={() => setTimeout(() => (open = false), 150)}
 		placeholder="Search…"
-		class="w-full rounded border border-rule bg-paper px-3 py-1.5 text-sm outline-none placeholder:text-steel/70 focus:border-accent-600 focus:bg-white"
+		class="w-full rounded border border-rule bg-paper px-3 py-1.5 text-sm outline-none placeholder:text-steel/70 focus:border-accent-600 focus:bg-surface"
 	/>
 	{#if open}
-		<div class="absolute left-0 right-0 z-20 mt-1 max-h-96 overflow-y-auto rounded-lg border border-rule bg-white shadow-lg">
+		<div class="absolute left-0 right-0 z-20 mt-1 max-h-96 overflow-y-auto rounded-lg border border-rule bg-surface shadow-lg">
 			{#if groups.length === 0}
 				<p class="px-3 py-4 text-center text-sm text-steel/70">No matches</p>
 			{:else}

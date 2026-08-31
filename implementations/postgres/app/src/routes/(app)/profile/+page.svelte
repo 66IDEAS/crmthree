@@ -1,0 +1,87 @@
+<script lang="ts">
+	import { invalidateAll } from '$app/navigation';
+	import DataService from '$lib/DataService';
+	import { fieldLabel } from '$lib/display';
+
+	let { data } = $props();
+
+	let theme = $state(String(data.me.theme_preference ?? 'System'));
+	let language = $state(String(data.me.language_preference ?? 'en'));
+	// Unset means enabled, exactly how the notification triggers read it.
+	let prefs = $state<Record<string, boolean>>({ ...(data.me.notification_preferences ?? {}) });
+	let saved = $state(false);
+
+	async function save() {
+		await DataService.update('UserProfile', String(data.me.id), {
+			theme_preference: theme,
+			language_preference: language,
+			notification_preferences: prefs
+		});
+		saved = true;
+		setTimeout(() => (saved = false), 1500);
+		await invalidateAll();
+	}
+
+	function toggle(type: string) {
+		prefs = { ...prefs, [type]: prefs[type] === false ? true : false };
+	}
+</script>
+
+<div class="mx-auto max-w-2xl">
+	<h1 class="text-xl font-semibold tracking-tight">Profile</h1>
+
+	<section class="mt-5 rounded-lg border border-rule bg-surface p-6">
+		<div class="flex items-center gap-4">
+			<span class="flex h-14 w-14 items-center justify-center rounded-full bg-accent-100 text-lg font-semibold text-accent-700">
+				{String(data.me.first_name ?? '?')[0]}{String(data.me.last_name ?? '?')[0]}
+			</span>
+			<div>
+				<p class="text-lg font-semibold">{data.me.first_name} {data.me.last_name}</p>
+				<p class="text-sm text-steel">{data.me.email} · {data.me.role_name}</p>
+				<p class="mt-0.5 text-xs text-steel">
+					Level {data.me.level} {data.me.level_name} · {data.me.xp_total} XP ·
+					{data.me.current_streak_days}-day streak
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
+		<h2 class="text-sm font-semibold">Appearance & Language</h2>
+		<div class="mt-3 grid grid-cols-2 gap-4 text-sm">
+			<label class="flex flex-col gap-1">
+				<span class="font-medium text-ink/80">Theme</span>
+				<select bind:value={theme} class="rounded border border-steel/40 px-2 py-1.5">
+					<option>Light</option><option>Dark</option><option>System</option>
+				</select>
+			</label>
+			<label class="flex flex-col gap-1">
+				<span class="font-medium text-ink/80">Language</span>
+				<select bind:value={language} class="rounded border border-steel/40 px-2 py-1.5">
+					<option value="en">English</option>
+					<option value="de">Deutsch</option>
+				</select>
+			</label>
+		</div>
+	</section>
+
+	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
+		<h2 class="text-sm font-semibold">Notifications</h2>
+		<p class="mt-1 text-xs text-steel">Applies at the source: a disabled type is never created for you, whoever the writer is.</p>
+		<div class="mt-3 grid grid-cols-2 gap-2">
+			{#each data.notificationTypes as type (type)}
+				<label class="flex items-center gap-2 text-sm">
+					<input type="checkbox" class="h-4 w-4 accent-accent-600"
+						checked={prefs[type] !== false} onchange={() => toggle(type)} />
+					{fieldLabel(type)}
+				</label>
+			{/each}
+		</div>
+	</section>
+
+	<div class="mt-4 flex items-center gap-3">
+		<button onclick={save}
+			class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500">Save</button>
+		{#if saved}<span class="text-sm text-success">Saved</span>{/if}
+	</div>
+</div>

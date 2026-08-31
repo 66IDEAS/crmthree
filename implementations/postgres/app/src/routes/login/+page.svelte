@@ -25,7 +25,7 @@
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-rail">
-	<div class="w-full max-w-sm rounded-lg bg-white p-8 shadow-xl">
+	<div class="w-full max-w-sm rounded-lg bg-surface p-8 shadow-xl">
 		<img src="/crmthree-by-light.svg" alt="CRMTHREE by 66IDEAS" class="mx-auto h-14 w-auto" />
 		<p class="mt-3 text-center text-sm text-steel">Sign in to continue</p>
 

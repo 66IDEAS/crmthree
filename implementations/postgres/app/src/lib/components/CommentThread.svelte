@@ -63,7 +63,7 @@
 	}
 </script>
 
-<section class="rounded-lg border border-rule bg-white">
+<section class="rounded-lg border border-rule bg-surface">
 	<h2 class="border-b border-rule/50 px-4 py-2.5 text-sm font-semibold">
 		Comments <span class="ml-1 font-normal text-steel">{comments.length}</span>
 	</h2>

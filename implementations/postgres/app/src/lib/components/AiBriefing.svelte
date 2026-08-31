@@ -27,7 +27,7 @@
 	}
 </script>
 
-<section class="mt-4 rounded-lg border border-rule bg-white">
+<section class="mt-4 rounded-lg border border-rule bg-surface">
 	<header class="flex items-center gap-2.5 px-4 py-2.5">
 		<span class="flex h-7 w-7 items-center justify-center rounded-full bg-accent-600 text-white">
 			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">

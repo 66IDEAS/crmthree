@@ -35,17 +35,17 @@
 		<div class="flex gap-2">
 			{#if data.opportunity}
 				<a href={`/Opportunity/${data.opportunity.id}`}
-					class="rounded border border-rule px-4 py-1.5 text-sm hover:bg-white">View Opportunity</a>
+					class="rounded border border-rule px-4 py-1.5 text-sm hover:bg-paper">View Opportunity</a>
 			{/if}
 			{#if data.room.status === 'Active'}
-				<button onclick={closeRoom} class="rounded border border-rule px-4 py-1.5 text-sm hover:bg-white">Close Deal Room</button>
+				<button onclick={closeRoom} class="rounded border border-rule px-4 py-1.5 text-sm hover:bg-paper">Close Deal Room</button>
 			{/if}
 		</div>
 	</div>
 
 	<!-- Stage progress: the pipeline as a stepper, current highlighted, click to move. -->
 	{#if data.opportunity}
-		<div class="mt-5 flex items-center gap-1 overflow-x-auto rounded-lg border border-rule bg-white p-4">
+		<div class="mt-5 flex items-center gap-1 overflow-x-auto rounded-lg border border-rule bg-surface p-4">
 			{#each data.stages as stage, index (stage.id)}
 				<button
 					onclick={() => updateStage(stage.id)}
@@ -68,7 +68,7 @@
 	<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
 		<div class="flex flex-col gap-4 lg:col-span-2">
 			<!-- Activity timeline -->
-			<section class="rounded-lg border border-rule bg-white">
+			<section class="rounded-lg border border-rule bg-surface">
 				<h2 class="border-b border-rule/50 px-4 py-2.5 text-sm font-semibold">Activity Timeline</h2>
 				<div class="flex flex-col">
 					{#each data.activities as activity (activity.id)}
@@ -87,7 +87,7 @@
 
 		<div class="flex flex-col gap-4">
 			{#if data.opportunity}
-				<section class="rounded-lg border border-rule bg-white p-4">
+				<section class="rounded-lg border border-rule bg-surface p-4">
 					<h2 class="text-sm font-semibold">Deal Info</h2>
 					<dl class="mt-3 flex flex-col gap-2 text-sm">
 						<div class="flex justify-between"><dt class="text-steel">Amount</dt>
@@ -109,7 +109,7 @@
 					</dl>
 				</section>
 			{/if}
-			<section class="rounded-lg border border-rule bg-white p-4">
+			<section class="rounded-lg border border-rule bg-surface p-4">
 				<h2 class="text-sm font-semibold">Contacts</h2>
 				<div class="mt-2 flex flex-col gap-2">
 					{#each data.contacts as contact (contact.id)}
