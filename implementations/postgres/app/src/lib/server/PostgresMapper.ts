@@ -2,6 +2,7 @@ import type pg from 'pg';
 import { randomUUID } from 'node:crypto';
 import ModelRegistry from '$lib/model/ModelRegistry';
 import { withUser } from './db';
+import { externalConfigFor, ExternalSourceAdapter } from './DataSourceRouter';
 
 /**
  * The Postgres counterpart of the reference implementation's FirestoreMapper (P4, P5).
@@ -121,6 +122,8 @@ export async function createInTx(
 
 const PostgresMapper = {
 	async getById(profileId: string | null, objectType: string, id: string) {
+		const external = await externalConfigFor(objectType);
+		if (external) return ExternalSourceAdapter.getById(external, id);
 		const table = safeTable(objectType);
 		return withUser(profileId, async (client) => {
 			const result = await client.query(`select * from ${table} where id = $1`, [id]);
@@ -143,6 +146,8 @@ const PostgresMapper = {
 	 * index has to be declared in advance.
 	 */
 	async listPage(profileId: string | null, objectType: string, options: ListOptions = {}) {
+		const external = await externalConfigFor(objectType);
+		if (external) return ExternalSourceAdapter.listPage(external, Math.min(options.pageSize ?? 25, 1000));
 		const table = safeTable(objectType);
 		const sortField = options.sort?.field ?? 'created_at';
 		const sortColumn = safeColumn(objectType, sortField);
@@ -177,6 +182,8 @@ const PostgresMapper = {
 	},
 
 	async count(profileId: string | null, objectType: string, options: ListOptions = {}) {
+		const external = await externalConfigFor(objectType);
+		if (external) return ExternalSourceAdapter.count(external);
 		const table = safeTable(objectType);
 		const params: unknown[] = [];
 		const where = buildWhere(objectType, options.filters, params);
@@ -187,10 +194,14 @@ const PostgresMapper = {
 	},
 
 	async create(profileId: string | null, objectType: string, data: Record<string, unknown>) {
+		const external = await externalConfigFor(objectType);
+		if (external) return ExternalSourceAdapter.create(external, data);
 		return withUser(profileId, (client) => createInTx(client, profileId, objectType, data));
 	},
 
 	async update(profileId: string | null, objectType: string, id: string, data: Record<string, unknown>) {
+		const external = await externalConfigFor(objectType);
+		if (external) return ExternalSourceAdapter.update(external, id, data);
 		const table = safeTable(objectType);
 		const columns = Object.keys(data).filter(
 			(key) => key !== 'id' && ModelRegistry.getFieldDefinition(objectType, key)
@@ -212,6 +223,8 @@ const PostgresMapper = {
 	},
 
 	async remove(profileId: string | null, objectType: string, id: string) {
+		const external = await externalConfigFor(objectType);
+		if (external) return ExternalSourceAdapter.remove(external, id);
 		const table = safeTable(objectType);
 		return withUser(profileId, async (client) => {
 			const result = await client.query(`delete from ${table} where id = $1`, [id]);

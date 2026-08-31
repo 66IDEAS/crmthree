@@ -6,7 +6,7 @@
 	let { data } = $props();
 
 	// ── User management (story 62) ──────────────────────────────────────────────
-	let open = $state<'users' | 'roles' | 'statuses' | 'whitelist' | 'ai' | 'audit' | 'languages' | null>('users');
+	let open = $state<'users' | 'roles' | 'statuses' | 'whitelist' | 'ai' | 'audit' | 'languages' | 'sources' | 'replication' | null>('users');
 	let showInvite = $state(false);
 	let invite = $state({ email: '', password: '', firstName: '', lastName: '', roleName: 'User' });
 	let problem = $state('');
@@ -137,6 +137,30 @@
 	}
 	async function removeLanguage(code: string) {
 		await fetch(`/api/translations?code=${encodeURIComponent(code)}`, { method: 'DELETE' });
+		await invalidateAll();
+	}
+
+	// ── Integration ────────────────────────────────────────────────────────────
+	let runResult = $state('');
+	async function runReplication(id: string) {
+		runResult = 'Running…';
+		const response = await fetch('/api/replication', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ id })
+		});
+		const result = await response.json().catch(() => null);
+		runResult = response.ok
+			? `Received ${result.received}: ${result.created} created, ${result.updated} updated, ${result.skipped} skipped`
+			: (result?.message ?? 'Run failed');
+		await invalidateAll();
+	}
+	async function toggleSource(source: { id: string; active: boolean }) {
+		await DataService.update('DataSourceConfig', source.id, { active: !source.active });
+		await invalidateAll();
+	}
+	async function removeReplication(id: string) {
+		await fetch(`/api/replication?id=${id}`, { method: 'DELETE' });
 		await invalidateAll();
 	}
 
@@ -448,6 +472,65 @@
 						{translating ? 'Translating…' : 'Add & AI-translate'}</button>
 				</form>
 				<p class="mt-2 text-xs text-steel">Translation runs the full label catalog through the configured AI provider in batches; users pick their language on the profile page.</p>
+			</div>
+		{/if}
+	</section>
+
+	<!-- Data sources -->
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
+		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'sources' ? null : 'sources')}>
+			<span class="text-sm font-semibold">Data Sources <span class="ml-1 font-normal text-steel">{data.sources.filter((s) => s.active).length} active</span></span>
+			<span class="text-steel">{open === 'sources' ? '−' : '+'}</span>
+		</button>
+		{#if open === 'sources'}
+			<div class="border-t border-rule/50 px-4 pb-4">
+				<p class="mt-2 text-xs text-steel">An active external source serves its object type live from the external system - list, detail, create, update and delete all pass through. Configure new sources via the Data Source Config records; this list toggles them.</p>
+				<table class="mt-2 w-full text-sm">
+					<tbody>
+						{#each data.sources as source (source.id)}
+							<tr class="border-t border-rule/40 first:border-0">
+								<td class="py-2 pr-4 font-medium">{source.object_type}</td>
+								<td class="py-2 pr-4 text-xs text-steel">{source.endpoint_url}</td>
+								<td class="py-2 pr-4"><span class="rounded-full px-2 py-0.5 text-xs font-medium {source.active ? 'bg-success/10 text-success' : 'bg-rule/40 text-steel'}">{source.active ? 'External' : 'Inactive'}</span></td>
+								<td class="py-2 text-right"><button onclick={() => toggleSource(source)} class="text-xs text-steel hover:text-ink">{source.active ? 'Deactivate' : 'Activate'}</button></td>
+							</tr>
+						{:else}
+							<tr><td class="py-3 text-sm text-steel/70">All object types serve from the local database.</td></tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</section>
+
+	<!-- Replication -->
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
+		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'replication' ? null : 'replication')}>
+			<span class="text-sm font-semibold">Replication <span class="ml-1 font-normal text-steel">{data.replications.length}</span></span>
+			<span class="text-steel">{open === 'replication' ? '−' : '+'}</span>
+		</button>
+		{#if open === 'replication'}
+			<div class="border-t border-rule/50 px-4 pb-4">
+				{#if runResult}<p class="mt-2 rounded bg-accent-50 px-3 py-2 text-sm">{runResult}</p>{/if}
+				<table class="mt-2 w-full text-sm">
+					<tbody>
+						{#each data.replications as replication (replication.id)}
+							<tr class="border-t border-rule/40 first:border-0">
+								<td class="py-2 pr-4 font-medium">{replication.name}</td>
+								<td class="py-2 pr-4 text-xs text-steel">{replication.object_type} · key {replication.key_field}</td>
+								<td class="py-2 pr-4 text-xs text-steel">
+									{replication.last_run_at ? `${new Date(replication.last_run_at).toLocaleString()}: ${replication.last_result}` : 'never run'}</td>
+								<td class="py-2 text-right whitespace-nowrap">
+									<button onclick={() => runReplication(replication.id)}
+										class="rounded bg-accent-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-accent-500">Run now</button>
+									<button onclick={() => removeReplication(replication.id)} class="ml-2 text-xs text-steel hover:text-error">Remove</button>
+								</td>
+							</tr>
+						{:else}
+							<tr><td class="py-3 text-sm text-steel/70">No replication configurations. Create one via the API: PUT /api/replication.</td></tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
 		{/if}
 	</section>
