@@ -26,13 +26,15 @@ implementation as-is.
 |---|---|
 | [`specs/`](specs/) | **The product.** Functional specification, UX specification, architecture, and data model |
 | [`implementations/firebase/`](implementations/firebase/) | **The proof.** The canonical reference implementation: React + Firebase (Hosting, Auth, Firestore, Cloud Functions), self-hostable |
+| [`implementations/postgres/`](implementations/postgres/) | **The second proof.** The same spec on a stack that shares nothing with the first: Svelte 5 + SvelteKit + PostgreSQL, authorization in the database, no vendor, runs entirely on a laptop |
 | `implementations/…` | Room for further implementations on other stacks - UI5, Azure, or yours |
 
 ## The specification
 
 - [`specs/specifications.md`](specs/specifications.md) - functional spec: 60+ user stories with acceptance criteria
 - [`specs/ux.md`](specs/ux.md) - UX spec: layouts, navigation, interaction patterns
-- [`specs/architecture.md`](specs/architecture.md) - architecture: services, data access, AI proxy, security
+- [`specs/architecture.md`](specs/architecture.md) - the technology-independent core: delivery model, product package, and the nine capabilities every implementation must provide
+- [`specs/firebase.architecture.md`](specs/firebase.architecture.md) / [`specs/postgres.architecture.md`](specs/postgres.architecture.md) - how each stack realises them, including each implementation's deliberate divergences
 - [`specs/data-model.json`](specs/data-model.json) - the complete data model, machine-readable
 - [`specs/styles/`](specs/styles/) - visual style guides (light and dark)
 
@@ -44,10 +46,16 @@ concrete, the data model is machine-readable, and nothing depends on tribal know
 ![Dashboard](assets/screenshots/02-dashboard.png)
 ![Deal room](assets/screenshots/07-deal-room.png)
 
-## Run the reference implementation
+## Run an implementation
 
-See [`implementations/firebase/README.md`](implementations/firebase/README.md) - in
-short: create a Firebase project, copy two config examples, `npm install`, deploy.
+- **Firebase (reference):** see [`implementations/firebase/README.md`](implementations/firebase/README.md) -
+  create a Firebase project, copy two config examples, `npm install`, deploy.
+- **Postgres (no vendor, fully local):** see [`implementations/postgres/README.md`](implementations/postgres/README.md) -
+  `createdb`, one apply script, `npm run dev`. Nothing leaves your machine.
+
+Two implementations, one specification: that is the thesis demonstrated rather than
+claimed. Building the second one fed corrections back into the spec - the divergence
+sections in the architecture documents record what each stack taught it.
 
 ## Contributing
 
