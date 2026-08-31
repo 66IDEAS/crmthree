@@ -163,7 +163,7 @@ async function hasAnyUsers() {
  * Seed default roles if they don't exist.
  * Returns the Admin role document (with id).
  */
-async function seedDefaultRoles() {
+async function seedDefaultRoles(actorId) {
   if (!db) throw new Error('Firestore is not configured');
   let adminRole = null;
 
@@ -184,6 +184,8 @@ async function seedDefaultRoles() {
         id,
         created_at: now,
         updated_at: now,
+        created_by: actorId,
+        updated_by: actorId,
       };
       await setDoc(doc(db, 'roles', id), roleDoc);
       if (roleDef.name === 'Admin') {
@@ -201,7 +203,7 @@ async function seedDefaultRoles() {
 /**
  * Seed default pipeline stages if they don't exist.
  */
-async function seedDefaultPipelineStages() {
+async function seedDefaultPipelineStages(actorId) {
   if (!db) return;
   const q = query(collection(db, 'pipelineStages'), limit(1));
   const snapshot = await getDocs(q);
@@ -215,6 +217,8 @@ async function seedDefaultPipelineStages() {
       id,
       created_at: now,
       updated_at: now,
+      created_by: actorId,
+      updated_by: actorId,
     });
   }
 }
@@ -226,14 +230,14 @@ async function seedDefaultPipelineStages() {
 export async function setupFirstUser(firebaseUser) {
   if (!db) throw new Error('Firestore is not configured');
 
-  // Seed default roles and pipeline stages
-  const [adminRole] = await Promise.all([
-    seedDefaultRoles(),
-    seedDefaultPipelineStages(),
-  ]);
-
-  // Create UserProfile
+  // The first user's rows reference the profile being created, so its id exists first.
   const id = uuidv4();
+
+  // Seed default roles and pipeline stages, stamped with the first user as actor
+  const [adminRole] = await Promise.all([
+    seedDefaultRoles(id),
+    seedDefaultPipelineStages(id),
+  ]);
   const now = new Date().toISOString();
   const profile = {
     id,
@@ -254,6 +258,8 @@ export async function setupFirstUser(firebaseUser) {
     notification_preferences: null,
     created_at: now,
     updated_at: now,
+    created_by: id,
+    updated_by: id,
   };
 
   await setDoc(doc(db, 'userProfiles', id), profile);
@@ -306,7 +312,7 @@ export async function resolveUserSession(firebaseUser) {
   const role = await fetchRole(profile.role_id);
 
   // Ensure pipeline stages exist
-  seedDefaultPipelineStages().catch(() => {});
+  seedDefaultPipelineStages(profile.id).catch(() => {});
 
   // Ensure Admin role ribbon_items stays in sync with ALL_RIBBON_ITEMS
   if (role?.ribbon_items) {

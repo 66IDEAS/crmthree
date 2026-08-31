@@ -5,6 +5,18 @@ import ModelRegistry from '../model/ModelRegistry';
 import { getAutoNumberField } from '../utils/fieldUtils';
 import { getNextAutoNumber } from './FirestoreMapper';
 
+/**
+ * The profile id of the signed-in user, set by AuthContext when a session resolves.
+ * Module-level singleton, same pattern as TranslationService: DataService has no React
+ * context access, yet every write must carry audit provenance. Records written before
+ * sign-in resolves (none in practice) simply omit the fields rather than fail.
+ */
+let currentActorId = null;
+
+export function setCurrentActor(profileId) {
+  currentActorId = profileId || null;
+}
+
 class ValidationError extends Error {
   constructor(objectType, errors) {
     super(`Validation failed for ${objectType}: ${errors.map((e) => e.error).join('; ')}`);
@@ -46,6 +58,13 @@ const DataService = {
       id: data.id || uuidv4(),
       created_at: now,
       updated_at: now,
+      // Audit provenance is part of the model's contract; its absence in every record this
+      // app had ever written only surfaced when a database that enforces the model tried to
+      // import the data.
+      ...(currentActorId && {
+        created_by: data.created_by || currentActorId,
+        updated_by: currentActorId,
+      }),
     };
 
     // Generate auto-number if the object type has one
@@ -67,6 +86,7 @@ const DataService = {
     const enriched = {
       ...data,
       updated_at: new Date().toISOString(),
+      ...(currentActorId && { updated_by: currentActorId }),
     };
 
     return routeOperation(objectType, 'update', id, enriched);

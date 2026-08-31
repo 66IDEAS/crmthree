@@ -7,6 +7,7 @@ import {
   signOut,
   resolveUserSession,
 } from '../services/AuthService';
+import { setCurrentActor } from '../services/DataService';
 
 const AuthContext = createContext({
   user: null,
@@ -51,6 +52,7 @@ export default function AuthProvider({ children }) {
     try {
       const result = await resolveUserSession(firebaseUser);
       setUserProfile(result.profile);
+      setCurrentActor(result.profile?.id ?? null);
       setRole(result.role);
       setRejectedReason(result.rejected || null);
     } catch (err) {
@@ -89,6 +91,7 @@ export default function AuthProvider({ children }) {
     setUserProfile(null);
     setRole(null);
     setRejectedReason(null);
+    setCurrentActor(null);
   }, []);
 
   const hasPermission = useCallback(
