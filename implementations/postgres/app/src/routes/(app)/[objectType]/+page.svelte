@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { t } from '$lib/i18n';
 	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
 
 	let { data } = $props();
@@ -97,7 +98,7 @@
 	<h1 class="text-xl font-semibold tracking-tight">
 		{objectLabel(data.objectType, true)}
 		<span class="ml-2 text-sm font-normal text-steel/70">
-			{data.total} record{data.total === 1 ? '' : 's'}{data.filtered ? ' (filtered)' : ''}
+			{data.total} {t('ui.records', 'records')}{data.filtered ? ' (filtered)' : ''}
 		</span>
 		{#if data.filtered}
 			<button onclick={clearFilters} class="ml-2 text-xs font-normal text-accent-600 hover:underline">Clear filters</button>
@@ -106,7 +107,7 @@
 	<div class="flex items-center gap-2">
 		<div class="relative">
 			<button onclick={() => (columnsOpen = !columnsOpen)}
-				class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">Columns</button>
+				class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">{t('ui.columns', 'Columns')}</button>
 			{#if columnsOpen}
 				<div class="absolute right-0 z-20 mt-1 max-h-80 w-56 overflow-y-auto rounded-lg border border-rule bg-surface p-2 shadow-lg">
 					{#each data.offerable as field (field.name)}
@@ -125,14 +126,14 @@
 			<option value="25">25</option><option value="50">50</option><option value="100">100</option>
 		</select>
 		<a href={`/api/csv/${data.objectType}`} download
-			class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">Export CSV</a>
+			class="rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">{t('ui.export_csv', 'Export CSV')}</a>
 		<label class="cursor-pointer rounded border border-rule px-3 py-1.5 text-sm hover:bg-paper">
-			{importing ? 'Importing…' : 'Import CSV'}
+			{importing ? 'Importing…' : t('ui.import_csv', 'Import CSV')}
 			<input type="file" accept=".csv,text/csv" class="hidden" onchange={importCsv} disabled={importing} />
 		</label>
 		<a href={`/${data.objectType}/new`}
 			class="rounded bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-500">
-			New {objectLabel(data.objectType)}
+			{t('ui.new', 'New')} {objectLabel(data.objectType)}
 		</a>
 	</div>
 </div>

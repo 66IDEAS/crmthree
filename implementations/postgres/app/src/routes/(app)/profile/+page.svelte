@@ -59,7 +59,9 @@
 				<span class="font-medium text-ink/80">Language</span>
 				<select bind:value={language} class="rounded border border-steel/40 px-2 py-1.5">
 					<option value="en">English</option>
-					<option value="de">Deutsch</option>
+					{#each data.languages as lang (lang.code)}
+						<option value={lang.code}>{lang.language_name}</option>
+					{/each}
 				</select>
 			</label>
 		</div>

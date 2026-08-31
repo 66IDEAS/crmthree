@@ -3,6 +3,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import DataService from '$lib/DataService';
 	import FieldInput from '$lib/components/FieldInput.svelte';
+	import { t } from '$lib/i18n';
 	import { displayName, fieldLabel, formatValue, enumChipClass, objectLabel } from '$lib/display';
 	import { onChange } from '$lib/realtime-client';
 	import RelatedCard from '$lib/components/RelatedCard.svelte';
@@ -151,9 +152,9 @@
 				{/each}
 				<button onclick={startEdit} disabled={lockedByOther}
 					class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500 disabled:cursor-not-allowed disabled:opacity-40">
-					Edit
+					{t('ui.edit', 'Edit')}
 				</button>
-				<button onclick={remove} class="rounded border border-error/30 px-4 py-1.5 text-sm text-error hover:bg-error/5">Delete</button>
+				<button onclick={remove} class="rounded border border-error/30 px-4 py-1.5 text-sm text-error hover:bg-error/5">{t('ui.delete', 'Delete')}</button>
 			</div>
 		{/if}
 	</div>
@@ -183,9 +184,9 @@
 			<div class="mt-6 flex gap-2">
 				<button type="submit" disabled={busy}
 					class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500 disabled:opacity-50">
-					{busy ? 'Saving…' : 'Save'}
+					{busy ? 'Saving…' : t('ui.save', 'Save')}
 				</button>
-				<button type="button" onclick={stopEdit} class="rounded border border-steel/40 px-4 py-1.5 text-sm hover:bg-paper">Cancel</button>
+				<button type="button" onclick={stopEdit} class="rounded border border-steel/40 px-4 py-1.5 text-sm hover:bg-paper">{t('ui.cancel', 'Cancel')}</button>
 			</div>
 		</form>
 	{:else}

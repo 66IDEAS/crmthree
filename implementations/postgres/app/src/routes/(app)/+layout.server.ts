@@ -8,12 +8,20 @@ import { withUser } from '$lib/server/db';
  */
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.profile) throw redirect(303, '/login');
-	const prefs = await withUser(locals.profile.id, (client) =>
-		client
+	const [prefs, labels] = await withUser(locals.profile.id, async (client) => {
+		const p = await client
 			.query('select theme_preference, language_preference from user_profile where id = $1', [
 				locals.profile!.id
 			])
-			.then((r) => r.rows[0] ?? {})
-	);
-	return { profile: locals.profile, prefs };
+			.then((r) => r.rows[0] ?? {});
+		const lang = p.language_preference ?? 'en';
+		const l =
+			lang === 'en'
+				? {}
+				: await client
+						.query('select labels from translation where code = $1', [lang])
+						.then((r) => r.rows[0]?.labels ?? {});
+		return [p, l];
+	});
+	return { profile: locals.profile, prefs, labels };
 };

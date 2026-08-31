@@ -6,7 +6,7 @@
 	let { data } = $props();
 
 	// ── User management (story 62) ──────────────────────────────────────────────
-	let open = $state<'users' | 'roles' | 'statuses' | 'whitelist' | 'ai' | 'audit' | null>('users');
+	let open = $state<'users' | 'roles' | 'statuses' | 'whitelist' | 'ai' | 'audit' | 'languages' | null>('users');
 	let showInvite = $state(false);
 	let invite = $state({ email: '', password: '', firstName: '', lastName: '', roleName: 'User' });
 	let problem = $state('');
@@ -115,6 +115,28 @@
 		});
 		if (!response.ok) { problem = (await response.json().catch(() => null))?.message ?? 'Failed'; return; }
 		ai = { provider: 'Anthropic', model: '', api_key: '', endpoint_url: '' };
+		await invalidateAll();
+	}
+
+	// ── Languages ──────────────────────────────────────────────────────────────
+	let newLang = $state({ code: '', language_name: '' });
+	let translating = $state(false);
+	async function addLanguage(event: SubmitEvent, translate: boolean) {
+		event.preventDefault();
+		problem = '';
+		translating = translate;
+		const response = await fetch('/api/translations', {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ ...newLang, translate })
+		});
+		translating = false;
+		if (!response.ok) { problem = (await response.json().catch(() => null))?.message ?? 'Failed'; return; }
+		newLang = { code: '', language_name: '' };
+		await invalidateAll();
+	}
+	async function removeLanguage(code: string) {
+		await fetch(`/api/translations?code=${encodeURIComponent(code)}`, { method: 'DELETE' });
 		await invalidateAll();
 	}
 
@@ -394,6 +416,38 @@
 						{/each}
 					</tbody>
 				</table>
+			</div>
+		{/if}
+	</section>
+
+	<!-- Languages -->
+	<section class="mt-4 rounded-lg border border-rule bg-surface">
+		<button class="flex w-full items-center justify-between px-4 py-3 text-left" onclick={() => (open = open === 'languages' ? null : 'languages')}>
+			<span class="text-sm font-semibold">Languages <span class="ml-1 font-normal text-steel">{data.languages.length + 1}</span></span>
+			<span class="text-steel">{open === 'languages' ? '−' : '+'}</span>
+		</button>
+		{#if open === 'languages'}
+			<div class="border-t border-rule/50 px-4 pb-4">
+				<table class="mt-2 w-full text-sm">
+					<tbody>
+						<tr><td class="py-2 pr-4 font-medium">English</td><td class="py-2 pr-4 text-xs text-steel">en · built-in default</td><td></td></tr>
+						{#each data.languages as language (language.code)}
+							<tr class="border-t border-rule/40">
+								<td class="py-2 pr-4 font-medium">{language.language_name}</td>
+								<td class="py-2 pr-4 text-xs text-steel">{language.code}</td>
+								<td class="py-2 text-right"><button onclick={() => removeLanguage(language.code)} class="text-xs text-steel hover:text-error">Remove</button></td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+				<form onsubmit={(e) => addLanguage(e, true)} class="mt-3 flex items-center gap-2 text-sm">
+					<input required placeholder="Code (de)" maxlength="5" bind:value={newLang.code} class="w-24 rounded border border-steel/40 px-2 py-1.5" />
+					<input required placeholder="Language name (Deutsch)" bind:value={newLang.language_name} class="flex-1 rounded border border-steel/40 px-2 py-1.5" />
+					<button type="submit" disabled={translating}
+						class="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-500 disabled:opacity-50">
+						{translating ? 'Translating…' : 'Add & AI-translate'}</button>
+				</form>
+				<p class="mt-2 text-xs text-steel">Translation runs the full label catalog through the configured AI provider in batches; users pick their language on the profile page.</p>
 			</div>
 		{/if}
 	</section>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '$lib/i18n';
 	type Group = { objectType: string; label: string; matches: { id: string; display: string; sub: string }[] };
 
 	let query = $state('');
@@ -37,7 +38,7 @@
 		oninput={onInput}
 		onfocus={() => groups.length && (open = true)}
 		onblur={() => setTimeout(() => (open = false), 150)}
-		placeholder="Search…"
+		placeholder={t('ui.search', 'Search…')}
 		class="w-full rounded border border-rule bg-paper px-3 py-1.5 text-sm outline-none placeholder:text-steel/70 focus:border-accent-600 focus:bg-surface"
 	/>
 	{#if open}

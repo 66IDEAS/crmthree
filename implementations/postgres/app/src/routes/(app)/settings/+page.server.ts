@@ -3,7 +3,7 @@ import { withUser, withOwner } from '$lib/server/db';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const isAdmin = locals.profile!.role_name === 'Admin';
-	if (!isAdmin) return { isAdmin, users: [], roles: [], statuses: [], whitelist: [], aiConfigs: [], audit: [] };
+	if (!isAdmin) return { isAdmin, users: [], roles: [], statuses: [], whitelist: [], aiConfigs: [], audit: [], languages: [] };
 
 	// The provider-config query runs on the owner connection: has_key touches the api_key
 	// column, which is deliberately unreadable by the application role. The page itself is
@@ -16,8 +16,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			)
 			.then((r) => r.rows)
 	);
-	const [users, roles, statuses, whitelist, audit] = await withUser(locals.profile!.id, async (client) => {
-		const [u, r, t, w, a] = await Promise.all([
+	const [users, roles, statuses, whitelist, languages, audit] = await withUser(locals.profile!.id, async (client) => {
+		const [u, r, t, w, l, a] = await Promise.all([
 			client.query(
 				`select p.id, p.email, p.first_name, p.last_name, p.active, p.auth_uid is not null as claimed,
 				        r.id as role_id, r.name as role_name
@@ -27,13 +27,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 			client.query(`select id, name, description, is_system_role, permissions from role order by created_at`),
 			client.query(`select id, name, sort_order, is_closed, is_resolved, active from ticket_status order by sort_order`),
 			client.query(`select id, kind, value, created_at from email_whitelist order by created_at`),
+			client.query(`select code, language_name, updated_at from translation order by code`),
 			client.query(
 				`select a.*, p.first_name, p.last_name from audit_log a
 				 left join user_profile p on p.id = a.user_id
 				 order by a."timestamp" desc limit 100`
 			)
 		]);
-		return [u.rows, r.rows, t.rows, w.rows, a.rows];
+		return [u.rows, r.rows, t.rows, w.rows, l.rows, a.rows];
 	});
-	return { isAdmin, users, roles, statuses, whitelist, aiConfigs, audit };
+	return { isAdmin, users, roles, statuses, whitelist, aiConfigs, audit, languages };
 };

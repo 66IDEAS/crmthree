@@ -1,4 +1,5 @@
 import ModelRegistry from '$lib/model/ModelRegistry';
+import { t } from '$lib/i18n';
 
 /**
  * Display helpers shared by list, detail and form pages. The name resolution order matches
@@ -19,11 +20,12 @@ export function displayName(record: Record<string, unknown> | null | undefined):
 
 /** Human label for a field name: account_id -> Account, first_name -> First Name. */
 export function fieldLabel(name: string): string {
-	return name
+	const fallback = name
 		.replace(/_id$/, '')
 		.split('_')
 		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
 		.join(' ');
+	return t(`field.${name}`, fallback);
 }
 
 const GOOD = new Set(['Active', 'Won', 'Paid', 'Completed', 'Published', 'Accepted', 'Confirmed', 'Qualified', 'Converted']);
@@ -88,9 +90,11 @@ export const NAV_VIRTUAL = new Set(['CaseRoom', 'Timeline']);
 /** Object -> human plural for nav and headings, only where naive pluralisation fails. */
 export function objectLabel(objectType: string, plural = false): string {
 	const spaced = objectType.replace(/([a-z])([A-Z])/g, '$1 $2');
-	if (!plural) return spaced;
-	if (objectType === 'SLA') return 'SLAs';
-	if (objectType === 'Timeline') return 'Team Timeline';
-	if (spaced.endsWith('y')) return spaced.slice(0, -1) + 'ies';
-	return spaced + 's';
+	if (!plural) return t(`object.${objectType}`, spaced);
+	let fallback;
+	if (objectType === 'SLA') fallback = 'SLAs';
+	else if (objectType === 'Timeline') fallback = 'Team Timeline';
+	else if (spaced.endsWith('y')) fallback = spaced.slice(0, -1) + 'ies';
+	else fallback = spaced + 's';
+	return t(`object.${objectType}.plural`, fallback);
 }
