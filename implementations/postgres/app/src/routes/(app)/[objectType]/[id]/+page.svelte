@@ -7,7 +7,6 @@
 	import { onChange } from '$lib/realtime-client';
 	import RelatedCard from '$lib/components/RelatedCard.svelte';
 	import ConvertLeadDialog from '$lib/components/ConvertLeadDialog.svelte';
-	import CommentThread from '$lib/components/CommentThread.svelte';
 	import AiBriefing from '$lib/components/AiBriefing.svelte';
 
 	let { data } = $props();
@@ -132,6 +131,12 @@
 		</div>
 		{#if !editing}
 			<div class="flex gap-2">
+				{#if data.caseRoom}
+					<a href={`/CaseRoom/${data.record.id}`}
+						class="rounded border border-accent-600 px-4 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50">
+						Open Case Room
+					</a>
+				{/if}
 				{#if data.isLead && data.record.status !== 'Converted'}
 					<button onclick={() => (convertingLead = true)}
 						class="rounded border border-accent-600 px-4 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50">
@@ -220,10 +225,5 @@
 	{#each data.related as card (card.name)}
 		<RelatedCard {card} columns={data.cardColumns[card.name] ?? []} linkOptions={data.linkOptions[card.name] ?? []} />
 	{/each}
-	{#if data.commentable}
-		<div class="mt-4">
-			<CommentThread parentType={data.objectType} parentId={String(data.record.id)} profileId={data.profileId} />
-		</div>
-	{/if}
 {/if}
 </div>

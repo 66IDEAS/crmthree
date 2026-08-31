@@ -48,11 +48,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		options,
 		related,
 		conversions: (DOCUMENT_CONVERSIONS[objectType] ?? []).map(({ targetType, label }) => ({ targetType, label })),
-		// Comment threads belong to the rooms (stories 33/34), matching the reference
-		// implementation: the Deal Room workspace renders its own, and the ticket detail
-		// page carries the case discussion. The Comment parent enumeration is wider, but an
-		// enumeration says where a comment MAY point, not where a thread is a feature.
-		commentable: objectType === 'Ticket',
+		// Comment threads belong to the rooms (stories 33/34): the Deal Room and the Case
+		// Room each render their own. The ticket detail links to its Case Room instead.
+		caseRoom: objectType === 'Ticket',
 		// The briefing card exists only for supported types AND a configured provider.
 		aiBriefing:
 			['Account', 'Contact', 'Lead', 'Opportunity', 'Ticket', 'Quotation', 'SalesOrder', 'Invoice'].includes(objectType) &&

@@ -77,10 +77,13 @@ export function listColumns(objectType: string) {
 
 /** The object types shown in the navigation rail. */
 export const NAV_OBJECTS = [
-	'Account', 'Contact', 'Lead', 'Opportunity', 'DealRoom', 'Quotation', 'SalesOrder',
+	'Account', 'Contact', 'Lead', 'Opportunity', 'DealRoom', 'CaseRoom', 'Quotation', 'SalesOrder',
 	'Invoice', 'Product', 'Activity', 'Ticket', 'KnowledgeArticle', 'Asset',
 	'ServiceContract', 'SLA'
 ] as const;
+
+/** Nav entries that are workspaces over another type rather than model objects. */
+export const NAV_VIRTUAL = new Set(['CaseRoom']);
 
 /** Object -> human plural for nav and headings, only where naive pluralisation fails. */
 export function objectLabel(objectType: string, plural = false): string {

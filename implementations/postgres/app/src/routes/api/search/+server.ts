@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import ModelRegistry from '$lib/model/ModelRegistry';
 import { tableName } from '$lib/server/PostgresMapper';
 import { withUser } from '$lib/server/db';
-import { displayName, NAV_OBJECTS, objectLabel } from '$lib/display';
+import { displayName, NAV_OBJECTS, NAV_VIRTUAL, objectLabel } from '$lib/display';
 
 /**
  * Global search (story 16). One ILIKE query per navigable object type over its name-like,
@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const profileId = locals.profile.id;
 
 	const groups = await Promise.all(
-		NAV_OBJECTS.map(async (objectType) => {
+		NAV_OBJECTS.filter((t) => !NAV_VIRTUAL.has(t)).map(async (objectType) => {
 			const columns = searchColumns(objectType);
 			if (columns.length === 0) return null;
 			const where = columns.map((c) => `"${c}" ilike $1`).join(' or ');
