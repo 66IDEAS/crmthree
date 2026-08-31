@@ -35,6 +35,19 @@ function safeColumn(objectType: string, field: string): string {
 	return definition.name;
 }
 
+/**
+ * node-postgres serializes JS arrays as Postgres ARRAY literals, so a json-typed field
+ * holding an array binds as invalid jsonb - and an empty array silently becomes '{}',
+ * which is valid JSON but the wrong value. Everything destined for a jsonb column is
+ * stringified explicitly.
+ */
+function bindValue(field: { type: string }, value: unknown): unknown {
+	if (field.type === 'json' && value !== null && typeof value === 'object') {
+		return JSON.stringify(value);
+	}
+	return value;
+}
+
 const OPERATORS: Record<string, string> = {
 	eq: '=',
 	ne: '<>',
@@ -106,8 +119,9 @@ export async function createInTx(
 	const params: unknown[] = [id, profileId];
 
 	for (const key of Object.keys(data)) {
-		if (key === 'id' || !ModelRegistry.getFieldDefinition(objectType, key)) continue;
-		params.push(data[key]);
+		const field = ModelRegistry.getFieldDefinition(objectType, key);
+		if (key === 'id' || !field) continue;
+		params.push(bindValue(field, data[key]));
 		names.push(safeColumn(objectType, key));
 		placeholders.push(`$${params.length}`);
 	}
@@ -208,7 +222,7 @@ const PostgresMapper = {
 		);
 		const params: unknown[] = [id, profileId];
 		const assignments = columns.map((column) => {
-			params.push(data[column]);
+			params.push(bindValue(ModelRegistry.getFieldDefinition(objectType, column)!, data[column]));
 			return `"${safeColumn(objectType, column)}" = $${params.length}`;
 		});
 		assignments.push('updated_at = now()', 'updated_by = $2');

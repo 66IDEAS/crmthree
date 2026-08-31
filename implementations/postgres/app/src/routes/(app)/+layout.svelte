@@ -9,6 +9,19 @@
 
 	let { data, children } = $props();
 
+	// Role-adaptive navigation (story 48): a role listing ribbon items sees only those;
+	// an empty list means everything. Admins always see everything.
+	const navItems = $derived.by(() => {
+		const allowed = data.prefs?.ribbon_items;
+		if (data.profile.role_name === 'Admin' || !Array.isArray(allowed) || allowed.length === 0) {
+			return NAV_OBJECTS;
+		}
+		return NAV_OBJECTS.filter((item) => allowed.includes(item));
+	});
+
+	// Mobile (story 49): the rail hides behind a hamburger overlay and closes on navigation.
+	let mobileOpen = $state(false);
+
 	// Installed before anything below renders; SSR renders the tree synchronously after
 	// loads resolve, so per-request labels do not bleed between sessions.
 	setLabels(data.labels);
@@ -56,7 +69,7 @@
 <div class="flex h-screen overflow-hidden">
 	<!-- Navigation rail. Deep-ink ground; the toggle is the rail's first item, per the
 	     shared UX: expanded shows labels, collapsed shows monogram tiles. -->
-	<aside class="flex shrink-0 flex-col bg-rail text-warm/70 transition-[width] duration-150 {collapsed ? 'w-14' : 'w-56'}">
+	<aside class="{mobileOpen ? 'fixed inset-y-0 left-0 z-40 flex' : 'hidden'} shrink-0 flex-col bg-rail md:static md:flex text-warm/70 transition-[width] duration-150 {collapsed ? 'w-14' : 'w-56'}">
 		<a href="/" class="flex h-16 shrink-0 items-center px-3" aria-label="Home">
 			{#if collapsed}
 				<img src="/logo.svg" alt="CRMTHREE" class="mx-auto h-8 w-8" />
@@ -77,11 +90,12 @@
 		<div class="mx-3 my-1 border-t border-white/10"></div>
 
 		<nav class="rail-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
-			{#each NAV_OBJECTS as objectType}
+			{#each navItems as objectType}
 				{@const active = page.url.pathname.startsWith(`/${objectType}`)}
 				<a
 					href={`/${objectType}`}
 					title={objectLabel(objectType, true)}
+					onclick={() => (mobileOpen = false)}
 					class="flex items-center gap-3 rounded px-1.5 py-1.5 text-sm transition-colors
 						{active ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-warm'}"
 				>
@@ -104,8 +118,16 @@
 	</aside>
 
 	<div class="flex min-w-0 flex-1 flex-col">
-		<header class="flex shrink-0 items-center justify-between gap-4 border-b border-rule bg-surface px-6 py-3">
-			<GlobalSearch />
+		<header class="flex shrink-0 items-center justify-between gap-4 border-b border-rule bg-surface px-4 py-3 md:px-6">
+			<div class="flex min-w-0 items-center gap-3">
+				<button onclick={() => (mobileOpen = !mobileOpen)} aria-label="Menu"
+					class="rounded p-1.5 text-steel hover:bg-rule/30 md:hidden">
+					<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+					</svg>
+				</button>
+				<GlobalSearch />
+			</div>
 			<div class="flex items-center gap-4">
 			<NotificationBell />
 			<a href="/profile" class="text-sm hover:text-accent-600">
@@ -115,6 +137,10 @@
 			<button onclick={signOut} class="text-sm text-steel hover:text-ink">{t('ui.sign_out', 'Sign out')}</button>
 			</div>
 		</header>
+		{#if mobileOpen}
+			<button class="fixed inset-0 z-30 bg-ink/40 md:hidden" aria-label="Close menu"
+				onclick={() => (mobileOpen = false)}></button>
+		{/if}
 		<main class="flex-1 overflow-y-auto p-6">
 			{@render children()}
 		</main>

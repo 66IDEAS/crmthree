@@ -10,9 +10,11 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.profile) throw redirect(303, '/login');
 	const [prefs, labels] = await withUser(locals.profile.id, async (client) => {
 		const p = await client
-			.query('select theme_preference, language_preference from user_profile where id = $1', [
-				locals.profile!.id
-			])
+			.query(
+				`select u.theme_preference, u.language_preference, r.ribbon_items
+				   from user_profile u join role r on r.id = u.role_id where u.id = $1`,
+				[locals.profile!.id]
+			)
 			.then((r) => r.rows[0] ?? {});
 		const lang = p.language_preference ?? 'en';
 		const l =
