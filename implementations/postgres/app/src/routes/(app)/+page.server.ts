@@ -9,7 +9,7 @@ import { withUser } from '$lib/server/db';
 export const load: PageServerLoad = async ({ locals }) => {
 	const profileId = locals.profile!.id;
 	return withUser(profileId, async (client) => {
-		const [kpis, pipeline, priorities, leaders, challenges] = await Promise.all([
+		const [kpis, pipeline, priorities, leaders, challenges, trend] = await Promise.all([
 			client.query(`
 				select
 					(select coalesce(sum(amount), 0) from opportunity where result = 'Open') as pipeline_value,
@@ -41,14 +41,33 @@ export const load: PageServerLoad = async ({ locals }) => {
 			client.query(`
 				select title, target_value, current_value, status from challenge
 				 where user_id = $1 and status = 'Active' order by created_at desc limit 3
-			`, [profileId]).catch(() => ({ rows: [] }))
+			`, [profileId]).catch(() => ({ rows: [] })),
+			// Trend (story 54): new business records per month, twelve months back, gaps as
+			// zero months rather than missing bars.
+			client.query(`
+				with months as (
+					select generate_series(date_trunc('month', now()) - interval '11 months',
+					                       date_trunc('month', now()), '1 month') as m),
+				created as (
+					select date_trunc('month', created_at) as m from account
+					union all select date_trunc('month', created_at) from contact
+					union all select date_trunc('month', created_at) from lead
+					union all select date_trunc('month', created_at) from opportunity
+					union all select date_trunc('month', created_at) from activity
+					union all select date_trunc('month', created_at) from ticket)
+				select to_char(months.m, 'Mon') as label, to_char(months.m, 'YYYY-MM') as key,
+				       count(created.m)::int as total
+				  from months left join created on created.m = months.m
+				 group by months.m order by months.m
+			`)
 		]);
 		return {
 			kpis: kpis.rows[0],
 			pipeline: pipeline.rows as { name: string; value: string; deals: number }[],
 			priorities: priorities.rows as { priority: string; tickets: number }[],
 			leaders: leaders.rows,
-			challenges: challenges.rows
+			challenges: challenges.rows,
+			trend: trend.rows as { label: string; key: string; total: number }[]
 		};
 	});
 };

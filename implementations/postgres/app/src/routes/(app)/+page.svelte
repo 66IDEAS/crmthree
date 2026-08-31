@@ -13,6 +13,7 @@
 	]);
 
 	const maxStage = $derived(Math.max(1, ...data.pipeline.map((s) => Number(s.value))));
+	const maxTrend = $derived(Math.max(1, ...data.trend.map((m) => m.total)));
 	const maxPriority = $derived(Math.max(1, ...data.priorities.map((p) => p.tickets)));
 
 	// Sequential ramp for the ordered priority scale, light to dark, validated for lightness
@@ -129,4 +130,22 @@
 		{/if}
 	</section>
 </div>
+
+<!-- Trend (story 54): one series, one axis, columns anchored to the baseline. -->
+<section class="mt-4 rounded-lg border border-rule bg-surface p-5">
+	<h2 class="text-sm font-semibold">New records per month</h2>
+	<div class="mt-4 flex h-36 items-end gap-2">
+		{#each data.trend as month (month.key)}
+			<div class="group relative flex h-full flex-1 flex-col items-center justify-end gap-1">
+				<span class="text-xs tabular-nums text-ink">{month.total || ''}</span>
+				<div class="w-full max-w-10 rounded-t bg-accent-600 transition-opacity group-hover:opacity-80"
+					style="height: {Math.max((month.total / maxTrend) * 100, month.total ? 2 : 0.5)}%"></div>
+				<span class="text-[10px] text-steel">{month.label}</span>
+				<div class="pointer-events-none absolute -top-6 z-10 hidden rounded bg-ink px-2 py-1 text-xs whitespace-nowrap text-paper group-hover:block">
+					{month.key}: {month.total} new record{month.total === 1 ? '' : 's'}
+				</div>
+			</div>
+		{/each}
+	</div>
+</section>
 
