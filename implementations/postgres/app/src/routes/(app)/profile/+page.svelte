@@ -79,6 +79,42 @@
 		</div>
 	</section>
 
+	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
+		<h2 class="text-sm font-semibold">Badges</h2>
+		{#if data.badges.length === 0}
+			<p class="mt-2 text-sm text-steel/70">No badges earned yet.</p>
+		{:else}
+			<div class="mt-3 grid grid-cols-2 gap-3">
+				{#each data.badges as badge (badge.name)}
+					<div class="flex items-center gap-3 rounded border border-rule/60 p-3">
+						<span class="flex h-9 w-9 items-center justify-center rounded-full bg-warning/15 text-warning">★</span>
+						<span class="min-w-0">
+							<span class="block truncate text-sm font-medium">{badge.name}</span>
+							<span class="block truncate text-xs text-steel">{badge.description ?? badge.category ?? ''}</span>
+						</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</section>
+
+	<section class="mt-4 rounded-lg border border-rule bg-surface p-6">
+		<h2 class="text-sm font-semibold">Your Recent Activity</h2>
+		<div class="mt-2 flex flex-col">
+			{#each data.activity as entry, index (index)}
+				<div class="flex items-center gap-3 border-t border-rule/40 py-1.5 text-sm first:border-0">
+					<span class="w-32 shrink-0 text-xs text-steel">{new Date(entry.timestamp).toLocaleString()}</span>
+					<span class="rounded-full px-2 py-0.5 text-xs font-medium
+						{entry.action === 'Create' ? 'bg-success/10 text-success' : entry.action === 'Delete' ? 'bg-error/10 text-error' : 'bg-accent-50 text-accent-600'}">{entry.action}</span>
+					<span class="min-w-0 flex-1 truncate">{entry.object_type}{entry.object_name ? ` · ${entry.object_name}` : ''}</span>
+					<span class="hidden truncate text-xs text-steel md:block">{entry.summary ?? ''}</span>
+				</div>
+			{:else}
+				<p class="py-3 text-sm text-steel/70">Nothing yet - your changes will show up here.</p>
+			{/each}
+		</div>
+	</section>
+
 	<div class="mt-4 flex items-center gap-3">
 		<button onclick={save}
 			class="rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-500">Save</button>

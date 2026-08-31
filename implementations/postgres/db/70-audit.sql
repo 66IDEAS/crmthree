@@ -20,7 +20,9 @@ begin
     select array_agg(n.key) into changed
       from jsonb_each(to_jsonb(new)) n join jsonb_each(to_jsonb(old)) o on o.key = n.key
      where n.value is distinct from o.value
-       and n.key not in ('updated_at', 'updated_by');
+       and n.key not in ('updated_at', 'updated_by',
+                         -- gamification counters churn constantly and are not history
+                         'xp_total', 'level', 'level_name', 'current_streak_days', 'longest_streak_days');
     if changed is null then return new; end if;   -- heartbeat writes leave no history
   end if;
 
@@ -62,6 +64,7 @@ begin
     'ticket_knowledge_article','service_contract','asset','document','comment',
     'user_profile','role','team','pipeline_stage','ticket_status'])
   loop
+    execute format('drop trigger if exists %I on %I', tab || '_audit', tab);
     execute format('create trigger %I after insert or update or delete on %I
                     for each row execute function app.audit_change()', tab || '_audit', tab);
   end loop;

@@ -79,17 +79,18 @@ export function listColumns(objectType: string) {
 export const NAV_OBJECTS = [
 	'Account', 'Contact', 'Lead', 'Opportunity', 'DealRoom', 'CaseRoom', 'Quotation', 'SalesOrder',
 	'Invoice', 'Product', 'Activity', 'Ticket', 'KnowledgeArticle', 'Asset',
-	'ServiceContract', 'SLA'
+	'ServiceContract', 'SLA', 'Timeline'
 ] as const;
 
 /** Nav entries that are workspaces over another type rather than model objects. */
-export const NAV_VIRTUAL = new Set(['CaseRoom']);
+export const NAV_VIRTUAL = new Set(['CaseRoom', 'Timeline']);
 
 /** Object -> human plural for nav and headings, only where naive pluralisation fails. */
 export function objectLabel(objectType: string, plural = false): string {
 	const spaced = objectType.replace(/([a-z])([A-Z])/g, '$1 $2');
 	if (!plural) return spaced;
 	if (objectType === 'SLA') return 'SLAs';
+	if (objectType === 'Timeline') return 'Team Timeline';
 	if (spaced.endsWith('y')) return spaced.slice(0, -1) + 'ies';
 	return spaced + 's';
 }

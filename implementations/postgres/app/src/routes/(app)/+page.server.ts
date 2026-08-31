@@ -9,7 +9,7 @@ import { withUser } from '$lib/server/db';
 export const load: PageServerLoad = async ({ locals }) => {
 	const profileId = locals.profile!.id;
 	return withUser(profileId, async (client) => {
-		const [kpis, pipeline, priorities] = await Promise.all([
+		const [kpis, pipeline, priorities, leaders, challenges] = await Promise.all([
 			client.query(`
 				select
 					(select coalesce(sum(amount), 0) from opportunity where result = 'Open') as pipeline_value,
@@ -32,12 +32,23 @@ export const load: PageServerLoad = async ({ locals }) => {
 				select priority::text, count(*)::int as tickets
 				  from ticket group by priority
 				 order by case priority when 'Low' then 1 when 'Medium' then 2 when 'High' then 3 else 4 end
-			`)
+			`),
+			// Leaderboard card (UX53): everyone can read profiles, so this needs no extras.
+			client.query(`
+				select id, first_name, last_name, xp_total, level, level_name, current_streak_days
+				  from user_profile where active order by xp_total desc limit 5
+			`),
+			client.query(`
+				select title, target_value, current_value, status from challenge
+				 where user_id = $1 and status = 'Active' order by created_at desc limit 3
+			`, [profileId]).catch(() => ({ rows: [] }))
 		]);
 		return {
 			kpis: kpis.rows[0],
 			pipeline: pipeline.rows as { name: string; value: string; deals: number }[],
-			priorities: priorities.rows as { priority: string; tickets: number }[]
+			priorities: priorities.rows as { priority: string; tickets: number }[],
+			leaders: leaders.rows,
+			challenges: challenges.rows
 		};
 	});
 };

@@ -83,3 +83,50 @@
 		</div>
 	</section>
 </div>
+
+<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+	<!-- Leaderboard (UX53): identity by name, colour only on the numbers. -->
+	<section class="rounded-lg border border-rule bg-surface p-5">
+		<h2 class="text-sm font-semibold">Leaderboard</h2>
+		<div class="mt-3 flex flex-col">
+			{#each data.leaders as leader, index (leader.id)}
+				<div class="flex items-center gap-3 border-t border-rule/40 py-2 first:border-0">
+					<span class="w-5 text-center text-sm font-semibold text-steel">{index + 1}</span>
+					<span class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-100 text-xs font-semibold text-accent-700">
+						{String(leader.first_name ?? '?')[0]}{String(leader.last_name ?? '?')[0]}
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="block truncate text-sm font-medium">{leader.first_name} {leader.last_name}</span>
+						<span class="block text-xs text-steel">Level {leader.level} · {leader.level_name}
+							{#if leader.current_streak_days > 1}· {leader.current_streak_days}-day streak{/if}</span>
+					</span>
+					<span class="text-sm font-semibold tabular-nums text-accent-600">{leader.xp_total} XP</span>
+				</div>
+			{/each}
+		</div>
+	</section>
+
+	<!-- Active challenges (story 42), when any are assigned. -->
+	<section class="rounded-lg border border-rule bg-surface p-5">
+		<h2 class="text-sm font-semibold">Your Challenges</h2>
+		{#if data.challenges.length === 0}
+			<p class="mt-3 text-sm text-steel/70">No active challenges this month.</p>
+		{:else}
+			<div class="mt-3 flex flex-col gap-3">
+				{#each data.challenges as challenge (challenge.title)}
+					{@const pct = Math.min(100, Math.round((Number(challenge.current_value ?? 0) / Math.max(1, Number(challenge.target_value))) * 100))}
+					<div>
+						<div class="flex items-baseline justify-between text-sm">
+							<span class="font-medium">{challenge.title}</span>
+							<span class="text-xs tabular-nums text-steel">{challenge.current_value ?? 0} / {challenge.target_value}</span>
+						</div>
+						<div class="mt-1 h-2 rounded-full bg-rule/40">
+							<div class="h-2 rounded-full bg-accent-600" style="width: {pct}%"></div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</section>
+</div>
+
