@@ -35,3 +35,12 @@
 body {
 	@apply bg-paper text-ink antialiased;
 }
+
+/* The rail's nav scrolls internally when the viewport is short; the track itself would be
+ * the brightest thing on the dark ground, so it stays invisible. */
+.rail-scroll {
+	scrollbar-width: none;
+}
+.rail-scroll::-webkit-scrollbar {
+	display: none;
+}

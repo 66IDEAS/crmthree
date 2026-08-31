@@ -32,11 +32,11 @@
 	}
 </script>
 
-<div class="flex min-h-screen">
+<div class="flex h-screen overflow-hidden">
 	<!-- Navigation rail. Deep-ink ground; the toggle is the rail's first item, per the
 	     shared UX: expanded shows labels, collapsed shows monogram tiles. -->
-	<aside class="shrink-0 bg-rail text-warm/70 transition-[width] duration-150 {collapsed ? 'w-14' : 'w-56'}">
-		<a href="/" class="flex h-16 items-center px-3" aria-label="Home">
+	<aside class="flex shrink-0 flex-col bg-rail text-warm/70 transition-[width] duration-150 {collapsed ? 'w-14' : 'w-56'}">
+		<a href="/" class="flex h-16 shrink-0 items-center px-3" aria-label="Home">
 			{#if collapsed}
 				<img src="/logo.svg" alt="CRMTHREE" class="mx-auto h-8 w-8" />
 			{:else}
@@ -45,7 +45,7 @@
 		</a>
 
 		<button onclick={toggle} aria-label="Toggle navigation"
-			class="flex w-full items-center gap-3 px-3 py-2 text-warm/80 hover:bg-white/5 hover:text-warm">
+			class="flex w-full shrink-0 items-center gap-3 px-3 py-2 text-warm/80 hover:bg-white/5 hover:text-warm">
 			<span class="flex h-8 w-8 shrink-0 items-center justify-center">
 				<svg class="h-5 w-5 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 					<path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -55,7 +55,7 @@
 		</button>
 		<div class="mx-3 my-1 border-t border-white/10"></div>
 
-		<nav class="flex flex-col gap-0.5 px-2 pb-6">
+		<nav class="rail-scroll flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
 			{#each NAV_OBJECTS as objectType}
 				{@const active = page.url.pathname.startsWith(`/${objectType}`)}
 				<a
@@ -71,7 +71,7 @@
 		</nav>
 		<div class="mx-3 my-1 border-t border-white/10"></div>
 		<a href="/settings" title="Settings"
-			class="mx-2 mb-4 flex items-center gap-3 rounded px-1.5 py-1.5 text-sm
+			class="mx-2 mb-3 flex shrink-0 items-center gap-3 rounded px-1.5 py-1.5 text-sm
 				{page.url.pathname.startsWith('/settings') ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-warm'}">
 			<span class="flex h-7 w-7 shrink-0 items-center justify-center {page.url.pathname.startsWith('/settings') ? 'text-accent-400' : 'text-warm/60'}">
 				<svg class="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -83,7 +83,7 @@
 	</aside>
 
 	<div class="flex min-w-0 flex-1 flex-col">
-		<header class="flex items-center justify-between gap-4 border-b border-rule bg-white px-6 py-3">
+		<header class="flex shrink-0 items-center justify-between gap-4 border-b border-rule bg-white px-6 py-3">
 			<GlobalSearch />
 			<div class="flex items-center gap-4">
 			<NotificationBell />
@@ -94,7 +94,7 @@
 			<button onclick={signOut} class="text-sm text-steel hover:text-ink">Sign out</button>
 			</div>
 		</header>
-		<main class="flex-1 p-6">
+		<main class="flex-1 overflow-y-auto p-6">
 			{@render children()}
 		</main>
 	</div>
