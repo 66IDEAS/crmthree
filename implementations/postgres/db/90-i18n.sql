@@ -16,3 +16,13 @@ drop policy if exists translation_write on translation;
 create policy translation_write on translation for all
   using (app.is_admin()) with check (app.is_admin());
 grant select, insert, update, delete on translation to crm_app;
+
+-- Seed registry (shared architecture, section 13): which bundled language codes have ever
+-- been seeded into this instance. Written only over the owner connection at server start;
+-- the application role has no access at all, so registration is permanent from the app's
+-- point of view and a deleted language stays deleted.
+create table if not exists translation_seed (
+  code text primary key,
+  seeded_at timestamptz not null default now()
+);
+alter table translation_seed enable row level security;

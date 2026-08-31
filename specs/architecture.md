@@ -59,6 +59,16 @@ packs into its translation store; the reference implementation additionally prov
 catalog exporter the packs are generated from (AI-assisted translation, then review). English
 is the built-in fallback in code and is never shipped as a pack.
 
+Packs are also part of every install: each implementation bundles the pack files into its
+build artifact and seeds its translation store from them without any import step. Seeding is
+per language and happens at most once per language code per instance, tracked in a seed
+registry: a bundled code never seen before is inserted, a code already present in the store
+is adopted into the registry, and a registered code is never touched again - so a freshly
+installed instance carries every product language, a pack added to the product later appears
+on existing instances after an upgrade, and administrator edits or deletions are never
+overwritten or resurrected. The importer scripts remain as the explicit refresh path when
+pack contents change.
+
 ## Data Architecture
 
 ### 14. Database-Agnostic Data Model

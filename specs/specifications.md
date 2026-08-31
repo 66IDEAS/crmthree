@@ -704,6 +704,7 @@ As a user, I want the CRM interface to be displayed in my preferred language so 
 - If a translation is missing for a label, the English default is shown as fallback
 - All page components (HomePage, LoginPage, SettingsPage, ObjectListPage, ObjectDetailPage, ObjectCreatePage, App.jsx) wrap hardcoded English strings with `t(key, fallback)` calls from TranslationService
 - The label catalog (keys and English defaults) is shared across implementations, and the product ships reviewed language packs for eight languages (German, French, Spanish, Dutch, Portuguese, Italian, Japanese, Simplified Chinese) that can be imported into any instance by script; in-app AI translation remains the path for additional languages and for labels added after a pack was built
+- A newly installed instance offers all bundled languages with no import or configuration step; a language pack added to the product later appears on existing instances after an upgrade, while languages an admin has edited or deleted are never overwritten or resurrected
 
 ### 59. Data Replication from External Systems
 As an admin, I want to replicate data from external web services into CRMThree so that records from other systems (e.g., SAP) are available locally.

@@ -1,8 +1,9 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, ServerInit } from '@sveltejs/kit';
 import { building } from '$app/environment';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { auth } from '$lib/server/auth';
 import { withUser } from '$lib/server/db';
+import { seedTranslations } from '$lib/server/seed-translations';
 
 /**
  * Resolves the session once per request and attaches the CRM profile to locals.
@@ -12,6 +13,11 @@ import { withUser } from '$lib/server/db';
  * active profile is authenticated but not provisioned, which is what the reference
  * implementation calls the "not provisioned" state.
  */
+/** Server start: seed the bundled language packs (once per language, ever). */
+export const init: ServerInit = async () => {
+	await seedTranslations();
+};
+
 export const handle: Handle = async ({ event, resolve }) => {
 	const session = await auth.api.getSession({ headers: event.request.headers });
 	event.locals.account = session?.user ?? null;

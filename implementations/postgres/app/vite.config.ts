@@ -9,7 +9,9 @@ export default defineConfig({
 		alias: {
 			// The data model is read from specs/, never forked into the implementation. See
 			// src/lib/model/ModelRegistry.js.
-			$model: fileURLToPath(new URL('../../../specs/data-model.json', import.meta.url))
+			$model: fileURLToPath(new URL('../../../specs/data-model.json', import.meta.url)),
+			// The language packs ship inside the server build for first-run seeding (P15).
+			$translations: fileURLToPath(new URL('../../../specs/translations', import.meta.url))
 		}
 	},
 	server: {

@@ -12,9 +12,18 @@ import NavigationHistoryProvider from './contexts/NavigationHistoryContext';
 import NotificationProvider from './contexts/NotificationContext';
 import GamificationProvider from './contexts/GamificationContext';
 import { t } from './services/TranslationService';
+import usePermissions from './hooks/usePermissions';
+import { seedBundledTranslations } from './services/TranslationSeeder';
+import { useEffect } from 'react';
 
 function AuthGate({ children }) {
   const { user, userProfile, loading, profileLoading, rejectedReason, handleSignOut } = useAuth();
+  const { isAdmin } = usePermissions();
+
+  // First-run seeding of bundled language packs runs once an administrator is signed in.
+  useEffect(() => {
+    if (user && userProfile && isAdmin) seedBundledTranslations();
+  }, [user, userProfile, isAdmin]);
 
   if (loading) {
     return (

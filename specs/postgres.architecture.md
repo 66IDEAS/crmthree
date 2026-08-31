@@ -274,7 +274,15 @@ labels and the reference's static UI keys. `label-catalog.ts` generates the iden
 set from the same rules, and parity with the reference exporter's output is asserted rather
 than assumed. `scripts/import-translations.mjs` upserts the packs from `specs/translations/`
 into the `translation` table over the migration connection, replacing stored label maps
-wholesale. Singular object type names are not in the shared catalog - the reference never
+wholesale.
+
+The packs are also bundled into the server build - imported from `specs/translations/` the
+same way the data model is - and seeded at server start over the owner connection, the same
+privileged-bootstrap pattern as first-admin provisioning. A `translation_seed` table records
+which codes have ever been seeded; codes in it are never touched again, codes with an
+existing row are adopted, and unseen codes are inserted. A fresh `apply.sh` plus first boot
+therefore yields all bundled languages, and admin edits and deletions survive every restart
+and upgrade. Singular object type names are not in the shared catalog - the reference never
 translates them - so they stay English.
 
 ## User provisioning

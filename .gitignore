@@ -23,3 +23,6 @@ specs/*.tasks.md
 
 # Scratch/tooling workspace, never shipped
 tmp/
+
+# Generated at build time from specs/translations/ (see copy-translations.mjs)
+implementations/firebase/app/public/translations/
