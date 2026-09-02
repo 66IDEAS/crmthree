@@ -1,0 +1,128 @@
+<% title = object_label(object_type, count: 2) %>
+<% content_for :title, "#{title} · CRMthree" %>
+
+<div class="page" data-controller="list-filter">
+  <header class="page-heading">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to crm_t("nav.home", "Home"), root_path %> / <%= title %></nav>
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title"><%= title %></h1>
+        <p class="page-subtitle"><%= pluralize(@total_count, object_label(object_type)) %></p>
+      </div>
+      <div class="page-actions">
+        <%= link_to record_export_path(object_type:, columns: @columns, q: @query, filter: @filters), class: "button" do %><%= ui_icon "download", size: 18 %><span><%= crm_t("ui.export", "Export") %></span><% end %>
+        <%= link_to new_record_path(object_type: object_type), class: "button button--primary" do %>
+          <%= ui_icon "plus", size: 18 %><span><%= crm_t("ui.new", "New") %> <%= object_label(object_type) %></span>
+        <% end %>
+      </div>
+    </div>
+  </header>
+
+  <section class="panel record-list-panel">
+    <div class="list-toolbar">
+      <% if object_type == "KnowledgeArticle" %>
+        <%= form_with url: records_path(object_type: object_type), method: :get, class: "list-filter knowledge-search" do %>
+          <%= ui_icon "search", size: 17 %>
+          <%= search_field_tag :q, @query, placeholder: "Search knowledge…", aria: {label: "Search knowledge articles"} %>
+          <%= submit_tag "Search", class: "button button--compact" %>
+          <% if @query.present? %><%= link_to "Clear", records_path(object_type: object_type), class: "text-button" %><% end %>
+        <% end %>
+        <span class="client-filter-note">Authorised title, content, and category search</span>
+      <% else %>
+        <div class="list-filter">
+          <%= ui_icon "search", size: 17 %>
+          <input type="search" placeholder="Filter this page…" aria-label="Filter visible records" data-list-filter-target="query" data-action="input->list-filter#filter">
+        </div>
+        <span class="client-filter-note">Filters the <%= @records.length %> records on this page</span>
+      <% end %>
+      <details class="column-picker">
+        <summary class="button">Columns</summary>
+        <%= form_with url: records_path(object_type: object_type), method: :get, class: "column-picker__panel" do %>
+          <%= hidden_field_tag :limit, @page_size %>
+          <%= hidden_field_tag :sort, @sort %>
+          <%= hidden_field_tag :direction, @direction %>
+          <%= hidden_field_tag :q, @query if @query.present? %>
+          <% @filters.each do |field, values| %>
+            <% Array(values).each do |value| %><%= hidden_field_tag "filter[#{field}][]", value %><% end %>
+          <% end %>
+          <% @definition.fetch("specific_fields").each do |field| %>
+            <label><%= check_box_tag "columns[]", field.fetch("name"), field.fetch("name").in?(@columns) %> <%= field_label(object_type, field) %></label>
+          <% end %>
+          <%= submit_tag "Apply columns", class: "button button--primary" %>
+        <% end %>
+      </details>
+    </div>
+
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <% @columns.each do |column| %>
+              <% field = @definition.fetch("fields").find { |candidate| candidate.fetch("name") == column } %>
+              <% next unless field %>
+              <% next_direction = @sort == column && @direction == "asc" ? "desc" : "asc" %>
+              <th scope="col">
+                <%= link_to field_label(object_type, field), records_path(object_type: object_type, sort: column, direction: next_direction, limit: @page_size, columns: @columns, q: @query, filter: @filters), class: "sort-link", aria: {label: "Sort by #{field_label(object_type, field)} #{next_direction}"} %>
+                <% if @sort == column %><span aria-hidden="true"><%= @direction == "asc" ? "↑" : "↓" %></span><% end %>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody data-list-filter-target="rows">
+          <% @records.each do |record| %>
+            <tr data-list-filter-target="row" data-filter-text="<%= @columns.filter_map { |column| record.public_send(column) }.join(" ").downcase %>">
+              <% @columns.each_with_index do |column, index| %>
+                <% field = @definition.fetch("fields").find { |candidate| candidate.fetch("name") == column } %>
+                <% next unless field %>
+                <% value = formatted_field_value(record, field, references: @references) %>
+                <td>
+                  <% if index.zero? || field["auto_generated"] %>
+                    <%= link_to(value.presence || "—", record_path(object_type: object_type, id: record.id), class: "record-link") %>
+                  <% elsif field.fetch("type") == "enum" && value.present? %>
+                    <details class="inline-editor">
+                      <summary><span class="chip chip--<%= enum_tone(record, field) %>"><%= value %></span></summary>
+                      <%= form_with model: record, url: record_path(object_type: object_type, id: record.id), method: :patch, class: "inline-editor__form" do |form| %>
+                        <%= hidden_field_tag :return_to, request.fullpath %>
+                        <%= crm_field_input(form, field, options: @reference_options[field.fetch("name")] || [], compact: true) %>
+                        <%= form.submit crm_t("ui.save", "Save"), class: "button button--primary" %>
+                      <% end %>
+                    </details>
+                  <% elsif value.present? %>
+                    <details class="inline-editor">
+                      <summary><%= value %></summary>
+                      <%= form_with model: record, url: record_path(object_type: object_type, id: record.id), method: :patch, class: "inline-editor__form" do |form| %>
+                        <%= hidden_field_tag :return_to, request.fullpath %>
+                        <%= crm_field_input(form, field, options: @reference_options[field.fetch("name")] || [], compact: true) %>
+                        <%= form.submit crm_t("ui.save", "Save"), class: "button button--primary" %>
+                      <% end %>
+                    </details>
+                  <% else %>
+                    <span class="empty-value">—</span>
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <% if @records.empty? %>
+        <div class="empty-state"><strong><%= @query.present? ? "No knowledge articles match that search." : "No #{title.downcase} yet." %></strong><% unless @query.present? %><br>Create the first record to get started.<% end %></div>
+      <% end %>
+      <div class="empty-state list-filter-empty" hidden data-list-filter-target="empty">No records on this page match that filter.</div>
+    </div>
+
+    <footer class="pagination">
+      <div>
+        <span>Rows per page</span>
+        <% [25, 50, 100].each do |size| %>
+          <%= link_to size, records_path(object_type: object_type, limit: size, sort: @sort, direction: @direction, columns: @columns, q: @query, filter: @filters), class: "page-size #{"is-current" if size == @page_size}" %>
+        <% end %>
+      </div>
+      <div>
+        <% if @page > 1 %><%= link_to "Previous", records_path(object_type: object_type, page: @page - 1, limit: @page_size, sort: @sort, direction: @direction, columns: @columns, q: @query, filter: @filters), class: "button" %><% end %>
+        <span>Page <%= @page %></span>
+        <% if @page * @page_size < @total_count %><%= link_to "Next", records_path(object_type: object_type, page: @page + 1, limit: @page_size, sort: @sort, direction: @direction, columns: @columns, q: @query, filter: @filters), class: "button" %><% end %>
+      </div>
+    </footer>
+  </section>
+</div>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "CRMthree" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Crmthree Rails">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%= javascript_tag nonce: true do %>
+      (() => {
+        const saved = localStorage.getItem("crmthree-theme") || "<%= current_profile&.theme_preference&.downcase || "system" %>";
+        document.documentElement.dataset.theme = saved;
+      })();
+    <% end %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="<%= authenticated? ? "app-body" : "guest-body" %>" <%= %(data-controller="theme ribbon session-history" data-theme-profile-value="#{current_profile&.theme_preference&.downcase || "system"}").html_safe if authenticated? %>>
+    <% if authenticated? %>
+      <div class="app-shell" data-ribbon-target="shell">
+        <%= render "shared/top_bar" %>
+        <%= render "shared/ribbon" %>
+        <main id="main-content" class="app-content" tabindex="-1">
+          <%= render "shared/flash" %>
+          <%= yield %>
+        </main>
+        <%= render "shared/search_bar" %>
+        <%= tag.div hidden: true, data: {controller: "celebration", celebration_events_value: Array(@shell_celebrations).map { |event| {kind: event.kind, message: event.message} }} %>
+      </div>
+    <% else %>
+      <main id="main-content" class="guest-content">
+        <%= render "shared/flash" %>
+        <%= yield %>
+      </main>
+    <% end %>
+  </body>
+</html>

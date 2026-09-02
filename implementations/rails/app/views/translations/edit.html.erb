@@ -1,0 +1,51 @@
+<% content_for :title, "Manage #{@translation.language_name} · CRMthree" %>
+<% translated_count = Crm::TranslationService.translated_count(@translation) %>
+<% total_count = @catalog.length %>
+<% categories = {"all" => "All", "navigation" => "Navigation", "objects" => "Objects", "fields" => "Fields", "enums" => "Enums", "interface" => "Interface"} %>
+<div class="page" data-controller="translation-filter">
+  <header class="page-heading">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to "Settings", settings_path(anchor: "language-management") %> / Languages / <%= @translation.language_name %></nav>
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title"><%= @translation.language_name %></h1>
+        <p class="page-subtitle"><%= translated_count %> / <%= total_count %> labels translated</p>
+        <progress class="translation-progress" value="<%= translated_count %>" max="<%= total_count %>" aria-label="Translation progress"><%= translated_count %> / <%= total_count %></progress>
+      </div>
+      <% if AIProviderConfig.exists?(is_active: true) %><%= button_to ai_translate_translation_path(@translation), class: "button", form: {data: {turbo_confirm: "Translate only the currently missing labels? Existing manual translations will remain unchanged."}} do %><%= ui_icon "spark", size: 17 %> Translate missing labels<% end %><% end %>
+    </div>
+  </header>
+
+  <%= form_with url: translation_path(@translation), method: :patch do %>
+    <section class="panel translation-editor">
+      <div class="translation-editor__tools">
+        <div class="list-filter">
+          <%= ui_icon "search", size: 17 %>
+          <input type="search" placeholder="Filter labels…" aria-label="Filter translation labels" data-translation-filter-target="query" data-action="input->translation-filter#filter">
+        </div>
+        <div class="translation-categories" role="group" aria-label="Translation categories">
+          <% categories.each do |key, label| %>
+            <button type="button" class="button button--compact <%= "is-current" if key == "all" %>" data-translation-filter-target="category" data-action="translation-filter#selectCategory" data-category="<%= key %>" aria-pressed="<%= key == "all" %>"><%= label %></button>
+          <% end %>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Label key</th><th>English</th><th><%= @translation.language_name %></th></tr></thead>
+          <tbody>
+            <% @catalog.each do |key, english| %>
+              <% prefix = key.split(".").first %>
+              <% category = case prefix when "nav", "menu" then "navigation" when "object", "rel" then "objects" when "field" then "fields" when "enum" then "enums" else "interface" end %>
+              <tr data-translation-filter-target="row" data-category="<%= category %>" data-filter-text="<%= "#{key} #{english}".downcase %>">
+                <td><code><%= key %></code></td>
+                <td><%= english %></td>
+                <td><%= text_field_tag "labels[#{key}]", @translation.labels.to_h[key], aria: {label: "#{key} translation"} %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <div class="empty-state" hidden data-translation-filter-target="empty">No labels match this filter.</div>
+      </div>
+    </section>
+    <div class="form-actions"><%= link_to "Back", settings_path(anchor: "language-management"), class: "button" %><%= submit_tag "Save translations", class: "button button--primary" %></div>
+  <% end %>
+</div>

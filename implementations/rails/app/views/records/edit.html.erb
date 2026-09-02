@@ -1,0 +1,14 @@
+<% name = display_name(@record) %>
+<% content_for :title, "Edit #{name} · CRMthree" %>
+
+<div class="page" data-controller="record-lock" data-record-lock-editing-value="true"
+  data-record-lock-object-type-value="<%= object_type %>" data-record-lock-record-id-value="<%= @record.id %>"
+  data-record-lock-current-profile-value="<%= current_profile.id %>"
+  data-record-lock-renew-url-value="<%= record_lock_path(object_type:, record_id: @record.id) %>"
+  data-record-lock-release-url-value="<%= record_lock_path(object_type:, record_id: @record.id) %>">
+  <header class="page-heading">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to "Home", root_path %> / <%= link_to object_label(object_type, count: 2), records_path(object_type: object_type) %> / <%= link_to name, record_path(object_type: object_type, id: @record.id) %> / Edit</nav>
+    <div class="page-title-row"><div><h1 class="page-title">Edit <%= name %></h1><p class="page-subtitle">Changes are validated before they are saved.</p></div></div>
+  </header>
+  <section class="panel form-panel"><div class="panel__body"><%= render "form" %></div></section>
+</div>

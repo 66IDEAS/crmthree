@@ -1,0 +1,77 @@
+<% content_for :title, "Home · CRMthree" %>
+<% widget_labels = {
+  "pipeline_value" => crm_t("dashboard.pipeline_value", "Pipeline Value"),
+  "open_opportunities" => crm_t("dashboard.open_opportunities", "Open Opportunities"),
+  "open_tickets" => crm_t("dashboard.open_tickets", "Open Tickets"),
+  "open_leads" => crm_t("dashboard.open_leads", "Open Leads"),
+  "activities_this_week" => crm_t("dashboard.activities_this_week", "Activities This Week"),
+  "inactive_assets" => "Inactive Assets",
+  "opportunities_by_stage" => crm_t("dashboard.opp_by_stage", "Opportunities by Stage"),
+  "tickets_by_priority" => crm_t("dashboard.tickets_by_priority", "Tickets by Priority"),
+  "activity_trend" => crm_t("dashboard.activity_trend", "Activity Trend"),
+  "revenue_by_invoice_status" => crm_t("dashboard.revenue_by_status", "Revenue by Invoice Status"),
+  "leaderboard" => "Leaderboard"
+} %>
+
+<div class="page dashboard-page" data-controller="dialog dashboard-charts">
+  <header class="page-heading">
+    <nav class="breadcrumb" aria-label="Breadcrumb">Home</nav>
+    <div class="page-title-row">
+      <div><h1 class="page-title"><%= crm_t("dashboard.welcome_back", "Welcome back") %>, <%= current_profile.first_name %></h1><p class="page-subtitle">Here is what needs attention across your CRM.</p></div>
+      <div class="record-actions"><%= link_to "Trends", trends_path, class: "button" %><%= link_to "Duplicates", duplicate_links_path, class: "button" %><%= link_to "Review intake", intake_drafts_path, class: "button" %><button class="icon-button" type="button" aria-label="Configure dashboard widgets" data-action="dialog#open" data-dialog-id-param="dashboard-settings"><%= ui_icon "settings", size: 20 %></button></div>
+    </div>
+  </header>
+
+  <%= render "briefings/card", object_type: nil, record_id: nil %>
+
+  <section class="dashboard-grid" aria-label="CRM dashboard">
+    <% [
+      ["pipeline_value", number_to_currency(@dashboard.pipeline_value, unit: "$", precision: 0), "target", records_path(object_type: "Opportunity", filter: @dashboard_filters["pipeline_value"])],
+      ["open_opportunities", @dashboard.open_opportunities, "briefcase", records_path(object_type: "Opportunity", filter: @dashboard_filters["open_opportunities"])],
+      ["open_tickets", @dashboard.open_tickets, "lifebuoy", records_path(object_type: "Ticket", filter: @dashboard_filters["open_tickets"])],
+      ["open_leads", @dashboard.open_leads, "spark", records_path(object_type: "Lead", filter: @dashboard_filters["open_leads"])],
+      ["activities_this_week", @dashboard.activities_this_week, "calendar", records_path(object_type: "Activity")],
+      ["inactive_assets", @dashboard.inactive_assets, "wrench", records_path(object_type: "Asset", filter: @dashboard_filters["inactive_assets"])]
+    ].each do |key, value, icon, path| %>
+      <% next unless key.in?(@visible_widgets) %>
+      <%= link_to path, class: "panel kpi-card" do %>
+        <span class="kpi-card__icon"><%= ui_icon icon, size: 21 %></span>
+        <span><small><%= widget_labels.fetch(key) %></small><strong><%= value %></strong></span>
+      <% end %>
+    <% end %>
+
+    <% if "leaderboard".in?(@visible_widgets) %><%= link_to leaderboard_path, class: "panel leaderboard-card" do %><div class="panel__header"><h2><%= ui_icon "trophy", size: 19 %> Leaderboard</h2></div><div class="leaderboard-card__rows"><% @leaderboard_top.each_with_index do |profile, index| %><span><b class="rank-medal rank-medal--<%= index + 1 %>"><%= index + 1 %></b><span class="avatar"><%= profile.first_name.first %><%= profile.last_name.first %></span><strong><%= display_name(profile) %></strong><small><%= number_with_delimiter(profile.xp_total) %> XP</small></span><% end %></div><% end %><% end %>
+
+    <% [
+      ["opportunities_by_stage", @dashboard.opportunities_by_stage, "bar", true, records_path(object_type: "Opportunity")],
+      ["tickets_by_priority", @dashboard.tickets_by_priority, "donut", false, records_path(object_type: "Ticket")],
+      ["activity_trend", @dashboard.activity_trend, "line", false, records_path(object_type: "Activity")],
+      ["revenue_by_invoice_status", @dashboard.revenue_by_invoice_status, "bar", false, records_path(object_type: "Invoice")]
+    ].each do |key, data, kind, horizontal, path| %>
+      <% next unless key.in?(@visible_widgets) %>
+      <% chart_filter = @dashboard_chart_filters[key] %>
+      <article class="panel dashboard-chart">
+        <div class="panel__header"><h2><%= widget_labels.fetch(key) %></h2></div>
+        <div class="dashboard-chart__body">
+          <div class="dashboard-skeleton" data-dashboard-charts-target="skeleton"></div>
+          <canvas hidden data-dashboard-charts-target="chart" data-kind="<%= kind %>" data-horizontal="<%= horizontal %>"
+            data-labels="<%= data.keys.to_json %>" data-values="<%= data.values.to_json %>" data-url="<%= path %>"
+            data-filter-field="<%= chart_filter&.first %>" data-filter-values="<%= chart_filter ? data.keys.map { |label| chart_filter.last[label] }.to_json : "[]" %>"
+            role="img" aria-label="<%= widget_labels.fetch(key) %> chart"></canvas>
+        </div>
+      </article>
+    <% end %>
+  </section>
+
+  <dialog id="dashboard-settings" class="dialog" data-dialog-target="dialog">
+    <div class="dialog__header"><div><h2>Configure widgets</h2><p>Choose which dashboard cards and charts are visible.</p></div><button class="icon-button" type="button" data-action="dialog#close" aria-label="Close"><%= ui_icon "x", size: 18 %></button></div>
+    <%= form_with url: dashboard_config_path, method: :patch do %>
+      <div class="dialog__body preference-options">
+        <% Crm::DashboardPreferences::WIDGETS.each do |key| %>
+          <label class="preference-option"><%= check_box_tag "widgets[]", key, key.in?(@visible_widgets) %><span><%= widget_labels.fetch(key) %></span></label>
+        <% end %>
+      </div>
+      <div class="dialog__actions"><button class="button" type="button" data-action="dialog#close">Cancel</button><button class="button button--primary" type="submit">Save dashboard</button></div>
+    <% end %>
+  </dialog>
+</div>

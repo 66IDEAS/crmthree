@@ -1,0 +1,5 @@
+<% if notice.present? || alert.present? %>
+  <div class="flash-wrap" role="status" aria-live="polite">
+    <p class="flash <%= alert.present? ? "flash--alert" : "flash--notice" %>"><%= alert || notice %></p>
+  </div>
+<% end %>

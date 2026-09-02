@@ -1,0 +1,10 @@
+<% title = object_label(object_type) %>
+<% content_for :title, "New #{title} · CRMthree" %>
+
+<div class="page" data-history-entry="New <%= title %>">
+  <header class="page-heading">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to "Home", root_path %> / <%= link_to object_label(object_type, count: 2), records_path(object_type: object_type) %> / New</nav>
+    <div class="page-title-row"><div><h1 class="page-title">New <%= title %></h1><p class="page-subtitle">Complete the key information first. Optional fields are grouped below.</p></div></div>
+  </header>
+  <section class="panel form-panel"><div class="panel__body"><%= render "form" %></div></section>
+</div>

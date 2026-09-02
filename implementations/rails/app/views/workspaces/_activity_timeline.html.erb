@@ -1,0 +1,13 @@
+<section class="panel workspace-card">
+  <div class="panel__header"><div><span class="linked-card__eyebrow">Chronological feed</span><h2>Activity Timeline <span class="linked-count"><%= activities.length %></span></h2></div></div>
+  <div class="workspace-timeline">
+    <% activities.each do |activity| %>
+      <%= link_to record_path(object_type: "Activity", id: activity.id), class: "workspace-timeline__entry" do %>
+        <span class="workspace-timeline__icon"><%= ui_icon({"Call" => "phone", "Email" => "mail", "Meeting" => "calendar", "Task" => "check-square"}.fetch(activity.type_before_type_cast, "calendar"), size: 17) %></span>
+        <span><strong><%= activity.subject %></strong><small><%= display_name(activity.owner) %> · <%= time_ago_in_words(activity.start_date || activity.created_at) %> ago</small></span>
+        <span class="chip chip--<%= Crm::RecordPresentation.chip_tone(activity.status_before_type_cast) %>"><%= activity.status_before_type_cast %></span>
+      <% end %>
+    <% end %>
+    <% if activities.empty? %><div class="empty-state">No activities are linked yet.</div><% end %>
+  </div>
+</section>

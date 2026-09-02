@@ -1,0 +1,2 @@
+<% content_for :title, "My Timeline · CRMthree" %>
+<div class="page timeline-page"><header class="page-heading"><nav class="breadcrumb"><%= link_to "Home", root_path %> / My Timeline</nav><div class="page-title-row"><div><h1 class="page-title">My Timeline</h1><p class="page-subtitle">Activities and CRM events across your work</p></div></div></header><%= render "filters", url: my_timeline_path, timeline: @timeline %><%= render "feed", timeline: @timeline %></div>

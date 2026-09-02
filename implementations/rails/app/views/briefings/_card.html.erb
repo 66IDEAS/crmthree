@@ -1,0 +1,14 @@
+<% if AIProviderConfig.exists?(is_active: true) %>
+  <%= turbo_frame_tag dom_id_for_ai_briefing(object_type, record_id) do %>
+    <section class="panel ai-priority-card ai-briefing-card workspace-summary">
+      <div class="ai-priority-card__icon"><%= ui_icon "spark", size: 22 %></div>
+      <div><h2><%= object_type.present? ? "AI Briefing" : "AI Priority Summary" %></h2><p><%= object_type.present? ? "Generate a current, evidence-based summary when you need it." : "Generate today's evidence-based priorities when you need them." %></p></div>
+      <%= button_to object_type.present? ? "Generate briefing" : "Generate priorities", briefings_path, params: {object_type:, record_id:}, class: "button button--primary" %>
+    </section>
+  <% end %>
+<% else %>
+  <section class="panel ai-priority-card workspace-summary" hidden aria-hidden="true">
+    <h2><%= object_type.present? ? "AI Briefing" : "AI Priority Summary" %></h2>
+    <p><%= case object_type when "Opportunity" then "Contextual opportunity briefing" when "Ticket" then "Contextual support briefing" else "AI priority summary" end %></p>
+  </section>
+<% end %>

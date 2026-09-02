@@ -1,0 +1,50 @@
+<% important_names = (@definition.fetch("default_list_columns") + @fields.select { |field| field["required"] }.map { |field| field.fetch("name") }).uniq %>
+<% important = @fields.select { |field| field.fetch("name").in?(important_names) } %>
+<% additional = @fields - important %>
+<% action_url = @record.persisted? ? record_path(object_type: object_type, id: @record.id) : records_path(object_type: object_type) %>
+
+<%= form_with model: @record, scope: :record, url: action_url, method: (@record.persisted? ? :patch : :post), class: "record-form" do |form| %>
+  <%= hidden_field_tag :return_to, params[:return_to] if params[:return_to].present? %>
+  <%= hidden_field_tag :parent_field, params[:parent_field] if params[:parent_field].present? %>
+  <%= hidden_field_tag :parent_id, params[:parent_id] if params[:parent_id].present? %>
+  <%= hidden_field_tag :parent_type, params[:parent_type] if params[:parent_type].present? %>
+  <%= hidden_field_tag :activity_type, params[:activity_type] if params[:activity_type].present? %>
+  <%= hidden_field_tag :context_label, params[:context_label] if params[:context_label].present? %>
+  <% errors = Array(@form_errors).presence || @record.errors.full_messages %>
+  <% if errors.present? %>
+    <div class="form-errors" role="alert" data-controller="error-focus" tabindex="-1">
+      <strong>Please review the highlighted information.</strong>
+      <ul><% errors.each do |error| %><li><%= error %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <div class="form-grid">
+    <% important.each do |field| %>
+      <div class="field <%= "field--wide" if %w[text json].include?(field.fetch("type")) %>">
+        <%= form.label field.fetch("name") do %><%= field_label(object_type, field) %><% if field["required"] %><span class="required-mark" aria-label="required">*</span><% end %><% end %>
+        <%= crm_field_input(form, field, options: @reference_options[field.fetch("name")] || []) %>
+        <span class="field-hint"><%= field["description"] %></span>
+      </div>
+    <% end %>
+  </div>
+
+  <% if additional.present? %>
+    <details class="additional-fields">
+      <summary>Additional information <span><%= additional.length %> fields</span></summary>
+      <div class="form-grid">
+        <% additional.each do |field| %>
+          <div class="field <%= "field--wide" if %w[text json].include?(field.fetch("type")) %>">
+            <%= form.label field.fetch("name") do %><%= field_label(object_type, field) %><% if field["required"] %><span class="required-mark" aria-label="required">*</span><% end %><% end %>
+            <%= crm_field_input(form, field, options: @reference_options[field.fetch("name")] || []) %>
+            <span class="field-hint"><%= field["description"] %></span>
+          </div>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+  <div class="form-actions">
+    <%= link_to crm_t("ui.cancel", "Cancel"), @cancel_path, class: "button", data: ({action: "record-lock#releaseAndContinue"} if @record.persisted?) %>
+    <%= form.submit @record.persisted? ? crm_t("ui.save_changes", "Save changes") : "#{crm_t("ui.create", "Create")} #{object_label(object_type)}", class: "button button--primary" %>
+  </div>
+<% end %>

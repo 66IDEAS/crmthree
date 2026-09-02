@@ -27,6 +27,7 @@ implementation as-is.
 | [`specs/`](specs/) | **The product.** Functional specification, UX specification, architecture, and data model |
 | [`implementations/firebase/`](implementations/firebase/) | **The proof.** The canonical reference implementation: React + Firebase (Hosting, Auth, Firestore, Cloud Functions), self-hostable |
 | [`implementations/postgres/`](implementations/postgres/) | **The second proof.** The same spec on a stack that shares nothing with the first: Svelte 5 + SvelteKit + PostgreSQL, authorization in the database, no vendor - runs on a laptop and deploys unchanged to any Node + Postgres host |
+| [`implementations/rails/`](implementations/rails/) | **The third proof.** Ruby on Rails 8 + Hotwire + SQLite: server-rendered, one process, self-contained on any machine that runs Ruby |
 | `implementations/…` | Room for further implementations on other stacks - UI5, Azure, or yours |
 
 ## The specification
@@ -52,8 +53,10 @@ concrete, the data model is machine-readable, and nothing depends on tribal know
   create a Firebase project, copy two config examples, `npm install`, deploy.
 - **Postgres (no vendor):** see [`implementations/postgres/README.md`](implementations/postgres/README.md) -
   `createdb`, one apply script, `npm run dev` - against a local Postgres or any hosted one.
+- **Rails (self-contained):** see [`implementations/rails/README.md`](implementations/rails/README.md) -
+  `bin/setup`, one bootstrap command, `bin/dev`. SQLite travels with the app.
 
-Two implementations, one specification: that is the thesis demonstrated rather than
+Three implementations, one specification: that is the thesis demonstrated rather than
 claimed. Building the second one fed corrections back into the spec - the divergence
 sections in the architecture documents record what each stack taught it.
 

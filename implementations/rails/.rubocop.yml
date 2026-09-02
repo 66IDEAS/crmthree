@@ -1,0 +1,17 @@
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - "db/schema.rb"
+    - "db/*_schema.rb"
+    - "db/migrate/20260901090000_create_crm_domain.rb"
+    - "db/migrate/20260901090100_create_crm_infrastructure.rb"
+    - "vendor/**/*"
+
+Layout/SpaceInsideArrayLiteralBrackets:
+  EnforcedStyle: no_space
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space

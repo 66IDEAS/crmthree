@@ -1,0 +1,20 @@
+<% content_for :title, "Deal Rooms · CRMthree" %>
+<div class="page">
+  <header class="page-heading">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to "Home", root_path %> / Deal Rooms</nav>
+    <div class="page-title-row"><div><h1 class="page-title">Deal Rooms</h1><p class="page-subtitle"><%= pluralize(@deal_rooms.length, "purpose-built deal workspace") %></p></div></div>
+  </header>
+  <section class="panel">
+    <div class="table-scroll"><table class="data-table workspace-list"><thead><tr><th>Deal Room #</th><th>Name</th><th>Opportunity</th><th>Amount</th><th>Stage</th><th>Status</th></tr></thead><tbody>
+      <% @deal_rooms.each do |room| %><tr>
+        <td><%= link_to DealRoom.crm_display_number(room.deal_room_number), deal_room_path(room), class: "record-link" %></td>
+        <td><strong><%= room.name %></strong><small><%= room.opportunity.account.name1 %></small></td>
+        <td><%= link_to room.opportunity.name, record_path(object_type: "Opportunity", id: room.opportunity_id), class: "record-link" %></td>
+        <td><%= number_to_currency(room.opportunity.amount, unit: "#{room.opportunity.currency} ", strip_insignificant_zeros: true) %></td>
+        <td><span class="chip chip--progress"><%= room.opportunity.stage.name %></span></td>
+        <td><span class="chip chip--<%= Crm::RecordPresentation.chip_tone(room.status_before_type_cast) %>"><%= room.status_before_type_cast %></span></td>
+      </tr><% end %>
+    </tbody></table></div>
+    <% if @deal_rooms.empty? %><div class="empty-state"><strong>No Deal Rooms yet.</strong><br>Create one from an Opportunity detail page.</div><% end %>
+  </section>
+</div>

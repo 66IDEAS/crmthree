@@ -1,0 +1,15 @@
+<div class="ask-bar" role="search" data-controller="global-search" data-global-search-url-value="<%= search_path %>" data-global-search-assistant-url-value="<%= assistant_path %>">
+  <div class="search-dropup" data-global-search-target="panel" hidden>
+    <div class="search-loading" data-global-search-target="loading" hidden><span class="spinner" aria-hidden="true"></span> Searching…</div>
+    <div data-global-search-target="results"></div>
+  </div>
+  <label class="ask-bar__label" for="global-search">Ask CRMthree</label>
+  <div class="ask-bar__input-wrap">
+    <%= ui_icon "search", size: 18 %>
+    <input id="global-search" class="ask-input--desktop" type="search" placeholder="<%= crm_t("search.placeholder", "Search CRMthree or ask a question…") %>"
+      autocomplete="off" aria-label="Search CRMthree" data-global-search-target="input" data-action="input->global-search#search keydown->global-search#submit">
+    <input class="ask-input--mobile" type="search" placeholder="<%= crm_t("search.placeholder", "Search or ask AI…") %>" autocomplete="off"
+      aria-label="Search CRMthree" data-global-search-target="input" data-action="input->global-search#search keydown->global-search#submit">
+    <kbd>⌘ K</kbd>
+  </div>
+</div>

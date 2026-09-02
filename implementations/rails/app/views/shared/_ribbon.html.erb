@@ -1,0 +1,20 @@
+<aside id="primary-navigation" class="ribbon" data-ribbon-target="ribbon" aria-label="Primary navigation">
+  <nav class="ribbon__nav">
+    <%= link_to root_path, class: "ribbon-link #{"is-current" if current_page?(root_path)}", title: "Home" do %>
+      <%= ui_icon "home", size: 20 %><span><%= crm_t("nav.home", "Home") %></span>
+    <% end %>
+    <div class="ribbon__divider" role="separator"></div>
+    <% Crm::Navigation.for(current_profile).each do |entry| %>
+      <% active = params[:object_type] == entry.object_type || (entry.key == "case_rooms" && controller_name == "case_rooms") %>
+      <%= link_to navigation_path(entry), class: "ribbon-link #{"is-current" if active}", title: entry.label do %>
+        <%= ui_icon entry.icon, size: 20 %><span><%= crm_t("nav.#{entry.key}", entry.label) %></span>
+      <% end %>
+    <% end %>
+  </nav>
+  <div class="ribbon__footer">
+    <%= link_to settings_path, class: "ribbon-link #{"is-current" if controller_name == "settings"}", title: "Settings" do %>
+      <%= ui_icon "settings", size: 20 %><span><%= crm_t("nav.settings", "Settings") %></span>
+    <% end %>
+  </div>
+</aside>
+<button class="ribbon-scrim" type="button" data-ribbon-target="scrim" data-action="ribbon#close" aria-label="Close navigation"></button>

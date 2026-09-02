@@ -1,0 +1,45 @@
+<% currency = @record.respond_to?(:currency) ? @record.currency : "USD" %>
+<% new_form_id = "new-line-item-#{@record.id}" %>
+<% product_options = @line_item_products.map { |product| [product.name, product.id, {data: {price: @line_item_prices.fetch(product.id), unit: product.unit_of_measure}}] } %>
+
+<section class="panel linked-card line-items-card" data-controller="line-items" data-line-items-currency-value="<%= currency %>">
+  <div class="line-item-forms" hidden>
+    <%= form_with url: line_items_path(parent_type: @record.class.name, parent_id: @record.id), id: new_form_id do %><%= hidden_field_tag :idempotency_key, SecureRandom.uuid %><% end %>
+    <% card.records.each do |line_item| %>
+      <%= form_with url: line_item_path(parent_type: @record.class.name, parent_id: @record.id, id: line_item.id), method: :patch, id: "edit-line-item-#{line_item.id}" do %><% end %>
+    <% end %>
+  </div>
+  <div class="panel__header">
+    <div><span class="linked-card__eyebrow">Inline editing</span><h2>Line items <span class="linked-count"><%= card.total_count %></span></h2></div>
+    <button type="button" class="button" data-action="line-items#showNew"><%= ui_icon "plus", size: 16 %> Add new</button>
+  </div>
+  <div class="table-scroll">
+    <table class="data-table line-items-table">
+      <thead><tr><th>Item #</th><th>Product</th><th>Quantity</th><th>Net price</th><th>Discount %</th><th>Net value</th><th><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        <% card.records.sort_by { |item| item.item_number.to_i }.each do |line_item| %>
+          <% form_id = "edit-line-item-#{line_item.id}" %>
+          <tr data-line-items-target="row" data-alternative="<%= line_item.alternative_to.present? %>">
+            <td><strong><%= LineItem.crm_display_number(line_item.item_number) %></strong></td>
+            <td><%= select_tag "line_item[product_id]", options_for_select(product_options, line_item.product_id), required: true, form: form_id, class: "line-item-input line-item-product", data: {field: "product", action: "change->line-items#productChanged"} %></td>
+            <td><%= number_field_tag "line_item[quantity]", line_item.quantity, min: 0.001, step: 0.001, required: true, form: form_id, class: "line-item-input", data: {field: "quantity", action: "input->line-items#calculate"} %></td>
+            <td><%= number_field_tag "line_item[unit_price]", line_item.unit_price, min: 0, step: 0.01, required: true, form: form_id, class: "line-item-input", data: {field: "price", action: "input->line-items#calculate"} %></td>
+            <td><%= number_field_tag "line_item[discount_percent]", line_item.discount_percent, min: 0, max: 100, step: 0.01, form: form_id, class: "line-item-input", data: {field: "discount", action: "input->line-items#calculate"} %></td>
+            <td class="line-item-value" data-line-items-target="value" data-raw-value="<%= line_item.total_price %>"><%= number_to_currency(line_item.total_price, unit: "#{currency} ", strip_insignificant_zeros: true) %></td>
+            <td><div class="line-item-actions"><%= button_tag "Save", type: "submit", form: form_id, class: "button button--compact" %><%= button_to line_item_path(parent_type: @record.class.name, parent_id: @record.id, id: line_item.id), method: :delete, class: "icon-button icon-button--danger", aria: {label: "Delete item #{LineItem.crm_display_number(line_item.item_number)}"}, form: {data: {turbo_confirm: "Delete this line item?"}} do %><%= ui_icon "trash", size: 16 %><% end %></div></td>
+          </tr>
+        <% end %>
+        <tr hidden data-line-items-target="newRow row" data-alternative="false" class="line-item-new-row">
+          <td><span class="chip">Next</span></td>
+          <td><%= select_tag "line_item[product_id]", options_for_select(product_options), prompt: "Choose product…", required: true, form: new_form_id, class: "line-item-input line-item-product", data: {field: "product", action: "change->line-items#productChanged"} %></td>
+          <td><%= number_field_tag "line_item[quantity]", 1, min: 0.001, step: 0.001, required: true, form: new_form_id, class: "line-item-input", data: {field: "quantity", action: "input->line-items#calculate"} %></td>
+          <td><%= number_field_tag "line_item[unit_price]", nil, min: 0, step: 0.01, required: true, form: new_form_id, class: "line-item-input", data: {field: "price", action: "input->line-items#calculate"} %></td>
+          <td><%= number_field_tag "line_item[discount_percent]", 0, min: 0, max: 100, step: 0.01, form: new_form_id, class: "line-item-input", data: {field: "discount", action: "input->line-items#calculate"} %></td>
+          <td class="line-item-value" data-line-items-target="value" data-raw-value="0"><%= number_to_currency(0, unit: "#{currency} ", strip_insignificant_zeros: true) %></td>
+          <td><div class="line-item-actions"><%= button_tag "Add", type: "submit", form: new_form_id, class: "button button--primary button--compact", data: {turbo_submits_with: "Adding…"} %><button type="button" class="text-button" data-action="line-items#hideNew">Cancel</button></div></td>
+        </tr>
+      </tbody>
+      <tfoot><tr><td colspan="5">Total</td><td class="line-items-total" data-line-items-target="total"><%= number_to_currency(card.records.reject { |item| item.alternative_to.present? }.sum { |item| item.total_price.to_d }, unit: "#{currency} ", strip_insignificant_zeros: true) %></td><td></td></tr></tfoot>
+    </table>
+  </div>
+</section>

@@ -1,0 +1,43 @@
+<header class="top-bar">
+  <div class="top-bar__brand">
+    <button class="icon-button top-bar__menu" type="button" data-action="ribbon#toggle" aria-label="Toggle navigation" aria-controls="primary-navigation" aria-expanded="false" data-ribbon-target="toggle">
+      <%= ui_icon "menu", size: 22 %>
+    </button>
+    <%= link_to root_path, class: "brand-link", aria: {label: "CRMthree home"} do %>
+      <%= image_tag "crmthree-light.svg", class: "brand-logo brand-logo--light", alt: "CRMTHREE" %>
+      <%= image_tag "crmthree-dark.svg", class: "brand-logo brand-logo--dark", alt: "CRMTHREE" %>
+    <% end %>
+  </div>
+
+  <div class="top-bar__actions">
+    <%= link_to leaderboard_path, class: "gamification", aria: {label: "Open leaderboard and gamification status"} do %>
+      <%= ui_icon "trophy", size: 18 %>
+      <span class="gamification__badge"><%= current_profile.level_name %></span>
+      <span><%= number_with_delimiter(current_profile.xp_total) %> XP</span>
+      <% if current_profile.current_streak_days.positive? %><span title="Current streak">🔥 <%= current_profile.current_streak_days %></span><% end %>
+    <% end %>
+    <details class="notification-menu" data-controller="notifications" data-notifications-url-value="<%= notifications_path %>">
+      <summary class="icon-button" aria-label="<%= crm_t("menu.notifications", "Notifications") %>">
+        <%= ui_icon "bell", size: 19 %>
+        <span class="notification-badge" data-notifications-target="badge" <%= "hidden" if @shell_unread_notifications.to_i.zero? %>><%= @shell_unread_notifications %></span>
+      </summary>
+      <div class="notification-panel" data-notifications-target="panel">
+        <%= render "notifications/panel", notifications: Array(@shell_notifications) %>
+      </div>
+    </details>
+    <details class="profile-menu">
+      <summary class="profile-menu__summary">
+        <span class="avatar"><%= current_profile.first_name.to_s.first %><%= current_profile.last_name.to_s.first %></span>
+        <span class="profile-menu__identity">
+          <strong><%= display_name(current_profile) %></strong>
+          <small><%= current_profile.role.name %></small>
+        </span>
+      </summary>
+      <div class="profile-menu__panel">
+        <%= link_to crm_t("profile.title", "Profile & appearance"), profile_path %>
+        <%= link_to my_timeline_path do %><%= ui_icon "timeline", size: 16 %> My Timeline<% end %>
+        <%= button_to crm_t("menu.sign_out", "Sign out"), session_path, method: :delete, class: "profile-menu__signout" %>
+      </div>
+    </details>
+  </div>
+</header>

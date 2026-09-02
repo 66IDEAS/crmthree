@@ -1,0 +1,7 @@
+<%= turbo_frame_tag dom_id_for_ai_briefing(object_type, record_id) do %>
+  <section class="panel ai-priority-card ai-briefing-card">
+    <div class="ai-priority-card__icon"><%= ui_icon "spark", size: 22 %></div>
+    <div><h2><%= object_type.present? ? "AI Briefing" : "AI Priority Summary" %></h2><p><%= content.presence || error %></p><small>Generated <%= time_ago_in_words(Time.current) %> ago from authorised current data.</small></div>
+    <%= button_to "Refresh", briefings_path, params: {object_type:, record_id:}, class: "button" %>
+  </section>
+<% end %>

@@ -1,0 +1,94 @@
+<% name = display_name(@record) %>
+<% number = Crm::RecordPresentation.display_number(@record) %>
+<% title = object_label(object_type, count: 2) %>
+<% content_for :title, "#{name} · CRMthree" %>
+
+<div class="page" data-history-entry="<%= name %>" data-controller="dialog record-lock"
+  data-record-lock-object-type-value="<%= object_type %>" data-record-lock-record-id-value="<%= @record.id %>"
+  data-record-lock-current-profile-value="<%= current_profile.id %>">
+  <header class="page-heading record-heading">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to crm_t("nav.home", "Home"), root_path %> / <%= link_to title, records_path(object_type: object_type) %> / <%= name %></nav>
+    <div class="page-title-row">
+      <div class="record-title">
+        <%= link_to records_path(object_type: object_type), class: "icon-button", aria: {label: "Back to #{title}"} do %><%= ui_icon "chevron-left", size: 22 %><% end %>
+        <div><h1 class="page-title"><%= name %></h1><% if number.present? %><span class="number-chip"><%= number %></span><% end %></div>
+      </div>
+      <div class="record-actions">
+        <% if @record.is_a?(Opportunity) && !@record.result_open? && AIProviderConfig.exists?(is_active: true) %><%= button_to "Draft win/loss article", opportunity_knowledge_draft_path(opportunity_id: @record.id), class: "button" %><% end %>
+        <% if @record.is_a?(Opportunity) %>
+          <% if @deal_room %>
+            <%= link_to deal_room_path(@deal_room), class: "button button--primary" do %><%= ui_icon "briefcase", size: 17 %><span>Open Deal Room</span><% end %>
+          <% else %>
+            <%= link_to new_deal_room_path(opportunity_id: @record.id), class: "button button--primary" do %><%= ui_icon "briefcase", size: 17 %><span>Create Deal Room</span><% end %>
+          <% end %>
+        <% elsif @record.is_a?(Ticket) %>
+          <%= link_to case_room_path(@record), class: "button button--primary" do %><%= ui_icon "lifebuoy", size: 17 %><span>Open Case Room</span><% end %>
+        <% end %>
+        <% if @record_lock && @record_lock.holder_id != current_profile.id %>
+          <span class="record-lock-indicator"><%= ui_icon "lock", size: 16 %> <%= display_name(@record_lock.holder) %> is editing</span>
+        <% end %>
+        <% conversion_actions_for(@record).each do |action| %>
+          <%= button_tag type: "button", class: "button", disabled: action[:disabled],
+            data: {action: "dialog#open", dialog_id_param: conversion_dialog_id(@record, action[:target])},
+            title: ("This lead has already been converted" if action[:disabled]) do %>
+            <%= ui_icon action[:icon], size: 17 %><span><%= action[:label] %></span>
+          <% end %>
+        <% end %>
+        <% if @record_lock && @record_lock.holder_id != current_profile.id %>
+          <button class="button" type="button" disabled title="This record is currently locked"><%= ui_icon "edit", size: 17 %><span><%= crm_t("ui.edit", "Edit") %></span></button>
+        <% else %>
+          <%= link_to edit_record_path(object_type: object_type, id: @record.id), class: "button" do %><%= ui_icon "edit", size: 17 %><span><%= crm_t("ui.edit", "Edit") %></span><% end %>
+        <% end %>
+        <%= button_to record_path(object_type: object_type, id: @record.id), method: :delete, class: "button button--danger", form: {data: {turbo_confirm: "Delete #{name}? This cannot be undone."}} do %><%= ui_icon "trash", size: 17 %><span><%= crm_t("ui.delete", "Delete") %></span><% end %>
+      </div>
+    </div>
+    <div class="recent-records" data-controller="record-history" data-record-history-current-value="<%= request.path %>">
+      <span>Recent</span><nav data-record-history-target="links" aria-label="Recent records"></nav>
+    </div>
+  </header>
+
+  <%= render "quick_actions", record: @record %>
+  <%= render "converted_lead", lead: @record if @record.is_a?(Lead) && @record.converted? %>
+  <%= render "ticket_sla", ticket: @record, snapshot: @sla_snapshot if @record.is_a?(Ticket) %>
+  <% if Crm::AI::Briefing::SUPPORTED_TYPES.include?(object_type) %><%= render "briefings/card", object_type:, record_id: @record.id %><% end %>
+
+  <section class="panel detail-panel">
+    <div class="panel__header"><h2><%= crm_t("section.details", "Details") %></h2></div>
+    <div class="detail-grid">
+      <% @fields.each do |field| %>
+        <% value = formatted_field_value(@record, field, references: @references) %>
+        <% next if value.blank? && value != false %>
+        <div class="detail-field">
+          <dt><%= field_label(object_type, field) %></dt>
+          <dd>
+            <% if field.fetch("type") == "enum" %>
+              <span class="chip chip--<%= enum_tone(@record, field) %>"><%= value %></span>
+            <% elsif field.fetch("type") == "reference" && field["target"] && @record.public_send(field.fetch("name")).present? %>
+              <%= link_to value, record_path(object_type: field.fetch("target"), id: @record.public_send(field.fetch("name"))), class: "record-link" %>
+            <% elsif notification_preferences_field?(@record, field) %>
+              <div class="preference-status-list">
+                <% notification_preference_items(@record).each do |label, enabled| %>
+                  <span class="preference-status"><strong><%= label %></strong><span class="chip <%= "chip--positive" if enabled %>"><%= enabled ? "On" : "Off" %></span></span>
+                <% end %>
+              </div>
+            <% elsif field.fetch("type") == "json" %>
+              <pre><%= value %></pre>
+            <% else %>
+              <%= value %>
+            <% end %>
+          </dd>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <% if @record.is_a?(KnowledgeArticle) %>
+    <section class="knowledge-feedback" aria-label="Knowledge article feedback">
+      <span>Was this article helpful?</span>
+      <%= button_to knowledge_article_helpful_path(knowledge_article_id: @record.id), class: "button button--compact" do %><%= ui_icon "check-square", size: 16 %> Helpful · <%= @record.helpful_count %><% end %>
+    </section>
+  <% end %>
+
+  <%= render "linked_records", parent_cards: @parent_cards, child_cards: @child_cards %>
+  <%= render "conversion_dialogs", record: @record %>
+</div>

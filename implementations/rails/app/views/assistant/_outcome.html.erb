@@ -1,0 +1,25 @@
+<div class="assistant-outcome" data-conversation-id="<%= outcome.conversation&.id %>">
+  <% if outcome.conversation %>
+    <div class="assistant-thread" aria-live="polite">
+      <% outcome.conversation.messages.each do |message| %>
+        <div class="assistant-bubble assistant-bubble--<%= message["role"] %>"><%= simple_format(message["content"], {}, wrapper_tag: "span") %></div>
+      <% end %>
+    </div>
+  <% elsif outcome.error.present? %>
+    <div class="search-empty"><%= outcome.error %></div>
+  <% end %>
+
+  <% outcome.groups.each do |group| %>
+    <section class="search-group">
+      <h2><%= ui_icon group.icon, size: 15 %><%= group.label %></h2>
+      <% group.records.each do |record| %>
+        <% semantic = record.is_a?(Crm::AI::Assistant::Item) %>
+        <%= link_to record_path(object_type: group.object_type, id: record.id), class: "search-result", data: {action: "global-search#close"} do %>
+          <span><strong><%= semantic ? record.name : display_name(record) %></strong><% if semantic && record.reason.present? %><small><%= record.reason %></small><% end %></span>
+          <%= ui_icon "chevron-right", size: 16 %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+  <% if outcome.groups.empty? && outcome.conversation.nil? && outcome.error.blank? %><div class="search-empty">No matching records found.</div><% end %>
+</div>

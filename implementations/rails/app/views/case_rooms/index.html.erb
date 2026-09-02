@@ -1,0 +1,7 @@
+<% content_for :title, "Case Rooms · CRMthree" %>
+<div class="page">
+  <header class="page-heading"><nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to "Home", root_path %> / Case Rooms</nav><div class="page-title-row"><div><h1 class="page-title">Case Rooms</h1><p class="page-subtitle"><%= pluralize(@tickets.length, "ticket workspace") %></p></div></div></header>
+  <section class="panel"><div class="table-scroll"><table class="data-table workspace-list"><thead><tr><th>Ticket #</th><th>Subject</th><th>Account</th><th>Status</th><th>Priority</th><th>Assigned to</th></tr></thead><tbody>
+    <% @tickets.each do |ticket| %><tr><td><%= link_to Ticket.crm_display_number(ticket.ticket_number), case_room_path(ticket), class: "record-link" %></td><td><strong><%= ticket.subject %></strong><small><%= ticket.category %></small></td><td><%= ticket.account.name1 %></td><td><span class="chip chip--<%= ticket.status.is_closed? || ticket.status.is_resolved? ? "positive" : "progress" %>"><%= ticket.status.name %></span></td><td><span class="chip chip--<%= Crm::RecordPresentation.chip_tone(ticket.priority_before_type_cast) %>"><%= ticket.priority_before_type_cast %></span></td><td><%= ticket.assignee ? display_name(ticket.assignee) : "Unassigned" %></td></tr><% end %>
+  </tbody></table></div><% if @tickets.empty? %><div class="empty-state">No accessible tickets.</div><% end %></section>
+</div>

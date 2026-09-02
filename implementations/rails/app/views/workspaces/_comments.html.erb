@@ -1,0 +1,8 @@
+<section class="panel workspace-card" id="comments">
+  <div class="panel__header"><div><span class="linked-card__eyebrow">Team discussion</span><h2>Comments <span class="linked-count"><%= comments.length %></span></h2></div></div>
+  <div class="comment-thread">
+    <% comments.each do |comment| %><article class="comment"><span class="avatar"><%= comment.author.first_name.first %><%= comment.author.last_name.first %></span><div><header><strong><%= display_name(comment.author) %></strong><time datetime="<%= comment.created_at.iso8601 %>"><%= time_ago_in_words(comment.created_at) %> ago</time></header><p><%= simple_format(comment.content) %></p></div></article><% end %>
+    <% if comments.empty? %><div class="empty-state">Start the discussion with a note.</div><% end %>
+  </div>
+  <%= form_with url: workspace_comments_path(workspace_type: workspace.class.name, workspace_id: workspace.id), class: "comment-composer" do %><%= text_area_tag :content, nil, required: true, rows: 2, placeholder: "Write a team comment…", aria: {label: "Team comment"} %><%= button_tag type: "submit", class: "button button--primary" do %><%= ui_icon "send", size: 16 %> Post<% end %><% end %>
+</section>

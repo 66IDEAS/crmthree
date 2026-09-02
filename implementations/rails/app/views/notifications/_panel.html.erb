@@ -1,0 +1,21 @@
+<div class="notification-panel__header">
+  <h2><%= crm_t("menu.notifications", "Notifications") %></h2>
+  <%= button_to crm_t("menu.mark_all_read", "Mark all as read"), mark_all_notifications_path, class: "text-button",
+    disabled: notifications.none? { |notification| !notification.read? } %>
+</div>
+<div class="notification-list">
+  <% if notifications.empty? %>
+    <div class="notification-empty"><%= ui_icon "bell", size: 28 %><span><%= crm_t("menu.no_notifications", "No notifications") %></span></div>
+  <% end %>
+  <% notifications.each do |notification| %>
+    <article class="notification-item <%= "notification-item--unread" unless notification.read? %>">
+      <% unless notification.read? %><span class="notification-item__dot" aria-label="Unread"></span><% end %>
+      <%= button_to open_notification_path(notification), class: "notification-item__content" do %>
+        <strong><%= notification.title %></strong>
+        <span><%= truncate(notification.message, length: 72) %></span>
+        <small><%= time_ago_in_words(notification.created_at) %> ago</small>
+      <% end %>
+      <%= button_to notification_path(notification), method: :delete, class: "icon-button notification-item__delete", aria: {label: "Delete notification"} do %><%= ui_icon "x", size: 14 %><% end %>
+    </article>
+  <% end %>
+</div>

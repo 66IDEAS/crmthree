@@ -1,0 +1,12 @@
+<section class="panel conversion-summary">
+  <div class="panel__header"><div><span class="linked-card__eyebrow">Conversion complete</span><h2>Converted records</h2></div><span class="chip chip--positive">Converted</span></div>
+  <div class="conversion-summary__links">
+    <% [["Account", lead.converted_account], ["Contact", lead.converted_contact], ["Opportunity", lead.converted_opportunity]].each do |label, converted| %>
+      <% next unless converted %>
+      <%= link_to record_path(object_type: converted.class.name, id: converted.id), class: "conversion-summary__link" do %>
+        <span class="object-monogram"><%= label.first(2).upcase %></span>
+        <span><small><%= label %></small><strong><%= display_name(converted) %></strong></span>
+      <% end %>
+    <% end %>
+  </div>
+</section>

@@ -1,0 +1,18 @@
+<% if query.length < 2 %>
+  <div class="search-empty">Type at least two characters to search.</div>
+<% elsif groups.empty? %>
+  <div class="search-empty"><%= ui_icon "search", size: 24 %><span>No results for “<%= query %>”</span></div>
+<% else %>
+  <% groups.each do |group| %>
+    <section class="search-group">
+      <h2><%= ui_icon group.icon, size: 17 %><%= group.label %></h2>
+      <% group.records.each do |record| %>
+        <%= link_to record_path(object_type: group.object_type, id: record.id), class: "search-result", data: {action: "global-search#close"} do %>
+          <span><strong><%= display_name(record) %></strong></span>
+          <% number = Crm::RecordPresentation.display_number(record) %>
+          <% if number.present? %><span class="number-chip"><%= number %></span><% end %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+<% end %>

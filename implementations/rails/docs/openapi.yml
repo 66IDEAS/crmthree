@@ -1,0 +1,61 @@
+openapi: 3.1.0
+info:
+  title: CRMthree Local API
+  version: 1.0.0
+  description: Policy-scoped CRUD and lead conversion for the local Rails implementation.
+servers:
+  - url: http://localhost:3000/api/v1
+components:
+  securitySchemes:
+    bearerToken:
+      type: http
+      scheme: bearer
+  schemas:
+    Error:
+      type: object
+      required: [error, messages]
+      properties:
+        error: { type: string }
+        messages: { type: array, items: { type: string } }
+security:
+  - bearerToken: []
+paths:
+  /records/{objectType}:
+    parameters:
+      - name: objectType
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: List authorised records
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+      responses:
+        '200': { description: Records with pagination metadata }
+        '401': { description: Missing or invalid bearer token }
+    post:
+      summary: Create a record
+      responses:
+        '201': { description: Created }
+        '422': { description: Validation error, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /records/{objectType}/{id}:
+    parameters:
+      - { name: objectType, in: path, required: true, schema: { type: string } }
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Read an authorised record
+      responses: { '200': { description: Record }, '404': { description: Missing or concealed } }
+    patch:
+      summary: Update an authorised record
+      responses: { '200': { description: Updated }, '404': { description: Missing or concealed } }
+    delete:
+      summary: Delete an authorised record
+      responses: { '204': { description: Deleted }, '404': { description: Missing or concealed } }
+  /records/Lead/{id}/convert:
+    post:
+      summary: Convert a lead idempotently
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
+      responses: { '201': { description: Conversion targets }, '409': { description: Already converted } }

@@ -1,0 +1,14 @@
+<% content_for :title, "Preview data import · CRMthree" %>
+<% fields = Crm::ModelRegistry.writable_fields(@import_run.object_type).sort_by { |field| field["required"] ? 0 : 1 } %>
+
+<div class="page">
+  <header class="page-heading"><nav class="breadcrumb"><%= link_to "Settings", settings_path %> / Data Import / Preview</nav><div class="page-title-row"><div><h1 class="page-title">Import <%= object_label(@import_run.object_type, count: 2) %></h1><p class="page-subtitle"><%= @import_run.filename %> · <%= @import_run.total_rows %> rows</p></div></div></header>
+  <section class="panel settings-section"><div class="panel__header"><h2>First five rows</h2></div><div class="table-scroll"><table class="data-table"><thead><tr><% @import_run.headers.each do |header| %><th><%= header %></th><% end %></tr></thead><tbody><% @import_run.preview_rows.each do |row| %><tr><% @import_run.headers.each do |header| %><td><%= truncate(row[header].to_s, length: 80) %></td><% end %></tr><% end %></tbody></table></div></section>
+  <%= form_with url: execute_data_import_path(@import_run), method: :post do %>
+    <section class="panel settings-section"><div class="panel__header"><div><h2>Field mapping</h2><p class="page-subtitle">Required CRM fields are listed first.</p></div></div><div class="table-scroll"><table class="data-table mapping-table"><thead><tr><th>CRM field</th><th>Source</th><th>Value</th></tr></thead><tbody>
+      <% fields.each do |field| %><% rule = @import_run.mapping.fetch(field.fetch("name"), {}) %><tr><td><strong><%= field.fetch("description", field.fetch("name").humanize) %></strong><% if field["required"] %><span class="required-mark">*</span><% end %></td><td><%= select_tag "mapping[#{field.fetch("name")}][mode]", options_for_select([["CSV Column", "column"], ["Fixed Value", "fixed"], ["Skip", "skip"]], rule["mode"]), aria: {label: "Source for #{field.fetch("name")}"} %></td><td><%= text_field_tag "mapping[#{field.fetch("name")}][value]", rule["value"], list: "csv-headers", aria: {label: "Value for #{field.fetch("name")}"} %></td></tr><% end %>
+    </tbody></table></div></section>
+    <datalist id="csv-headers"><% @import_run.headers.each do |header| %><option value="<%= header %>"><% end %></datalist>
+    <div class="form-actions"><%= link_to "Cancel", settings_path(anchor: "data-import"), class: "button" %><%= submit_tag "Import #{@import_run.total_rows} records", class: "button button--primary" %></div>
+  <% end %>
+</div>

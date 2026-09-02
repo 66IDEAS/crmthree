@@ -1,0 +1,10 @@
+<section class="panel timeline-panel">
+  <div class="timeline-feed">
+    <% timeline.entries.each do |entry| %><article class="timeline-entry">
+      <span class="timeline-entry__icon timeline-entry__icon--<%= entry.kind %>"><%= ui_icon(entry.kind == "activity" ? "calendar" : (entry.status == "Create" ? "plus" : "edit"), size: 18) %></span>
+      <div class="timeline-entry__body"><header><strong><%= entry.title %></strong><time datetime="<%= entry.occurred_at.iso8601 %>"><%= time_ago_in_words(entry.occurred_at) %> ago</time></header><div class="timeline-entry__meta"><% if policy(entry.actor).show? %><%= link_to display_name(entry.actor), member_profile_path(entry.actor), class: "record-link" %><% else %><span><%= display_name(entry.actor) %></span><% end %><span class="chip"><%= entry.object_type.underscore.humanize %></span><% if entry.status %><span class="chip chip--<%= Crm::RecordPresentation.chip_tone(entry.status) %>"><%= entry.status %></span><% end %><% if entry.xp.to_i.positive? %><span class="chip chip--xp">+<%= entry.xp %> XP</span><% end %><% if entry.context && entry.context.first != "Activity" %><%= link_to entry.context.last, record_path(object_type: entry.context.first, id: entry.context.second), class: "context-chip" %><% end %></div></div>
+    </article><% end %>
+    <% if timeline.entries.empty? %><div class="empty-state"><%= ui_icon "timeline", size: 28 %><strong>No timeline entries in this period.</strong></div><% end %>
+  </div>
+  <% pages = (timeline.total_count.to_f / timeline.per_page).ceil %><% if pages > 1 %><footer class="pagination"><span>Page <%= timeline.page %> of <%= pages %></span><div><% if timeline.page > 1 %><%= link_to "Previous", request.query_parameters.merge(page: timeline.page - 1), class: "button" %><% end %><% if timeline.page < pages %><%= link_to "Next", request.query_parameters.merge(page: timeline.page + 1), class: "button" %><% end %></div></footer><% end %>
+</section>

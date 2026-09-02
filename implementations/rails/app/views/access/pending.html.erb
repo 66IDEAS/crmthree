@@ -1,0 +1,11 @@
+<% content_for :title, "Access pending · CRMthree" %>
+
+<section class="guest-page guest-page--wide">
+  <div class="guest-card guest-card--center">
+    <p class="guest-eyebrow">Access pending</p>
+    <h1>Your identity is valid, but CRM access is not available.</h1>
+    <p>Signed in as <strong><%= @signed_in_email %></strong>.</p>
+    <p class="guest-copy">Ask an administrator to create or activate a matching profile and allow this email or domain.</p>
+    <%= button_to "Sign out", session_path, method: :delete, class: "button" %>
+  </div>
+</section>

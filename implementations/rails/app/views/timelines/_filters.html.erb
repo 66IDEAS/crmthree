@@ -1,0 +1,8 @@
+<%= form_with url:, method: :get, class: "timeline-filters" do %>
+  <% if defined?(teams) && teams.present? %><label>Team <%= select_tag :team_id, options_from_collection_for_select(teams, :id, :name, params[:team_id]), data: {controller: "autosubmit", action: "change->autosubmit#submit"} %></label><% end %>
+  <% if defined?(members) && members.present? %><label>Member <%= select_tag :member_id, options_for_select([["All members", ""]] + members.map { |member| [display_name(member), member.id] }, params[:member_id]) %></label><% end %>
+  <label>From <%= date_field_tag :from, timeline.from %></label>
+  <label>To <%= date_field_tag :to, timeline.to %></label>
+  <label>Type <%= select_tag :event_type, options_for_select([["All", "all"], ["Activities Only", "activities"], ["Events Only", "events"]], timeline.event_type) %></label>
+  <%= submit_tag "Apply filters", class: "button button--primary" %>
+<% end %>

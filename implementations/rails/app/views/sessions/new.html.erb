@@ -1,0 +1,23 @@
+<% content_for :title, "Sign in · CRMthree" %>
+
+<section class="guest-page">
+  <div class="guest-card">
+    <div class="guest-brand"><%= image_tag "crmthree-by-light.svg", class: "brand-logo guest-logo brand-logo--light", alt: "CRMTHREE by 66IDEAS" %><%= image_tag "crmthree-by-dark.svg", class: "brand-logo guest-logo brand-logo--dark", alt: "CRMTHREE by 66IDEAS" %></div>
+    <h1><%= crm_t("dashboard.welcome_back", "Welcome back") %></h1>
+    <p class="guest-copy"><%= crm_t("login.subtitle", "Sign in with your local CRMthree account.") %></p>
+
+    <%= form_with url: session_path, class: "guest-form" do |form| %>
+      <div class="field">
+        <%= form.label :email, crm_t("login.email", "Email") %>
+        <%= form.email_field :email, required: true, autofocus: true, autocomplete: "email" %>
+      </div>
+      <div class="field">
+        <%= form.label :password, crm_t("login.password", "Password") %>
+        <%= form.password_field :password, required: true, autocomplete: "current-password" %>
+      </div>
+      <%= form.submit crm_t("ui.sign_in", "Sign in"), class: "button button--primary guest-submit" %>
+    <% end %>
+
+    <p class="guest-link"><%= link_to "Reset local password", new_password_reset_path %></p>
+  </div>
+</section>

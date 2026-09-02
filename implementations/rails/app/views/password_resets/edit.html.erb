@@ -1,0 +1,13 @@
+<% content_for :title, "Choose password · CRMthree" %>
+
+<section class="guest-page">
+  <div class="guest-card">
+    <h1>Choose a new password</h1>
+    <% if Array(@errors).present? %><div class="form-errors" role="alert"><% Array(@errors).each do |error| %><p><%= error %></p><% end %></div><% end %>
+    <%= form_with url: password_reset_path(@token), method: :patch, class: "guest-form" do |form| %>
+      <div class="field"><%= form.label :password, "New password" %><%= form.password_field :password, required: true, minlength: 12, autocomplete: "new-password" %></div>
+      <div class="field"><%= form.label :password_confirmation, "Confirm password" %><%= form.password_field :password_confirmation, required: true, minlength: 12, autocomplete: "new-password" %></div>
+      <%= form.submit "Update password", class: "button button--primary guest-submit" %>
+    <% end %>
+  </div>
+</section>

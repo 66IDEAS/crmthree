@@ -1,0 +1,29 @@
+<% activity_actions = activity_actions_for(record) %>
+<% conversion_actions = conversion_actions_for(record) %>
+<% ticket_article = @case_conversion_article if record.is_a?(Ticket) %>
+<% if activity_actions.present? || conversion_actions.present? || record.is_a?(Ticket) %>
+  <section class="quick-action-bar" aria-label="Quick actions">
+    <span class="quick-action-bar__label">Quick actions</span>
+    <% activity_actions.each do |action| %>
+      <%= link_to action[:path], class: "button button--compact" do %>
+        <%= ui_icon action[:icon], size: 16 %><span><%= action[:label] %></span>
+      <% end %>
+    <% end %>
+    <% conversion_actions.each do |action| %>
+      <%= button_tag type: "button", class: "button button--compact", disabled: action[:disabled],
+        data: {action: "dialog#open", dialog_id_param: conversion_dialog_id(record, action[:target])},
+        title: ("This lead has already been converted" if action[:disabled]) do %>
+        <%= ui_icon action[:icon], size: 16 %><span><%= action[:label] %></span>
+      <% end %>
+    <% end %>
+    <% if record.is_a?(Ticket) %>
+      <% if ticket_article %>
+        <%= link_to record_path(object_type: "KnowledgeArticle", id: ticket_article.id), class: "button button--compact" do %><%= ui_icon "book", size: 16 %><span>Open Knowledge Article</span><% end %>
+      <% elsif policy(record).convert_to_knowledge? %>
+        <%= button_to ticket_knowledge_conversion_path(ticket_id: record.id), class: "button button--compact", params: {conversion: {idempotency_key: SecureRandom.uuid}} do %><%= ui_icon "book", size: 16 %><span>Create Knowledge Article</span><% end %>
+      <% else %>
+        <%= button_tag type: "button", class: "button button--compact", disabled: true, title: "Resolve the ticket and add a resolution first" do %><%= ui_icon "book", size: 16 %><span>Create Knowledge Article</span><% end %>
+      <% end %>
+    <% end %>
+  </section>
+<% end %>

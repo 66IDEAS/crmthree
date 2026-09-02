@@ -1,0 +1,31 @@
+<% if record.is_a?(Lead) && !record.converted? %>
+  <dialog id="<%= conversion_dialog_id(record, "LeadConversion") %>" class="conversion-dialog">
+    <%= form_with url: lead_conversion_path(lead_id: record.id), scope: :conversion, class: "conversion-form" do |form| %>
+      <div class="conversion-dialog__header"><div><span class="linked-card__eyebrow">Lead conversion</span><h2>Convert Lead</h2></div><%= button_tag type: "button", class: "icon-button", aria: {label: "Close"}, data: {action: "dialog#close"} do %><%= ui_icon "x", size: 20 %><% end %></div>
+      <div class="conversion-dialog__body">
+        <p class="conversion-dialog__intro">Create a customer account and contact from <strong><%= display_name(record) %></strong>. You can also open an opportunity.</p>
+        <section class="conversion-preview"><h3>Contact</h3><dl><dt>Name</dt><dd><%= display_name(record) %></dd><dt>Email</dt><dd><%= record.email.presence || "—" %></dd><dt>Phone</dt><dd><%= record.phone.presence || "—" %></dd><dt>Position</dt><dd><%= record.position.presence || "—" %></dd></dl></section>
+        <div class="field"><%= form.label :account_name, "Account name" %><%= form.text_field :account_name, value: record.company.presence || "#{display_name(record)} Account", maxlength: 40, required: true %></div>
+        <label class="conversion-checkbox"><%= form.check_box :create_opportunity %><span><strong>Create an opportunity</strong><small>The new account, contact, and lead owner will be carried over.</small></span></label>
+        <div class="field"><%= form.label :opportunity_name, "Opportunity name" %><%= form.text_field :opportunity_name, value: display_name(record), maxlength: 120 %></div>
+        <%= form.hidden_field :idempotency_key, value: SecureRandom.uuid %>
+      </div>
+      <div class="conversion-dialog__actions"><%= button_tag "Cancel", type: "button", class: "button", data: {action: "dialog#close"} %><%= form.submit "Convert", class: "button button--primary", data: {turbo_submits_with: "Converting…"} %></div>
+    <% end %>
+  </dialog>
+<% end %>
+
+<% conversion_actions_for(record).reject { |action| action[:target] == "LeadConversion" }.each do |action| %>
+  <% target = action[:target] %>
+  <dialog id="<%= conversion_dialog_id(record, target) %>" class="conversion-dialog">
+    <%= form_with url: document_conversion_path(source_type: record.class.name, source_id: record.id, target_type: target), scope: :conversion, class: "conversion-form" do |form| %>
+      <div class="conversion-dialog__header"><div><span class="linked-card__eyebrow">Document conversion</span><h2>Create <%= sales_object_label(target) %> from <%= sales_object_label(record.class.name) %></h2></div><%= button_tag type: "button", class: "icon-button", aria: {label: "Close"}, data: {action: "dialog#close"} do %><%= ui_icon "x", size: 20 %><% end %></div>
+      <div class="conversion-dialog__body">
+        <p class="conversion-dialog__intro">The new document will be created as a draft and you will be taken to it immediately.</p>
+        <dl class="conversion-facts"><dt>Account</dt><dd><%= record.account.name1 %></dd><dt>Line items copied</dt><dd><%= record.line_items.count %></dd><dt>Currency</dt><dd><%= record.currency %></dd><dt>Owner</dt><dd><%= display_name(record.owner) %></dd></dl>
+        <%= form.hidden_field :idempotency_key, value: SecureRandom.uuid %>
+      </div>
+      <div class="conversion-dialog__actions"><%= button_tag "Cancel", type: "button", class: "button", data: {action: "dialog#close"} %><%= form.submit "Create #{sales_object_label(target)}", class: "button button--primary", data: {turbo_submits_with: "Creating…"} %></div>
+    <% end %>
+  </dialog>
+<% end %>

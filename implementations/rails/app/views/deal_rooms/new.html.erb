@@ -1,0 +1,12 @@
+<% content_for :title, "Create Deal Room · CRMthree" %>
+<div class="page">
+  <header class="page-heading"><nav class="breadcrumb" aria-label="Breadcrumb"><%= link_to "Opportunities", records_path(object_type: "Opportunity") %> / <%= link_to @opportunity.name, record_path(object_type: "Opportunity", id: @opportunity.id) %> / Create Deal Room</nav><div class="page-title-row"><div><h1 class="page-title">Create Deal Room</h1><p class="page-subtitle">Open a focused collaboration workspace for this opportunity.</p></div></div></header>
+  <section class="panel form-panel"><div class="panel__body">
+    <%= form_with model: @deal_room, url: deal_rooms_path, class: "record-form" do |form| %>
+      <%= hidden_field_tag :opportunity_id, @opportunity.id %>
+      <% errors = Array(@form_errors).presence || @deal_room.errors.full_messages %><% if errors.present? %><div class="form-errors" role="alert"><strong>Please review the Deal Room.</strong><ul><% errors.each do |error| %><li><%= error %></li><% end %></ul></div><% end %>
+      <div class="form-grid"><div class="field"><%= form.label :name %><%= form.text_field :name, required: true, maxlength: 120 %></div><div class="field"><label>Opportunity</label><input value="<%= @opportunity.name %>" readonly></div><div class="field field--wide"><%= form.label :description %><%= form.text_area :description, rows: 5 %></div></div>
+      <div class="form-actions"><%= link_to "Cancel", record_path(object_type: "Opportunity", id: @opportunity.id), class: "button" %><%= form.submit "Create Deal Room", class: "button button--primary" %></div>
+    <% end %>
+  </div></section>
+</div>

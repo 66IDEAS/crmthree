@@ -1,0 +1,13 @@
+<% content_for :title, "Reset password · CRMthree" %>
+
+<section class="guest-page">
+  <div class="guest-card">
+    <h1>Reset local password</h1>
+    <p class="guest-copy">For local development, a private reset URL is written beneath <code>tmp/local_password_resets</code>.</p>
+    <%= form_with url: password_resets_path, class: "guest-form" do |form| %>
+      <div class="field"><%= form.label :email %><%= form.email_field :email, required: true, autofocus: true, autocomplete: "email" %></div>
+      <%= form.submit "Create reset instructions", class: "button button--primary guest-submit" %>
+    <% end %>
+    <p class="guest-link"><%= link_to "Back to sign in", new_session_path %></p>
+  </div>
+</section>

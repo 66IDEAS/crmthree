@@ -1,0 +1,72 @@
+<div class="linked-stack">
+  <% parent_cards.each do |card| %>
+    <section class="panel linked-card linked-card--parent">
+      <div class="panel__header">
+        <div><span class="linked-card__eyebrow">Parent</span><h2><%= field_label(object_type, card.field) %></h2></div>
+        <%= link_to "Open", record_path(object_type: card.object_type, id: card.record_id), class: "button" %>
+      </div>
+      <div class="linked-parent-row"><span class="object-monogram"><%= card.object_type.first(2).upcase %></span><strong><%= card.label %></strong></div>
+    </section>
+  <% end %>
+
+  <% child_cards.each do |card| %>
+    <% relationship = card.relationship %>
+    <% target = relationship.fetch("target") %>
+    <% target_definition = Crm::ModelRegistry.fetch(target) %>
+    <% columns = target_definition.fetch("default_list_columns") %>
+    <% if target == "LineItem" %>
+      <%= render "line_items", card: card, relationship: relationship %>
+      <% next %>
+    <% end %>
+    <section class="panel linked-card">
+      <div class="panel__header">
+        <div><span class="linked-card__eyebrow"><%= relationship.fetch("type").humanize %></span><h2><%= relationship.fetch("name").humanize %> <span class="linked-count"><%= card.total_count %></span></h2></div>
+        <div class="linked-card__actions">
+          <% if relationship.fetch("type") == "one-to-many" && relationship["foreign_key"] %>
+            <% polymorphic_type = relationship["condition"]&.match(/parent_type = '([^']+)'/)&.captures&.first %>
+            <%= link_to new_record_path(object_type: target, parent_field: relationship.fetch("foreign_key"), parent_id: @record.id, parent_type: polymorphic_type, return_to: request.path), class: "button" do %><%= ui_icon "plus", size: 16 %> Add new<% end %>
+          <% elsif relationship.fetch("type") == "many-to-many" && card.link_options.present? %>
+            <details class="link-existing">
+              <summary class="button"><%= ui_icon "plus", size: 16 %> Link existing</summary>
+              <%= form_with url: record_relationship_path(object_type: object_type, id: @record.id, relationship_name: relationship.fetch("name")), class: "link-existing__form" do |form| %>
+                <%= select_tag :related_id, options_for_select(card.link_options.map { |id, label| [label, id] }), prompt: "Choose #{object_label(target)}…", required: true %>
+                <% through_fields = Crm::ModelRegistry.writable_fields(relationship.fetch("through")).reject { |field| field.fetch("type") == "reference" } %>
+                <%= form.fields_for :junction do |junction_form| %>
+                  <% through_fields.each do |field| %>
+                    <div class="field"><%= junction_form.label field.fetch("name"), field_label(relationship.fetch("through"), field) %><%= crm_field_input(junction_form, field) %></div>
+                  <% end %>
+                <% end %>
+                <%= form.submit "Link", class: "button button--primary" %>
+              <% end %>
+            </details>
+          <% end %>
+        </div>
+      </div>
+      <% if card.records.present? %>
+        <div class="table-scroll">
+          <table class="data-table linked-table">
+            <thead><tr><% columns.each do |column| %><% field = target_definition.fetch("fields").find { |candidate| candidate.fetch("name") == column } %><th><%= field_label(target, field) %></th><% end %><% if relationship.fetch("type") == "many-to-many" %><th>Link details</th><th><span class="sr-only">Actions</span></th><% end %></tr></thead>
+            <tbody>
+              <% card.records.each do |related| %>
+                <tr>
+                  <% columns.each_with_index do |column, index| %>
+                    <% field = target_definition.fetch("fields").find { |candidate| candidate.fetch("name") == column } %>
+                    <% value = formatted_field_value(related, field, references: card.references) %>
+                    <td><% if index.zero? %><%= link_to value.presence || "—", record_path(object_type: target, id: related.id), class: "record-link" %><% else %><%= value.presence || "—" %><% end %></td>
+                  <% end %>
+                  <% if relationship.fetch("type") == "many-to-many" %>
+                    <% junction = card.junctions[related.id] %>
+                    <td><%= junction ? Crm::ModelRegistry.fetch(relationship.fetch("through")).fetch("specific_fields").reject { |field| field.fetch("type") == "reference" }.filter_map { |field| formatted_field_value(junction, field).presence }.join(" · ").presence || "—" : "—" %></td>
+                    <td><%= button_to "Unlink", record_relationship_link_path(object_type: object_type, id: @record.id, relationship_name: relationship.fetch("name"), related_id: related.id), method: :delete, class: "text-button", form: {data: {turbo_confirm: "Unlink this record?"}} %></td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="empty-state">No linked <%= relationship.fetch("name").humanize.downcase %>.</div>
+      <% end %>
+    </section>
+  <% end %>
+</div>

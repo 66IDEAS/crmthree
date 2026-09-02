@@ -1,0 +1,16 @@
+<% if ticket.sla && snapshot %>
+  <section class="panel sla-card <%= "sla-card--breached" if snapshot.breached %>" aria-label="SLA status">
+    <div class="panel__header">
+      <div>
+        <span class="linked-card__eyebrow">Service level</span>
+        <h2><%= ticket.sla.name %></h2>
+      </div>
+      <span class="chip chip--<%= snapshot.breached ? "negative" : "positive" %>"><%= snapshot.breached ? "Attention required" : "On track" %></span>
+    </div>
+    <div class="sla-metrics">
+      <div><span>Response</span><strong class="chip chip--<%= sla_state_tone(snapshot.response) %>"><%= sla_state_label(snapshot.response) %></strong><small><%= ticket.sla_response_deadline ? l(ticket.sla_response_deadline, format: :long) : "No deadline" %></small></div>
+      <div><span>Resolution</span><strong class="chip chip--<%= sla_state_tone(snapshot.resolution) %>"><%= sla_state_label(snapshot.resolution) %></strong><small><%= ticket.sla_resolution_deadline ? l(ticket.sla_resolution_deadline, format: :long) : "No deadline" %></small></div>
+      <div><span>Clock</span><strong><%= ticket.sla.business_hours_only? ? "Business hours" : "Continuous" %></strong><small><% if snapshot.next_deadline %><%= snapshot.seconds_remaining.to_i.negative? ? "Deadline passed" : "#{distance_of_time_in_words(Time.current, snapshot.next_deadline)} remaining" %><% else %>Targets completed<% end %></small></div>
+    </div>
+  </section>
+<% end %>
