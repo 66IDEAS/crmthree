@@ -13,8 +13,9 @@ same spec as the Firebase reference, on a stack that shares nothing with it.
 | Authorization | Row Level Security, generated from the model, enforced in the database |
 | Storage | Filesystem behind an authorising route |
 
-**No vendor anywhere.** A Postgres server and a Node process are the whole system; it runs
-on a laptop with no cloud account. Design and divergences from the reference:
+**No vendor anywhere.** A Postgres server and a Node process are the whole system. It runs
+on a laptop with no cloud account, and deploys unchanged to any host that offers Node and
+Postgres - a VM, a container, or a managed Postgres with a Node platform. Design and divergences from the reference:
 [`specs/postgres.architecture.md`](../../specs/postgres.architecture.md).
 
 ## Run it
