@@ -6,6 +6,8 @@ SQLite and attachments travel with the app. The
 authoritative domain model remains [`../../specs/data-model.json`](../../specs/data-model.json);
 Rails migrations, models, and `config/crm/model_manifest.json` are deterministic generated outputs.
 
+**Implemented by Codex**, working from the specification.
+
 ## Requirements
 
 - macOS on Apple Silicon

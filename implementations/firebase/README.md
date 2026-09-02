@@ -3,6 +3,8 @@
 The canonical reference implementation of the [CRMTHREE specification](../../specs/):
 React 19 + Vite + MUI on Firebase (Hosting, Authentication, Firestore, Cloud Functions).
 
+**Implemented by Claude Code**, working from the specification.
+
 ## Prerequisites
 
 - Node.js 20+
