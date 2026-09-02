@@ -3,7 +3,7 @@
 The second implementation of the CRMTHREE specification, and the architecture proof: the
 same spec as the Firebase reference, on a stack that shares nothing with it.
 
-**Implemented by Claude Code**, working from the specification.
+**Implemented by Claude**, working from the specification.
 
 | Layer | Choice |
 |---|---|

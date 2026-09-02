@@ -25,9 +25,9 @@ implementation as-is.
 | Path | What it is |
 |---|---|
 | [`specs/`](specs/) | **The product.** Functional specification, UX specification, architecture, and data model |
-| [`implementations/firebase/`](implementations/firebase/) | **The proof.** The canonical reference implementation: React + Firebase (Hosting, Auth, Firestore, Cloud Functions), self-hostable |
-| [`implementations/postgres/`](implementations/postgres/) | **The second proof.** The same spec on a stack that shares nothing with the first: Svelte 5 + SvelteKit + PostgreSQL, authorization in the database, no vendor - runs on a laptop and deploys unchanged to any Node + Postgres host |
-| [`implementations/rails/`](implementations/rails/) | **The third proof.** Ruby on Rails 8 + Hotwire + SQLite: server-rendered, one process, self-contained on any machine that runs Ruby |
+| [`implementations/firebase/`](implementations/firebase/) | **The proof.** The canonical reference implementation: React + Firebase (Hosting, Auth, Firestore, Cloud Functions), self-hostable. **Implemented by Claude** |
+| [`implementations/postgres/`](implementations/postgres/) | **The second proof.** The same spec on a stack that shares nothing with the first: Svelte 5 + SvelteKit + PostgreSQL, authorization in the database, no vendor - runs on a laptop and deploys unchanged to any Node + Postgres host. **Implemented by Claude** |
+| [`implementations/rails/`](implementations/rails/) | **The third proof.** Ruby on Rails 8 + Hotwire + SQLite: server-rendered, one process, self-contained on any machine that runs Ruby. **Implemented by Codex** |
 | `implementations/…` | Room for further implementations on other stacks - UI5, Azure, or yours |
 
 ## The specification
