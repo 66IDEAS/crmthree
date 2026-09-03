@@ -113,9 +113,15 @@ Horizontal row of compact outlined icon buttons placed above the Details card:
 - Primary actions switch to `Save` (primary blue) and `Cancel` (subtle gray).
 
 ### UX-P18. Reference Pickers
-Reference fields never render as a plain dropdown: a list of every account is unusable at hundreds or thousands of records. Each reference field is a type-ahead picker - a text input that filters candidates as the user types (by display name and by auto-number), shows the first 50 matches with a "keep typing" hint beyond that, supports arrow-key and Enter selection, and offers a clear control. The selected id is submitted through a hidden field.
+**Every lookup into business data uses one picker** - accounts, contacts, opportunities, leads, assets, products, tickets and any other referenced object, on forms, inside the line-item grid, and in the link dialog. A plain dropdown over a list of every account or product is unusable at hundreds or thousands of records.
 
-Pickers can depend on each other: on documents that carry both, the contact picker is filtered to contacts of the currently selected account, re-evaluated each time it opens. Many-to-many cards use the same picker in their "Link" dialog to attach an existing record.
+The picker is a text input that filters candidates as the user types, shows the first 50 matches with a "keep typing" hint beyond that, supports arrow-key and Enter selection, and offers a clear control. The selected id is submitted through a hidden field.
+
+**What it matches:** the display name, the auto-number, and every plain-text column the target object's own list view shows - so a contact is found by email, an account by city, a product by its group. That column is also shown beside each candidate as a disambiguating hint, which keeps lookup and list views consistent: what you can see in a list is what you can search by in a lookup.
+
+**Dependent pickers:** on documents that carry both, the contact picker is filtered to contacts of the currently selected account, re-evaluated each time it opens. In the line-item grid, choosing a product adopts that product's list price; a price typed afterwards stands until the product is changed again.
+
+Plain dropdowns remain correct for **enums** (short, fixed, defined by the model) and for small administrator-curated configuration lists - ticket status, role, pipeline stage, language, page size. Those are state choices, not lookups into business data.
 
 ### UX-P10. Inline Line-Item Editing
 Opportunity, Quotation, Sales Order, and Invoice **creation forms and** detail pages display an inline line-item grid directly below the Details card. On the creation form the grid edits draft rows held in memory and writes them - with their item numbers and the document total - in the same step that creates the document, so a quote is entered header-and-items in one pass:

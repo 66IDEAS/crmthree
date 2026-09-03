@@ -262,6 +262,9 @@
     .ref-opt:hover, .ref-opt.sel { background: var(--surface-hover); }
     .ref-opt .n { color: var(--text-muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
     .ref-empty { padding: 10px; font-size: 12.5px; color: var(--text-muted); }
+    .ref-drop { min-width: 220px; }
+    .li-grid td { overflow: visible; }
+    .li-grid, .linked-card { overflow: visible; }
     .ref-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; padding: 2px 4px; }
     /* P15: rendered markdown */
     .md { font-size: 13px; line-height: 1.55; }
@@ -1395,11 +1398,19 @@
      * P12: `filter` narrows the candidate list (contacts of the chosen account, for example)
      * and is evaluated on every open, so it follows the other field's current value.
      */
-    function refPicker(f, currentVal, filter) {
+    function refPicker(f, currentVal, filter, onPick) {
       const wrap = h('div', { class: 'ref-pick' });
       const hidden = h('input', { type: 'hidden', name: f.k, value: currentVal || '' });
-      const numField = (M(f.refTbl) || {}).numField;
+      const targetMeta = M(f.refTbl) || {};
+      const numField = targetMeta.numField;
       const label = (rec) => getDisplayName(f.refTbl, rec);
+      // Searchable beyond the name: every plain-text column the object's own list view shows,
+      // so a contact is findable by email, an account by city, a product by its group.
+      const hintCols = (targetMeta.cols || [])
+        .filter(c => c.k !== numField && !c.refTbl && ['string', 'text'].includes(c.type))
+        .map(c => c.k)
+        .filter(k => !['name', 'name1', 'first_name', 'last_name', 'subject', 'title', 'label'].includes(k));
+      const hintOf = (r) => { for (const k of hintCols) if (r[k]) return String(r[k]); return ''; };
       const input = h('input', {
         class: 'form-control', autocomplete: 'off',
         placeholder: `${t('ui.search', 'Search…')} ${objSingular(f.refTbl)}`,
@@ -1408,20 +1419,27 @@
       const drop = h('div', { class: 'ref-drop' });
       const clear = h('span', { class: 'ref-clear', title: t('ui.remove', 'Remove') }, '✕');
       clear.style.display = currentVal ? '' : 'none';
-      clear.onmousedown = (e) => { e.preventDefault(); hidden.value = ''; input.value = ''; clear.style.display = 'none'; };
+      clear.onmousedown = (e) => {
+        e.preventDefault();
+        hidden.value = ''; input.value = ''; clear.style.display = 'none';
+        if (onPick) onPick(null);
+      };
       let idx = -1, shown = [];
       const paint = (q) => {
         let rows = DB.list(f.refTbl);
         if (filter) { try { rows = rows.filter(filter); } catch (e) { /* keep all */ } }
         const needle = (q || '').toLowerCase().trim();
         if (needle) rows = rows.filter(r => label(r).toLowerCase().includes(needle) ||
-          (numField && String(r[numField] || '').replace(/^0+/, '').includes(needle)));
+          (numField && String(r[numField] || '').replace(/^0+/, '').includes(needle)) ||
+          hintCols.some(k => String(r[k] || '').toLowerCase().includes(needle)));
         shown = rows.slice(0, 50);
         drop.innerHTML = '';
         if (!shown.length) { drop.appendChild(h('div', { class: 'ref-empty' }, t('search.no_results', 'No results found'))); return; }
         shown.forEach((r, i) => {
           const opt = h('div', { class: 'ref-opt' + (i === idx ? ' sel' : '') });
-          opt.innerHTML = `<span>${label(r)}</span>${numField && r[numField] ? `<span class="n">#${DB.formatNumber(r[numField])}</span>` : ''}`;
+          const hint = hintOf(r);
+          opt.innerHTML = `<span>${label(r)}</span>${hint ? `<span class="n">${hint}</span>` : ''}` +
+            `${numField && r[numField] ? `<span class="n" style="margin-left:auto">#${DB.formatNumber(r[numField])}</span>` : ''}`;
           opt.onmousedown = (e) => { e.preventDefault(); pick(r); };
           drop.appendChild(opt);
         });
@@ -1430,6 +1448,7 @@
       const pick = (r) => {
         hidden.value = r.id; input.value = label(r); clear.style.display = '';
         drop.classList.remove('open'); idx = -1;
+        if (onPick) onPick(r);
       };
       input.onfocus = () => { idx = -1; paint(''); input.select(); drop.classList.add('open'); };
       input.oninput = () => { idx = -1; hidden.value = ''; clear.style.display = 'none'; paint(input.value); drop.classList.add('open'); };
@@ -2258,20 +2277,24 @@
       rows.forEach((li, i) => {
         const tr = h('tr');
         tr.appendChild(h('td', {}, isDraft ? String((i + 1) * 10) : DB.formatNumber(li.item_number)));
-        const prodSel = h('select', { class: 'form-control' });
-        prodSel.appendChild(h('option', { value: '' }, t('line_items.select_product', 'Select product')));
-        DB.list('Product').forEach(p => {
-          const o = h('option', { value: p.id }, p.name);
-          if (p.id === li.product_id) o.selected = true;
-          prodSel.appendChild(o);
-        });
+        const prodPick = refPicker({ k: '_product', refTbl: 'Product' }, li.product_id,
+          (p) => p.status !== 'Discontinued',
+          (rec) => {
+            // Choosing a product adopts its list price; a price typed afterwards stands until
+            // the product is changed again.
+            if (rec && rec.base_price != null) price.value = rec.base_price;
+            save();
+          });
+        prodPick.style.minWidth = '190px';
+        prodPick.querySelector('input.form-control').placeholder = t('line_items.select_product', 'Select product');
         const qty = h('input', { type: 'number', step: 'any', class: 'form-control', value: li.quantity ?? 1, style: 'width:80px' });
         const price = h('input', { type: 'number', step: 'any', class: 'form-control', value: li.unit_price ?? 0, style: 'width:100px' });
         const disc = h('input', { type: 'number', step: 'any', class: 'form-control', value: li.discount_percent ?? 0, style: 'width:70px' });
         const totalCell = h('td', { style: 'font-weight:600; text-align:right;' }, Number(OPS.lineTotal(li)).toLocaleString());
         const save = () => {
           const patch = {
-            product_id: prodSel.value || null, quantity: Number(qty.value) || 0,
+            product_id: prodPick.querySelector('input[type=hidden]').value || null,
+            quantity: Number(qty.value) || 0,
             unit_price: Number(price.value) || 0, discount_percent: Number(disc.value) || 0
           };
           patch.total_price = OPS.lineTotal(patch);
@@ -2282,13 +2305,8 @@
           totalCell.textContent = Number(patch.total_price).toLocaleString();
           paintTotal();
         };
-        prodSel.onchange = () => {
-          const prod = DB.getById('Product', prodSel.value);
-          if (prod && prod.base_price != null && !Number(price.value)) price.value = prod.base_price;
-          save();
-        };
         [qty, price, disc].forEach(inp => inp.onchange = save);
-        [prodSel, qty, price, disc].forEach(el => tr.appendChild(h('td', {}, el)));
+        [prodPick, qty, price, disc].forEach(el => tr.appendChild(h('td', {}, el)));
         tr.appendChild(totalCell);
         const del = h('button', { type: 'button', class: 'btn-sm', title: t('ui.remove', 'Remove') });
         del.innerHTML = ICONS.trash;

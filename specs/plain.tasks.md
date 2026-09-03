@@ -223,3 +223,8 @@ The Plain implementation is a **zero-dependency, single-file HTML application** 
 - [x] **T9.8 Render Markdown** in long-text fields in read mode, with escaped input. (`P15`, `UX-P9`)
 - [x] **T9.9 Remove all emoji** outside gamification, replaced by inline SVG icons; owner fields
       default to the signed-in user. (`P16`, `P8`, `UX-P1`, `UX-P9`)
+- [x] **T9.10 One lookup for every object.** The line-item product picker was the last hand-built
+      dropdown over business data and now uses the shared type-ahead; picker matching widened to
+      the target's list-view text columns (contact by email, account by city, product by group)
+      with that column shown as a hint; choosing a product adopts its list price. Enums and small
+      configuration lists deliberately stay dropdowns. (`P17`, `UX-P18`)
