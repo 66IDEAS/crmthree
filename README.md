@@ -11,14 +11,14 @@
   <a href="https://66ideas.com"><img src="https://img.shields.io/badge/by-66IDEAS-16181D" alt="66IDEAS"></a>
 </p>
 
-**CRMTHREE is a complete CRM, published as an open-source specification with a working
-reference implementation.** Accounts, contacts, leads, opportunities, quotes, orders,
+**CRMTHREE is a complete CRM, published as an open-source specification with four working
+implementations.** Accounts, contacts, leads, opportunities, quotes, orders,
 invoices, tickets, SLAs, knowledge base, deal rooms, AI briefings, gamification - the
 functionality, the UX, and the architecture, written down so that anyone can build it.
 
 The idea, in one line: **the specification is the product; the code is the proof.**
-Take the spec and build CRMTHREE on the stack you trust - or run the reference
-implementation as-is.
+Take the spec and build CRMTHREE on the stack you trust - or run one of the four
+implementations as-is.
 
 ## Repository layout
 
