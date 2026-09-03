@@ -128,7 +128,7 @@ The picker is a text input that filters candidates as the user types, shows the 
 Plain dropdowns remain correct for **enums** (short, fixed, defined by the model) and for small administrator-curated configuration lists - ticket status, role, pipeline stage, language, page size. Those are state choices, not lookups into business data.
 
 ### UX-P10. Inline Line-Item Editing
-Opportunity, Quotation, Sales Order, and Invoice **creation forms and** detail pages display an inline line-item grid directly below the Details card. On the creation form the grid edits draft rows held in memory and writes them - with their item numbers and the document total - in the same step that creates the document, so a quote is entered header-and-items in one pass:
+Opportunity, Quotation, Sales Order, and Invoice **creation forms and** detail pages display an inline line-item grid directly below the Details card, **in read and edit mode alike** - a document is its header and its items together. While items exist the document total is read-only in the header form, mirrors the grid as rows change, and is recomputed from the items on save, since it is derived from them. On the creation form the grid edits draft rows held in memory and writes them - with their item numbers and the document total - in the same step that creates the document, so a quote is entered header-and-items in one pass:
 - **Columns:** `Item #` | `Product` | `Quantity` | `Net Price` | `Discount %` | `Net Value` | `Action`.
 - Item numbers auto-sequence in SAP style (`10`, `20`, `30...`).
 - Net value auto-calculates live as user edits quantity or discount: `qty * price * (1 - discount/100)`.

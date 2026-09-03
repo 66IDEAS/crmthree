@@ -1987,11 +1987,19 @@
         }
       } else {
         // --- Edit Mode ---
+        const hasItems = LINE_PARENTS.includes(tbl) && OPS.lineItems(tbl, id).length > 0;
         const form = h('form', { class: 'form-grid' });
         formFields(meta).forEach(f => {
           const group = h('div', { class: `form-group ${['textarea', 'text'].includes(f.type) ? 'full-width' : ''}` });
           group.appendChild(h('label', { class: 'form-label' }, [fieldLabel(tbl, f), f.req ? h('span', { class: 'req' }, '*') : '']));
-          group.appendChild(buildInput(f, record[f.k], form));
+          const input = buildInput(f, record[f.k], form);
+          // With line items present the total is theirs to determine, not the form's.
+          if (hasItems && f.k === TOTAL_FIELD(tbl) && input.tagName === 'INPUT') {
+            input.readOnly = true;
+            input.title = t('line_items.total', 'Total:') + ' ' + t('line_items.title', 'Line Items');
+            input.style.background = 'var(--surface-hover)';
+          }
+          group.appendChild(input);
           form.appendChild(group);
         });
         const btnGroup = h('div', { class: 'form-group full-width', style: 'margin-top:16px; display:flex; gap:10px;' });
@@ -2002,11 +2010,15 @@
           const updates = collectForm(tbl, meta, form);
           if (!updates) return;
           DB.update(tbl, id, updates);
+          if (LINE_PARENTS.includes(tbl) && OPS.lineItems(tbl, id).length) OPS.recalcDoc(tbl, id);
           releaseLock(tbl, id);
           renderDetailView(tbl, id, 'view');
         };
         detailCard.appendChild(form);
         mount.appendChild(detailCard);
+        // The grid is its own editing surface and stays available in edit mode: a document is
+        // its header and its items together.
+        if (LINE_PARENTS.includes(tbl)) mount.appendChild(lineItemCard(tbl, id, null, form));
       }
     }
 
@@ -2105,6 +2117,7 @@
       SalesOrder: [{ to: 'Invoice', l: '+ New Invoice' }]
     };
     const LINE_PARENTS = ['Opportunity', 'Quotation', 'SalesOrder', 'Invoice'];
+    const TOTAL_FIELD = (tbl) => (tbl === 'Opportunity' ? 'amount' : 'total_amount');
     const OPS = {
       lineItems(tbl, id) {
         return DB.query('LineItem', { filter: r => r.parent_type === tbl && r.parent_id === id, sortBy: 'item_number' }).data;
@@ -2279,10 +2292,17 @@
      * in memory so a quote can be entered header-and-items in one go; without it, it writes
      * through to LineItem records and keeps the document total in step.
      */
-    function lineItemCard(tbl, id, draft) {
+    function lineItemCard(tbl, id, draft, syncForm) {
       const isDraft = Array.isArray(draft);
       const card = h('div', { class: 'linked-card' });
-      const rerender = () => card.replaceWith(lineItemCard(tbl, id, draft));
+      const rerender = () => card.replaceWith(lineItemCard(tbl, id, draft, syncForm));
+      // Mirror a recalculated total into an open edit form so the two never disagree.
+      const syncTotal = () => {
+        if (!syncForm) return;
+        const field = syncForm.querySelector(`[name="${TOTAL_FIELD(tbl)}"]`);
+        const rec = DB.getById(tbl, id);
+        if (field && rec) field.value = rec[TOTAL_FIELD(tbl)] ?? 0;
+      };
       const rows = isDraft ? draft : OPS.lineItems(tbl, id);
       const header = h('div', { class: 'linked-header' });
       header.appendChild(h('span', {}, `${t('line_items.title', 'Line Items')} (${rows.length})`));
@@ -2294,7 +2314,7 @@
           rerender();
         } else {
           OPS.addLineItem(tbl, id, { product_id: null, unit_price: 0 });
-          renderView();
+          if (syncForm) { syncTotal(); rerender(); } else renderView();
         }
       };
       header.appendChild(addBtn);
@@ -2344,7 +2364,7 @@
           const prod = DB.getById('Product', patch.product_id);
           if (prod) patch.unit_of_measure = prod.unit_of_measure;
           Object.assign(li, patch);
-          if (!isDraft) { DB.update('LineItem', li.id, patch); OPS.recalcDoc(tbl, id); }
+          if (!isDraft) { DB.update('LineItem', li.id, patch); OPS.recalcDoc(tbl, id); syncTotal(); }
           totalCell.textContent = Number(patch.total_price).toLocaleString();
           paintTotal();
         };
@@ -2355,7 +2375,11 @@
         del.innerHTML = ICONS.trash;
         del.onclick = () => {
           if (isDraft) { draft.splice(i, 1); rerender(); }
-          else { DB.remove('LineItem', li.id); OPS.recalcDoc(tbl, id); renderView(); }
+          else {
+            DB.remove('LineItem', li.id); OPS.recalcDoc(tbl, id);
+            // In edit mode the form must survive; only the grid is rebuilt.
+            if (syncForm) { syncTotal(); rerender(); } else renderView();
+          }
         };
         tr.appendChild(h('td', {}, del));
         tbody.appendChild(tr);

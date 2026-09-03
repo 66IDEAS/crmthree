@@ -238,3 +238,6 @@ The Plain implementation is a **zero-dependency, single-file HTML application** 
       content area can no longer cut it off. (`P19`, `UX-P18`)
 - [x] **T9.13 Line items start empty.** A new row has no product and no price, is flagged until
       one is chosen, and a document with a product-less row is refused on save. (`P20`, `UX-P10`)
+- [x] **T9.14 Line items editable in edit mode.** The grid renders alongside the header form on
+      documents; the derived total is read-only there, mirrored live from the grid and recomputed
+      on save; row add/delete rebuilds only the grid so the open form survives. (`P21`, `UX-P10`)
