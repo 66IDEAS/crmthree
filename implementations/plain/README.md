@@ -1,10 +1,11 @@
 # CRMTHREE — Plain implementation
 
-The fourth proof, at the far end of the spectrum: the complete CRMTHREE specification as
-**one HTML file with zero dependencies**. No build step, no server, no framework, no
-database engine - `index.html` opens straight from disk (`file:///`) or from any static
-host, and everything it does runs on native browser primitives with all state in
-`localStorage`. See [`../../specs/plain.architecture.md`](../../specs/plain.architecture.md).
+The fourth proof, at the far end of the spectrum: the complete CRMTHREE specification in
+**HTML, JavaScript and CSS - no frameworks, no external dependencies**, all in one file. No
+build step, no server, no database engine; `index.html` opens straight from disk (`file:///`)
+or from any static host, everything runs on native browser primitives, and all state lives in
+`localStorage`. Developed by Google Gemini and Claude.
+See [`../../specs/plain.architecture.md`](../../specs/plain.architecture.md).
 
 ## Run it
 
@@ -13,13 +14,23 @@ Open `index.html` in a modern browser. That is the whole setup.
 For a release-shaped copy, `index.min.html` is the same file with styles and scripts
 minified - the golfing pass. Regenerate it after changes with `node scripts/minify.mjs`.
 
+## Size
+
+**The entire CRM is 319 kB** - one file, transferred once, with no second request. For
+comparison, opening a Salesforce Lightning page pulls roughly **13 MB** before the first
+record appears: about forty times the weight of this whole application, for one screen of one
+CRM. Everything here is in that single file: 39 object types, the generic list, detail and
+creation views, deal and case rooms, the dashboard and its charts, the gamification engine,
+the AI layer, and all eight language packs.
+
 | Artifact | Size | gzipped |
 |---|---|---|
-| `index.html` (readable source) | ~357 KB | ~157 KB |
-| `index.min.html` (release) | ~295 KB | ~148 KB |
+| `index.html` (readable source) | 392 kB | 170 kB |
+| `index.min.html` (release) | **319 kB** | 157 kB |
 
-Roughly 135 KB of either file is the embedded, gzip-compressed set of all eight product
-language packs (shared architecture, section 13) plus the English catalog.
+Roughly 140 kB of either file is the embedded, gzip-compressed set of all eight product
+language packs (shared architecture, section 13) plus the English catalog - so the
+application code and its complete user interface are around 180 kB of it.
 
 ## What is inside
 

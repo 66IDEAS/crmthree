@@ -28,7 +28,7 @@ implementation as-is.
 | [`implementations/firebase/`](implementations/firebase/) | **The proof.** The canonical reference implementation: React + Firebase (Hosting, Auth, Firestore, Cloud Functions), self-hostable. **Implemented by Claude** |
 | [`implementations/postgres/`](implementations/postgres/) | **The second proof.** The same spec on a stack that shares nothing with the first: Svelte 5 + SvelteKit + PostgreSQL, authorization in the database, no vendor - runs on a laptop and deploys unchanged to any Node + Postgres host. **Implemented by Claude** |
 | [`implementations/rails/`](implementations/rails/) | **The third proof.** Ruby on Rails 8 + Hotwire + SQLite: server-rendered, one process, self-contained on any machine that runs Ruby. **Implemented by Codex** |
-| [`implementations/plain/`](implementations/plain/) | **The fourth proof.** One HTML file, zero dependencies: vanilla JS, `localStorage`, opens from disk - the whole CRM as a single self-contained artifact |
+| [`implementations/plain/`](implementations/plain/) | **The fourth proof.** HTML, JavaScript and CSS - no frameworks, no external dependencies. The whole CRM as one 319 kB file that opens from disk and keeps its data in the browser. **Implemented by Google Gemini and Claude** |
 | `implementations/…` | Room for further implementations on other stacks - UI5, Azure, or yours |
 
 ## The specification
@@ -36,7 +36,7 @@ implementation as-is.
 - [`specs/specifications.md`](specs/specifications.md) - functional spec: 60+ user stories with acceptance criteria
 - [`specs/ux.md`](specs/ux.md) - UX spec: layouts, navigation, interaction patterns
 - [`specs/architecture.md`](specs/architecture.md) - the technology-independent core: delivery model, product package, and the nine capabilities every implementation must provide
-- [`specs/firebase.architecture.md`](specs/firebase.architecture.md) / [`specs/postgres.architecture.md`](specs/postgres.architecture.md) - how each stack realises them, including each implementation's deliberate divergences
+- [`specs/firebase.architecture.md`](specs/firebase.architecture.md), [`specs/postgres.architecture.md`](specs/postgres.architecture.md), [`specs/rails.architecture.md`](specs/rails.architecture.md), [`specs/plain.architecture.md`](specs/plain.architecture.md) - how each stack realises them, including each implementation's deliberate divergences
 - [`specs/data-model.json`](specs/data-model.json) - the complete data model, machine-readable
 - [`specs/styles/`](specs/styles/) - visual style guides (light and dark)
 
@@ -56,8 +56,8 @@ concrete, the data model is machine-readable, and nothing depends on tribal know
   `createdb`, one apply script, `npm run dev` - against a local Postgres or any hosted one.
 - **Rails (self-contained):** see [`implementations/rails/README.md`](implementations/rails/README.md) -
   `bin/setup`, one bootstrap command, `bin/dev`. SQLite travels with the app.
-- **Plain (zero-dependency):** open [`implementations/plain/index.html`](implementations/plain/index.html)
-  in a browser. That is the whole setup.
+- **Plain (no dependencies at all):** open [`implementations/plain/index.html`](implementations/plain/index.html)
+  in a browser. That is the whole setup - one file, no install, no server.
 
 Four implementations, one specification: that is the thesis demonstrated rather than
 claimed. Building the second one fed corrections back into the spec - the divergence
