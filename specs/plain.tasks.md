@@ -228,3 +228,7 @@ The Plain implementation is a **zero-dependency, single-file HTML application** 
       the target's list-view text columns (contact by email, account by city, product by group)
       with that column shown as a hint; choosing a product adopts its list price. Enums and small
       configuration lists deliberately stay dropdowns. (`P17`, `UX-P18`)
+- [x] **T9.11 Suppress the duplicated line-item card.** `data-model.json` declares `line_items`
+      as an ordinary relationship, so the generic linked-record loop rendered a read-only card
+      for the very rows the dedicated inline editor already shows. The generic card is skipped
+      where the editor covers it; all other relationship cards are untouched. (`P18`)

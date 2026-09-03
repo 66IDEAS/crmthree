@@ -1865,7 +1865,10 @@
 
         // --- T2.4: Render Linked Records Cards ---
         if (meta.linked && meta.linked.length > 0) {
-          meta.linked.forEach(link => {
+          // The dedicated line-item editor above already shows this relationship, richer and
+          // editable; the generic card would be a read-only duplicate of the same rows.
+          const cards = meta.linked.filter(link => !(link.t === 'LineItem' && LINE_PARENTS.includes(tbl)));
+          cards.forEach(link => {
             const linkedCard = h('div', { class: 'linked-card' });
             const relatedRecords = DB.query(link.t, { filter: r => link.m
               ? DB.list(link.m).some(j => j[link.a] === id && j[link.b] === r.id)
