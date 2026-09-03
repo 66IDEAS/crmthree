@@ -28,6 +28,7 @@ implementation as-is.
 | [`implementations/firebase/`](implementations/firebase/) | **The proof.** The canonical reference implementation: React + Firebase (Hosting, Auth, Firestore, Cloud Functions), self-hostable. **Implemented by Claude** |
 | [`implementations/postgres/`](implementations/postgres/) | **The second proof.** The same spec on a stack that shares nothing with the first: Svelte 5 + SvelteKit + PostgreSQL, authorization in the database, no vendor - runs on a laptop and deploys unchanged to any Node + Postgres host. **Implemented by Claude** |
 | [`implementations/rails/`](implementations/rails/) | **The third proof.** Ruby on Rails 8 + Hotwire + SQLite: server-rendered, one process, self-contained on any machine that runs Ruby. **Implemented by Codex** |
+| [`implementations/plain/`](implementations/plain/) | **The fourth proof.** One HTML file, zero dependencies: vanilla JS, `localStorage`, opens from disk - the whole CRM as a single self-contained artifact |
 | `implementations/…` | Room for further implementations on other stacks - UI5, Azure, or yours |
 
 ## The specification
@@ -55,8 +56,10 @@ concrete, the data model is machine-readable, and nothing depends on tribal know
   `createdb`, one apply script, `npm run dev` - against a local Postgres or any hosted one.
 - **Rails (self-contained):** see [`implementations/rails/README.md`](implementations/rails/README.md) -
   `bin/setup`, one bootstrap command, `bin/dev`. SQLite travels with the app.
+- **Plain (zero-dependency):** open [`implementations/plain/index.html`](implementations/plain/index.html)
+  in a browser. That is the whole setup.
 
-Three implementations, one specification: that is the thesis demonstrated rather than
+Four implementations, one specification: that is the thesis demonstrated rather than
 claimed. Building the second one fed corrections back into the spec - the divergence
 sections in the architecture documents record what each stack taught it.
 
