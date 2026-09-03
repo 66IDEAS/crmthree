@@ -38,7 +38,8 @@ The application adheres strictly to the official CRMTHREE color palette and typo
 ```
 
 - **Theme Switching:** Configured on the Profile page (Light / Dark / System). The preference is persisted in `localStorage` (`c3.cfg.theme`) and applied immediately via `document.documentElement.setAttribute('data-theme', ...)`.
-- **Branding:** Uses an inline SVG representation of the official CRMTHREE lockup with an orange accent element, switching gracefully between light and dark backgrounds.
+- **Branding:** The official CRMTHREE wordmark is inlined as SVG in the file itself. It carries no fixed colours: the word mark paints in `currentColor` and the accent word in `var(--primary)`, so one copy serves both themes. The browser tab icon is the 66 mark, inlined as an SVG data URI. The bold orange rule under the top bar remains the accent element.
+- **No emoji:** all interface affordances use inline SVG icons. Emoji appear only in gamification surfaces (streak flame, leaderboard medals, badge glyphs), where they are content rather than iconography.
 
 ---
 
@@ -53,6 +54,7 @@ Fixed at the top of the viewport with a bold **3px orange line (`#F7941D`)** alo
   3. **User Profile Avatar:** Displays user initials. Clicking toggles a dropdown menu with links to "Profile", "My Timeline", and "Sign Out" (profile switcher).
 
 ### UX-P3. Left Ribbon Navigation
+The rail itself never scrolls: only its navigation list does, with its scrollbar suppressed so that platform scrollbar settings (macOS "always show scrollbars") cannot cover the icons. The Settings item stays pinned and visible above the bottom bar at every viewport height.
 A vertical navigation rail on the left side:
 - **Top Toggle:** Hamburger button with an orange icon (`#F7941D`). Clicking toggles between collapsed (icons-only, 56px wide) and expanded (icons + labels, 200px wide). The default initial state is **collapsed**.
 - **Navigation Items:** Accounts, Contacts, Leads, Opportunities, Deal Rooms, Quotes, Sales Orders, Invoices, Products, Activities, Tickets, Case Rooms, Knowledge, Assets, SLAs, and Contracts - the reference implementation's ribbon set.
@@ -105,12 +107,18 @@ Horizontal row of compact outlined icon buttons placed above the Details card:
 
 ### UX-P9. Details Card with Progressive Disclosure
 - Clean two-column grid showing bold field labels and formatted values.
-- **Read Mode:** Empty/null fields are hidden to minimize clutter.
-- **Edit Mode:** All fields display native input elements (`<input>`, `<select>`, `<textarea>`). Form validation messages display human-readable labels (e.g. *"Account Name is required"*).
+- **Read Mode:** Empty/null fields are hidden to minimize clutter. Long-text fields (knowledge article content, descriptions, notes) render their Markdown - headings, emphasis, lists, quotes, code and links - rather than showing the raw source.
+- **Edit Mode:** the read-only card is **replaced** by the form in place; the record is never shown twice. All fields display native input elements (`<input>`, `<select>`, `<textarea>`), except references (see UX-P18). Form validation messages display human-readable labels (e.g. *"Account Name is required"*).
+- Fields identifying the assigned user default to the signed-in user on creation.
 - Primary actions switch to `Save` (primary blue) and `Cancel` (subtle gray).
 
+### UX-P18. Reference Pickers
+Reference fields never render as a plain dropdown: a list of every account is unusable at hundreds or thousands of records. Each reference field is a type-ahead picker - a text input that filters candidates as the user types (by display name and by auto-number), shows the first 50 matches with a "keep typing" hint beyond that, supports arrow-key and Enter selection, and offers a clear control. The selected id is submitted through a hidden field.
+
+Pickers can depend on each other: on documents that carry both, the contact picker is filtered to contacts of the currently selected account, re-evaluated each time it opens. Many-to-many cards use the same picker in their "Link" dialog to attach an existing record.
+
 ### UX-P10. Inline Line-Item Editing
-Opportunity, Quotation, Sales Order, and Invoice detail pages display an inline line-item grid directly below the Details card:
+Opportunity, Quotation, Sales Order, and Invoice **creation forms and** detail pages display an inline line-item grid directly below the Details card. On the creation form the grid edits draft rows held in memory and writes them - with their item numbers and the document total - in the same step that creates the document, so a quote is entered header-and-items in one pass:
 - **Columns:** `Item #` | `Product` | `Quantity` | `Net Price` | `Discount %` | `Net Value` | `Action`.
 - Item numbers auto-sequence in SAP style (`10`, `20`, `30...`).
 - Net value auto-calculates live as user edits quantity or discount: `qty * price * (1 - discount/100)`.
@@ -118,6 +126,8 @@ Opportunity, Quotation, Sales Order, and Invoice detail pages display an inline 
 - Each row includes a small trash icon to remove the item.
 
 ### UX-P11. Linked Record Cards
+- One-to-many cards (e.g. an account's **Contacts**, the contacts whose primary account this is) offer "+ Add" to create a pre-linked record.
+- Many-to-many cards (e.g. an account's **Additional Contacts** through the `ContactAccount` junction - contacts associated with the account without belonging to it) additionally offer **Link**, which opens a picker of records not yet linked, and an unlink control per row.
 Stacked vertically below the Details card:
 - Displays associated entities (e.g. Contacts for an Account, Activities for a Deal, Tickets for an Asset).
 - Compact table with column sorting and row click navigation.

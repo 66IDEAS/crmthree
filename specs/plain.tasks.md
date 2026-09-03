@@ -201,3 +201,25 @@ The Plain implementation is a **zero-dependency, single-file HTML application** 
 > in Settings; zero external requests except user-configured AI/integration endpoints;
 > model regeneration is byte-idempotent. Final user acceptance: pending user review.
 
+---
+
+## Fix round 1 — 2026-09-03 (test feedback P1-P16, see `specs/bugs.md`)
+
+- [x] **T9.1 Inline the official brand.** Wordmark inlined as theme-aware SVG (`currentColor`
+      + `var(--primary)`), 66 mark inlined as an SVG data-URI favicon. (`P1`, `P2`, `UX-P1`)
+- [x] **T9.2 Fix the navigation rail.** Only the nav list scrolls, its scrollbar suppressed so
+      platform scrollbars cannot cover the icons; the shell reserves the bottom bar's height so
+      the pinned Settings item is never covered. (`P3`, `P4`, `UX-P3`)
+- [x] **T9.3 Views own their mount.** `renderListView`, `renderDetailView` and `renderCreateView`
+      clear the mount themselves; previously only the router did, so filtering, sorting, paging
+      and entering/cancelling edit mode stacked duplicate copies of the view. (`P5`, `P9`, `P10`)
+- [x] **T9.4 Type-ahead reference pickers** with dependent filtering (contacts follow the chosen
+      account) and reuse in the link dialog. (`P11`, `P12`, `UX-P18`)
+- [x] **T9.5 Link existing records** on many-to-many cards, with per-row unlink. (`P7`, `UX-P11`)
+- [x] **T9.6 Line items during creation** for opportunities, quotes, orders and invoices: draft
+      rows written with the document in one step. (`P13`, `UX-P10`)
+- [x] **T9.7 Correct singular object labels** derived from the type name instead of chopping the
+      plural's last character ("Knowledg" -> "Knowledge Article"). (`P14`)
+- [x] **T9.8 Render Markdown** in long-text fields in read mode, with escaped input. (`P15`, `UX-P9`)
+- [x] **T9.9 Remove all emoji** outside gamification, replaced by inline SVG icons; owner fields
+      default to the signed-in user. (`P16`, `P8`, `UX-P1`, `UX-P9`)

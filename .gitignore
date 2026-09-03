@@ -21,3 +21,6 @@ tmp/
 
 # Generated at build time from specs/translations/ (see copy-translations.mjs)
 implementations/firebase/app/public/translations/
+
+# Local defect tracker - working state, not product spec
+specs/bugs.md
