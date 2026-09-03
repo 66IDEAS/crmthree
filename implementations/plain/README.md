@@ -16,21 +16,36 @@ minified - the golfing pass. Regenerate it after changes with `node scripts/mini
 
 ## Size
 
-**The entire CRM is 319 kB** - one file, transferred once, with no second request. For
+**The entire CRM is 196 kB** - one file, transferred once, with no second request. For
 comparison, opening a Salesforce Lightning page pulls roughly **13 MB** before the first
-record appears: about forty times the weight of this whole application, for one screen of one
-CRM. Everything here is in that single file: 39 object types, the generic list, detail and
-creation views, deal and case rooms, the dashboard and its charts, the gamification engine,
-the AI layer, and all eight language packs.
+record appears: some sixty times the weight of this whole application, for one screen of one
+CRM. Everything is in that single file: 39 object types, the generic list, detail and creation
+views, deal and case rooms, the dashboard and its charts, the gamification engine and the
+AI layer.
 
 | Artifact | Size | gzipped |
 |---|---|---|
-| `index.html` (readable source) | 392 kB | 170 kB |
-| `index.min.html` (release) | **319 kB** | 157 kB |
+| `index.html` (readable source) | 269 kB | 77 kB |
+| `index.min.html` (release) | **196 kB** | 64 kB |
 
-Roughly 140 kB of either file is the embedded, gzip-compressed set of all eight product
-language packs (shared architecture, section 13) plus the English catalog - so the
-application code and its complete user interface are around 180 kB of it.
+### Why only English ships
+
+The product's eight translated language packs are **deliberately not bundled**: they weighed
+127 kB, two thirds of the application itself, to ship seven languages that any given
+installation will not use. Only the English label catalog is embedded, because it is the source
+text the label editor displays and the AI translates from.
+
+Adding a language takes one step in **Settings → Language Management**, and there are two ways:
+
+- **AI-translate it.** Name the language and press the button; the configured AI provider
+  translates the 821-key catalog in batches. This is the intended path - everyone has an agent,
+  and translating a catalog is exactly what agents are good at.
+- **Import a pack.** A pack is a plain JSON file, `{ code, language_name, labels }`. The eight
+  reviewed product packs live in [`specs/translations/`](../../specs/translations/) and import
+  as they are; anything an AI agent produces in that shape works too.
+
+Either way the language is stored in the browser alongside the data, appears in the language
+selector immediately, and travels with the JSON backup.
 
 ## What is inside
 
@@ -48,9 +63,9 @@ application code and its complete user interface are around 180 kB of it.
   user management and per-object default sorting.
 - Dashboard with hand-rolled SVG/CSS charts, and the gamification engine: XP events,
   levels, streaks, badges, personal bests, monthly challenges, leaderboard, confetti.
-- The shared 821-key label catalog with **all eight language packs embedded** (gzip +
-  `DecompressionStream`), seeded through the per-language registry; instant language
-  switching and an admin label editor with AI batch translation.
+- The shared 821-key label catalog (embedded gzipped, inflated with `DecompressionStream`),
+  instant language switching, an admin label editor, AI batch translation and pack import -
+  see *Why only English ships* above.
 - An AI layer speaking OpenAI, Anthropic and Google wire formats directly from the browser
   with the user's own key; assistant chat, record briefings, pipeline coaching, lead-from-
   email extraction, case-to-article drafts and performance narratives.

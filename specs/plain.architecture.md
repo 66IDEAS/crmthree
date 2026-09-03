@@ -121,13 +121,13 @@ and batch label translation all flow through it; without a configured provider e
 surface degrades to a quiet hint and the rest of the product works unchanged.
 
 ### PL13. Internationalisation
-The shared catalog and packs apply unchanged (shared architecture, section 13): all eight
-language packs are embedded in the file as a gzip-compressed, base64-encoded blob (inflated
-natively with `DecompressionStream`), seeded into `c3.tbl.Translation` through a per-language
-seed registry in `c3.meta` - never overwriting or resurrecting administrator edits. A `t()`
-helper resolves catalog keys against the selected language with English fallbacks; enum
-storage stays English. `scripts/generate-model.mjs` refreshes the embedded blob from
-`specs/translations/`.
+The shared catalog applies unchanged (shared architecture, section 13), but only its **English**
+labels are embedded - as a gzip-compressed, base64-encoded blob inflated natively with
+`DecompressionStream`. A `t()` helper resolves catalog keys against the selected language with
+English fallbacks; enum storage stays English. Further languages are added at runtime, either by
+AI-translating the catalog through the configured provider or by importing a pack file, and are
+stored in `c3.tbl.Translation` like any other record. See divergence D8 for why the packs are
+not bundled.
 
 ### PL14. Backup, Restore and Quota
 Settings provides one-click export of the entire database to a JSON file and restore from
@@ -154,9 +154,17 @@ D5). Backup/restore is the operational answer to a storage medium the browser ma
    usability contract, not a security barrier - stated openly (PL8).
 7. **D7 - Files are base64 records.** Documents and images embed as data URLs inside their
    records instead of a file store (R6), sized for business documents rather than archives.
-8. **D8 - Language packs are embedded compressed.** The packs are part of the single file
-   (section 13 demands packs in the build artifact - here the artifact is the file), stored
-   gzipped to keep the file compact and inflated at first run.
+8. **D8 - Only English is bundled; other languages are added in the app.** Section 13 has each
+   implementation ship the product's eight language packs inside its build artifact. Here the
+   artifact is the file the user downloads, and the packs weighed 127 kB - two thirds of the
+   application - to carry seven languages a given installation will not use. So the file embeds
+   the English catalog alone (the source text for the label editor and for translation), and a
+   language is added in one step in Settings: AI-translate the catalog with the configured
+   provider, or import a pack in the shipped `{ code, language_name, labels }` shape, including
+   the reviewed packs in `specs/translations/`. The per-language seed registry disappears with
+   the seeding it guarded. This is the one place where the single-file constraint outweighs a
+   shared-architecture default, and it is the constraint's whole point: in a stack whose
+   deliverable is measured in kilobytes, what ships has to earn its weight.
 
 Divergences D1 and D6 are the honest price of the stack; D3 and D8 are the interesting
 results - the REST surface and the language packs both survive translation into a world with

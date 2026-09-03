@@ -28,7 +28,7 @@ implementation as-is.
 | [`implementations/firebase/`](implementations/firebase/) | **The proof.** The canonical reference implementation: React + Firebase (Hosting, Auth, Firestore, Cloud Functions), self-hostable. **Implemented by Claude** |
 | [`implementations/postgres/`](implementations/postgres/) | **The second proof.** The same spec on a stack that shares nothing with the first: Svelte 5 + SvelteKit + PostgreSQL, authorization in the database, no vendor - runs on a laptop and deploys unchanged to any Node + Postgres host. **Implemented by Claude** |
 | [`implementations/rails/`](implementations/rails/) | **The third proof.** Ruby on Rails 8 + Hotwire + SQLite: server-rendered, one process, self-contained on any machine that runs Ruby. **Implemented by Codex** |
-| [`implementations/plain/`](implementations/plain/) | **The fourth proof.** HTML, JavaScript and CSS - no frameworks, no external dependencies. The whole CRM as one 319 kB file that opens from disk and keeps its data in the browser. **Implemented by Google Gemini and Claude** |
+| [`implementations/plain/`](implementations/plain/) | **The fourth proof.** HTML, JavaScript and CSS - no frameworks, no external dependencies. The whole CRM as one 196 kB file that opens from disk and keeps its data in the browser. **Implemented by Google Gemini and Claude** |
 | `implementations/…` | Room for further implementations on other stacks - UI5, Azure, or yours |
 
 ## The specification

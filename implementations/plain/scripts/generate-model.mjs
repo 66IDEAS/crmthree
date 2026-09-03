@@ -2,12 +2,12 @@
  * Regenerates the embedded data blocks of index.html from the shared blueprint (PL6):
  *  - #c3m: the model registry derived from specs/data-model.json plus navigation and
  *    curated list columns, with labels matching the shared catalog English.
- *  - #c3p: all product language packs from specs/translations/, gzip+base64 (D8),
- *    with the English catalog included for the label editor and AI translation source.
+ *  - #c3p: the English label catalog, gzip+base64 - the source text for the label editor
+ *    and for AI translation. Other languages are added inside the app (D8).
  * Regeneration is deliberate and reviewed: run, diff, commit.
  *   node scripts/generate-model.mjs
  */
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import path from 'node:path';
@@ -99,17 +99,12 @@ for (const [type, def] of Object.entries(model.objects)) {
 
 const registry = { o: objects, nav: NAV };
 
-// Language packs + English catalog for the label editor / AI translation source.
-const packsDir = path.join(root, 'specs/translations');
-const packs = {};
-for (const file of readdirSync(packsDir).filter(f => f.endsWith('.json')).sort()) {
-  const p = JSON.parse(readFileSync(path.join(packsDir, file), 'utf8'));
-  packs[p.code] = { n: p.language_name, l: p.labels };
-}
-const enCatalog = {};
-// Reference catalog English: reuse the reference exporter output committed for rails.
+// Only the English catalog is embedded (divergence D8): it is the source text the label
+// editor shows and the AI translates from. The eight product language packs are NOT bundled -
+// they would be ~127 kB of the file, and a language is added in the app in one step, either by
+// AI-translating this catalog or by importing a pack from specs/translations/.
 const railsCatalog = JSON.parse(readFileSync(path.join(root, 'implementations/rails/config/crm/catalog.en.json'), 'utf8'));
-packs.en = { n: 'English', l: railsCatalog };
+const packs = { en: { n: 'English', l: railsCatalog } };
 const packBlob = gzipSync(Buffer.from(JSON.stringify(packs)), { level: 9 }).toString('base64');
 
 const html = readFileSync(path.join(here, '../index.html'), 'utf8');
@@ -122,4 +117,4 @@ if (html.includes('<!--C3MODEL-->')) {
   if (!out.includes('<!--C3MODEL-->')) throw new Error('insertion anchor not found');
 }
 writeFileSync(path.join(here, '../index.html'), out);
-console.log(`model: ${Object.keys(objects).length} objects, packs: ${Object.keys(packs).length} (${(packBlob.length / 1024).toFixed(0)}KB base64)`);
+console.log(`model: ${Object.keys(objects).length} objects, catalog: ${Object.keys(railsCatalog).length} keys (${(packBlob.length / 1000).toFixed(0)} kB base64)`);

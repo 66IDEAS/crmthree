@@ -241,3 +241,8 @@ The Plain implementation is a **zero-dependency, single-file HTML application** 
 - [x] **T9.14 Line items editable in edit mode.** The grid renders alongside the header form on
       documents; the derived total is read-only there, mirrored live from the grid and recomputed
       on save; row add/delete rebuilds only the grid so the open form survives. (`P21`, `UX-P10`)
+- [x] **T9.15 Ship English only.** The eight bundled language packs were 127 kB of a 319 kB
+      file, for seven languages a given installation will not use. Only the English catalog is
+      embedded now; languages are added in Settings by AI-translating it or importing a pack
+      (`{ code, language_name, labels }`, the shape in `specs/translations/`). Seeding and its
+      registry are gone. Release file: 319 kB -> 196 kB. (`D8`, `PL13`)
