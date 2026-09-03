@@ -121,6 +121,10 @@ The picker is a text input that filters candidates as the user types, shows the 
 
 **Dependent pickers:** on documents that carry both, the contact picker is filtered to contacts of the currently selected account, re-evaluated each time it opens. In the line-item grid, choosing a product adopts that product's list price; a price typed afterwards stands until the product is changed again.
 
+**Placement:** the candidate list is rendered in a top-level layer rather than inside the field's card, so no panel, table or scrolling region can clip it. It opens below the field, flips above when there is more room there, shrinks to fit rather than being cut off, and tracks scrolling while open.
+
+**Empty by default:** a newly added line item has no product and no price; its picker is marked until one is chosen, and a document whose line items still lack a product cannot be saved.
+
 Plain dropdowns remain correct for **enums** (short, fixed, defined by the model) and for small administrator-curated configuration lists - ticket status, role, pipeline stage, language, page size. Those are state choices, not lookups into business data.
 
 ### UX-P10. Inline Line-Item Editing

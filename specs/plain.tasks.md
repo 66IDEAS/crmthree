@@ -232,3 +232,9 @@ The Plain implementation is a **zero-dependency, single-file HTML application** 
       as an ordinary relationship, so the generic linked-record loop rendered a read-only card
       for the very rows the dedicated inline editor already shows. The generic card is skipped
       where the editor covers it; all other relationship cards are untouched. (`P18`)
+- [x] **T9.12 Lookup list escapes its container.** The dropdown renders in a top-level fixed
+      layer measured from the input - opens below, flips above when roomier, clamps into the
+      viewport, follows scroll, and is removed on close - so cards, tables and the scrolling
+      content area can no longer cut it off. (`P19`, `UX-P18`)
+- [x] **T9.13 Line items start empty.** A new row has no product and no price, is flagged until
+      one is chosen, and a document with a product-less row is refused on save. (`P20`, `UX-P10`)

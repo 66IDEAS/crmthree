@@ -255,16 +255,17 @@
     .popover-item svg { width: 15px; height: 15px; }
     /* P11: type-ahead reference picker */
     .ref-pick { position: relative; }
-    .ref-drop { position: absolute; left: 0; right: 0; top: 100%; z-index: 60; max-height: 240px; overflow-y: auto;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.14); display: none; }
+    /* Rendered into <body> at a fixed position: cards, tables and the scrolling content area
+       all clip their overflow, and a dropdown must never be cut off by them. */
+    .ref-drop { position: fixed; z-index: 200; max-height: 260px; overflow-y: auto;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: none; }
     .ref-drop.open { display: block; }
     .ref-opt { padding: 7px 10px; font-size: 13px; cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
     .ref-opt:hover, .ref-opt.sel { background: var(--surface-hover); }
     .ref-opt .n { color: var(--text-muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
     .ref-empty { padding: 10px; font-size: 12.5px; color: var(--text-muted); }
-    .ref-drop { min-width: 220px; }
-    .li-grid td { overflow: visible; }
-    .li-grid, .linked-card { overflow: visible; }
+    .ref-drop { min-width: 240px; }
+    .ref-pick.missing input.form-control { border-color: var(--danger); }
     .ref-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; padding: 2px 4px; }
     /* P15: rendered markdown */
     .md { font-size: 13px; line-height: 1.55; }
@@ -1417,6 +1418,38 @@
         value: currentVal ? label(DB.getById(f.refTbl, currentVal) || {}) : ''
       });
       const drop = h('div', { class: 'ref-drop' });
+      // Opens below the field, flips above when that is roomier, and always stays inside the
+      // viewport: the list shrinks rather than being cut off.
+      const place = () => {
+        const r = input.getBoundingClientRect();
+        const w = Math.max(r.width, 240);
+        drop.style.width = w + 'px';
+        drop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+        const below = window.innerHeight - r.bottom - 8;
+        const above = r.top - 8;
+        const flip = below < 160 && above > below;
+        drop.style.maxHeight = Math.max(120, Math.min(260, flip ? above : below)) + 'px';
+        if (flip) {
+          drop.style.top = '';
+          drop.style.bottom = Math.max(8, window.innerHeight - r.top + 4) + 'px';
+        } else {
+          drop.style.bottom = '';
+          drop.style.top = Math.max(8, Math.min(r.bottom + 4, window.innerHeight - 128)) + 'px';
+        }
+      };
+      const openDrop = () => {
+        if (drop.parentNode !== document.body) document.body.appendChild(drop);
+        drop.classList.add('open');
+        place();
+        window.addEventListener('scroll', place, true);
+        window.addEventListener('resize', place);
+      };
+      const closeDrop = () => {
+        drop.classList.remove('open');
+        window.removeEventListener('scroll', place, true);
+        window.removeEventListener('resize', place);
+        if (drop.parentNode) drop.parentNode.removeChild(drop);
+      };
       const clear = h('span', { class: 'ref-clear', title: t('ui.remove', 'Remove') }, '✕');
       clear.style.display = currentVal ? '' : 'none';
       clear.onmousedown = (e) => {
@@ -1434,7 +1467,7 @@
           hintCols.some(k => String(r[k] || '').toLowerCase().includes(needle)));
         shown = rows.slice(0, 50);
         drop.innerHTML = '';
-        if (!shown.length) { drop.appendChild(h('div', { class: 'ref-empty' }, t('search.no_results', 'No results found'))); return; }
+        if (!shown.length) { drop.appendChild(h('div', { class: 'ref-empty' }, t('search.no_results', 'No results found'))); place(); return; }
         shown.forEach((r, i) => {
           const opt = h('div', { class: 'ref-opt' + (i === idx ? ' sel' : '') });
           const hint = hintOf(r);
@@ -1444,16 +1477,18 @@
           drop.appendChild(opt);
         });
         if (rows.length > shown.length) drop.appendChild(h('div', { class: 'ref-empty' }, `+${rows.length - shown.length} more - keep typing`));
+        place();
       };
       const pick = (r) => {
         hidden.value = r.id; input.value = label(r); clear.style.display = '';
-        drop.classList.remove('open'); idx = -1;
+        closeDrop(); idx = -1;
+        wrap.classList.remove('missing');
         if (onPick) onPick(r);
       };
-      input.onfocus = () => { idx = -1; paint(''); input.select(); drop.classList.add('open'); };
-      input.oninput = () => { idx = -1; hidden.value = ''; clear.style.display = 'none'; paint(input.value); drop.classList.add('open'); };
+      input.onfocus = () => { idx = -1; paint(''); input.select(); openDrop(); };
+      input.oninput = () => { idx = -1; hidden.value = ''; clear.style.display = 'none'; paint(input.value); openDrop(); };
       input.onblur = () => setTimeout(() => {
-        drop.classList.remove('open');
+        closeDrop();
         // A half-typed name that matched nothing must not look selected.
         if (!hidden.value) input.value = '';
       }, 120);
@@ -1462,12 +1497,13 @@
           e.preventDefault();
           idx = Math.max(0, Math.min(shown.length - 1, idx + (e.key === 'ArrowDown' ? 1 : -1)));
           paint(input.value);
+          place();
           drop.children[idx] && drop.children[idx].scrollIntoView({ block: 'nearest' });
         } else if (e.key === 'Enter') {
           if (drop.classList.contains('open') && shown[idx < 0 ? 0 : idx]) { e.preventDefault(); pick(shown[idx < 0 ? 0 : idx]); }
-        } else if (e.key === 'Escape') { drop.classList.remove('open'); }
+        } else if (e.key === 'Escape') { closeDrop(); }
       };
-      wrap.appendChild(input); wrap.appendChild(clear); wrap.appendChild(hidden); wrap.appendChild(drop);
+      wrap.appendChild(input); wrap.appendChild(clear); wrap.appendChild(hidden);
       return wrap;
     }
 
@@ -2021,6 +2057,11 @@
         const data = collectForm(tbl, meta, form);
         if (!data) return;
         Object.assign(data, prefill);
+        const orphan = draftItems.findIndex(li => !li.product_id);
+        if (orphan > -1) {
+          alert(`${t('line_items.title', 'Line Items')} ${(orphan + 1) * 10}: ${t('line_items.product', 'Product')} ${t('form.required_suffix', 'is required.')}`);
+          return;
+        }
         if (draftItems.length) {
           const sum = draftItems.reduce((a, li) => a + OPS.lineTotal(li), 0);
           if (tbl === 'Opportunity') data.amount = sum; else data.total_amount = sum;
@@ -2247,14 +2288,12 @@
       header.appendChild(h('span', {}, `${t('line_items.title', 'Line Items')} (${rows.length})`));
       const addBtn = h('button', { type: 'button', class: 'btn-sm' }, '+ ' + t('ui.add', 'Add'));
       addBtn.onclick = () => {
-        const first = DB.list('Product').find(p => p.status !== 'Inactive');
+        // No product preselected: the row opens empty so the picker can be searched.
         if (isDraft) {
-          draft.push({ product_id: first ? first.id : null, quantity: 1,
-            unit_price: first ? Number(first.base_price || 0) : 0, discount_percent: 0,
-            unit_of_measure: first ? first.unit_of_measure : null });
+          draft.push({ product_id: null, quantity: 1, unit_price: 0, discount_percent: 0 });
           rerender();
         } else {
-          OPS.addLineItem(tbl, id, { product_id: first ? first.id : null, unit_price: first ? Number(first.base_price || 0) : 0 });
+          OPS.addLineItem(tbl, id, { product_id: null, unit_price: 0 });
           renderView();
         }
       };
@@ -2290,6 +2329,7 @@
           });
         prodPick.style.minWidth = '190px';
         prodPick.querySelector('input.form-control').placeholder = t('line_items.select_product', 'Select product');
+        if (!li.product_id) prodPick.classList.add('missing');
         const qty = h('input', { type: 'number', step: 'any', class: 'form-control', value: li.quantity ?? 1, style: 'width:80px' });
         const price = h('input', { type: 'number', step: 'any', class: 'form-control', value: li.unit_price ?? 0, style: 'width:100px' });
         const disc = h('input', { type: 'number', step: 'any', class: 'form-control', value: li.discount_percent ?? 0, style: 'width:70px' });
