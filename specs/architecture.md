@@ -102,6 +102,9 @@ is realised is documented in that implementation's own architecture file
 | R11 | Row-level visibility enforced by the server on queries, search, export and the real-time stream | 71 |
 | R12 | Background execution with retries (job queue) for mail sending, integration work and scheduled tasks | 72, 73, 74 |
 | R13 | Outbound SMTP to the company's mail server | 73 |
+| R14 | A performance budget checked by the build and by a test: the shipped web client within an agreed size (reference: 600 kB minified, 150 kB compressed for the plain client), and list pages, record pages and the application start within agreed response times on 100,000 records per business object (reference: 100 ms, 200 ms, 300 ms on the server); fields offered for sorting and filtering in list views must be indexed | 21, 63, 75 |
+
+Requirement R14 makes growth a decision: when a release exceeds the budget, the build or the test fails, and the team either shrinks the change, loads rarely used parts on demand, or raises the budget on purpose.
 
 Requirement R4 is the discriminating one: it is the capability most likely to have no direct
 equivalent outside the reference stack. Where any capability has no direct equivalent, the
