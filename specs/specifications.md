@@ -890,7 +890,10 @@ As a user, I want to create my own views of a list, choosing which columns appea
 **Acceptance Criteria:**
 - A view belongs to one object and holds a name, the columns in order, the sort (field and direction) and filters (any field, the operators of the list filters, favorites only)
 - Views are private, shared with the owner's team, or shared with everyone; sharing with everyone needs an admin right; only the owner (or an admin) changes or deletes a view
-- Each user marks one view per object as default; administrators set the default view for everyone; without one the object's built-in columns and default sort (story 63) apply
+- "All" and "Favorites" are built-in views of every list; each user pins up to five views (built-in or saved) as tabs, stored per user and object on the server and delivered with the application start (All and Favorites when nothing is pinned)
+- Each user marks one view per object as default, a built-in view included; administrators set the default view for everyone; without one the object's built-in columns and default sort (story 63) apply
+- Only fields with a database index can be sorted or filtered in a view (the server refuses others), so views never make the database scan a large table; any field can be a column
+- Filter values are entered like the field itself (record picker for references, value lists for coded fields), never as internal ids
 - Filters and sorts of a view are applied by the server, so views scale with the table; export (CSV) follows the current view's filters, sort and columns
 - The chosen view is part of the page address (story 65), so a link opens the list in that view
 - Views referring to a field that no longer exists ignore that field and say so
