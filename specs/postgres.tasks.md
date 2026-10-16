@@ -35,6 +35,9 @@ Architecture: `specs/postgres.architecture.md`. Requirements R1-R9: `specs/archi
 
 ## Next
 
+- [ ] PT68 - Opportunity Kanban board (specifications 64, UX 58): Table/Kanban display on the
+      Opportunities list, stage columns with per-currency totals, activity alerts, drag or menu
+      to move with the stage rules, audit/notification/XP, lock check
 - [x] PT12 - Vendor dependency removed. No Supabase, no Cloudflare: `adapter-node`,
       Better Auth, Postgres `listen`/`notify`, filesystem storage. Whole stack runs locally.
 - [x] PT21 - Identity moved from a platform function to a transaction-scoped session

@@ -574,7 +574,11 @@ Review evidence recorded during Gate 7:
   resumed later, implement and verify the original scope against `F18`, `F18b`, `F62`, `UX26`,
   `UX55`, `UX56`, `R2`, `RA15`, `RA16`, `RA19`, and `RA36`.
 
-There are no remaining implementation tasks. Only the final review remains.
+One specification addition is open:
+
+- [ ] **Opportunity Kanban board** (specifications 64, UX 58): Table/Kanban display on the Opportunities
+  list, stage columns with per-currency totals, activity alerts, drag or menu to move with the stage
+  rules, audit/notification/XP, lock check.
 
 ### Review Gate 8 — Final Product Review
 

@@ -98,6 +98,10 @@ is realised is documented in that implementation's own architecture file
 | R7 | Declarative, server-enforced authorization tied to the signed-in user's role | 18 |
 | R8 | Outbound HTTP for reading from and writing to external systems of record | 30, 31, 59 |
 | R9 | A public REST interface over the same data | 32 |
+| R10 | Every non-API address is answered with the application, so deep links and reloads work | 65 |
+| R11 | Row-level visibility enforced by the server on queries, search, export and the real-time stream | 71 |
+| R12 | Background execution with retries (job queue) for mail sending, integration work and scheduled tasks | 72, 73, 74 |
+| R13 | Outbound SMTP to the company's mail server | 73 |
 
 Requirement R4 is the discriminating one: it is the capability most likely to have no direct
 equivalent outside the reference stack. Where any capability has no direct equivalent, the

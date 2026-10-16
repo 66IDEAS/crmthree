@@ -246,3 +246,9 @@ The Plain implementation is a **zero-dependency, single-file HTML application** 
       embedded now; languages are added in Settings by AI-translating it or importing a pack
       (`{ code, language_name, labels }`, the shape in `specs/translations/`). Seeding and its
       registry are gone. Release file: 319 kB -> 196 kB. (`D8`, `PL13`)
+
+## Open - specification additions
+
+- [ ] **T10.1 Opportunity Kanban board.** Table/Kanban display on the Opportunities list, stage
+      columns with per-currency totals, cards with activity alerts, drag or menu to move with the
+      stage rules (product spec story 64, UX 58).

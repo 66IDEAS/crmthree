@@ -762,3 +762,125 @@ As a user, I want every list to open in a predictable order, and as an admin I w
 - A user can still click a column header to re-sort a list ad hoc; that choice is not persisted and does not change the configured default
 - Sorting is applied by the database across the whole collection, not only to the page in view, so paging through a list follows one continuous order
 - When a sorted list would omit records that lack the sorted field, the section warns the admin, states how many records are affected, and offers to assign the missing numbers
+
+### 64. Opportunity Kanban Board
+As a sales user, I want to see the pipeline as a board of stage columns and move a deal to another stage by dragging it, so that I can review and advance deals without opening each record.
+
+**Acceptance Criteria:**
+- The Opportunities list offers two displays, Table and Kanban, switched by a control on the list page; the choice is remembered in the user's browser
+- The board shows one column per active pipeline stage in stage order, the closed stages (won and lost) included
+- Each column header shows the stage name, the number of opportunities in it and their total amount; amounts in different currencies are totalled per currency and never added together
+- Each card shows the opportunity name (which opens the record), the account, the amount with its currency, the expected close date and the owner
+- Open opportunities carry alerts: one when the opportunity has an overdue open activity, another when it has no open activity at all
+- Dragging a card onto another column moves the opportunity to that stage; a menu on each card offers the same move without dragging (keyboard and touch)
+- A move applies the stage's rules: the probability takes the stage's default; a won stage sets the result to Won and the actual close date to today; a lost stage first asks for a loss reason, then sets the result to Lost and the actual close date to today; moving a closed opportunity back to an open stage sets the result to Open and clears the actual close date and the loss reason
+- A move is audited, notifies and awards XP exactly like a stage change saved on the record page; winning a deal shows the celebration
+- A move is refused with a message naming the user when another user holds the record's edit lock
+- A search field above the board filters the cards by opportunity name and account name
+- When the board is wider than the screen, holding a dragged card near its left or right edge scrolls the board
+
+## Retrofit from a customer project (2026-10-16)
+
+Generic capabilities first built in a customer project and adopted by the standard. UX in `ux.md` items 59 to 77.
+
+### 65. Addresses, Browser Navigation and Deep Links
+As a user, I want every page to have its own address so that the browser's back and forward buttons, reload and bookmarks work and I can send a colleague a link to a record.
+
+**Acceptance Criteria:**
+- Every page has an address: home, object lists (with search, paging, sort, favorites and filter in the query), record pages, new-record pages (with prefill), workspaces, settings, profile and timelines
+- Navigating to another page adds a browser history entry; paging, sorting and searching within a list replace the current one; back from a record returns to the same list page
+- Reloading a page shows the same page; edit mode is not restored (the record opens read-only)
+- A link opened while signed out shows the sign-in page and then the linked page; signing out on purpose forgets the page
+- A record the user may not see, or that does not exist, shows the usual not-found or no-access message
+- The server answers every non-API address with the application; unknown API addresses stay 404
+- Reference fields and reference columns are links to the referenced record (UX 59)
+
+### 66. Favorites
+As a user, I want to mark records as favorites and list them quickly so that the records I work on every day are one click away.
+
+**Acceptance Criteria:**
+- Any record of any object can be starred and unstarred by the signed-in user; favorites are stored per user on the server, without a fixed limit
+- Every object list can be filtered to the user's favorites by the server, so search, sort, paging and export work at any table size
+- The user's starred record ids are available when the application starts, so stars show on lists and record pages without extra requests
+- A favorites list returns the user's most recent favorites (up to 50) that the user can still see, with name and number; deleted or no longer visible records are left out
+- The home page shows the newest favorites and the count per object (UX 62)
+
+### 67. Related Records at Scale
+As a user, I want record pages to open fast even when a record has thousands of related records, and still reach all of them.
+
+**Acceptance Criteria:**
+- A record page loads at most 100 related records per object (the newest); documents load their line items complete
+- The record page knows the true total per related object and offers "View all", which opens the object's list filtered to the record
+- Related lists show number, title or description and a meaningful status (UX 63)
+
+### 68. Action Preconditions and Double-Submit Protection
+As a user, I want actions that cannot run to be disabled with their reasons, and every action to run exactly once, so that I do not run into errors or create records twice.
+
+**Acceptance Criteria:**
+- Each action with preconditions (document conversion, lead conversion, deal room creation and others) has a server-side check without side effects that returns the reasons it cannot run; the button is disabled with these reasons as tooltip (UX 65)
+- The same checks run again when the action is submitted; a refused action returns its reasons
+- While a changing request runs, the client blocks further clicks (UX 66)
+- The server ignores an identical request from the same browser tab repeated within one second
+
+### 69. Server-Granted Edit Lock and Unsaved Changes
+As a user, I want edit mode to start only when the server granted me the lock, and to be asked before I lose unsaved changes, so that nobody overwrites anyone and nothing typed gets lost. Extends story 61.
+
+**Acceptance Criteria:**
+- Edit mode starts only after the server granted the lock; the server refuses changes to a locked record from anyone but the lock holder, including the same user in another browser tab
+- Locks end after 15 minutes without activity; the editor is told so
+- Administrators can release a lock someone else holds; the holder's browser leaves edit mode and is told why
+- Leaving a record with unsaved changes (also by browser back) asks with an in-app dialog to stay or to discard (UX 68)
+
+### 70. Code Lists as Data
+As an administrator, I want value lists to be data with codes and labels per language so that changing a list needs no deployment, and as a user I want coded fields to show code and meaning.
+
+**Acceptance Criteria:**
+- The data model binds a field to a named code list; codes, labels per language, order and active flag are stored in the database
+- Administrators maintain lists in Settings (UX 76); changes reach open browsers at once
+- Fields show "CODE label"; long lists are searchable; stored values outside the list stay selectable and savable; a default outside the list is not preselected (UX 70)
+- Existing enum fields keep working; a list can replace an enum without a data migration
+
+### 71. Record Visibility: Private Deals, Opportunity Teams and Manager Hierarchy
+As a sales manager, I want opportunities and their documents to be visible only to the people working on them and to their managers so that deals stay private.
+
+**Acceptance Criteria:**
+- Opportunities are private: a user sees an opportunity as its owner, as a member of its team, or above the owner in the manager hierarchy (each user profile names its manager)
+- Quotes, sales orders and the other children of a deal follow their opportunity, or their own owner when they have none
+- Administrators and holders of the permission "all deals" see every deal
+- The owner, the managers above the owner and administrators maintain the opportunity team: members with access Edit or Read and a team role (UX 73); members with Read cannot edit
+- Approvers of a record's approval requests and their delegates see that record (story 72)
+- Visibility is enforced by the server on lists, record pages, global search, export, dashboard figures, record locks and the real-time stream; a hidden record answers "You do not have access to this record (it belongs to another team)."
+- Accounts, contacts and assets stay visible to everyone with read access
+- Each real-time event about a deal costs one visibility check per connected user without "all deals"; deployments with many such users need a cached visibility set
+
+### 72. Approval Workflow
+As a sales rep, I want records that exceed limits to go through approvals defined by rules, and as an approver I want to see and decide what waits for me, so that discounts and terms are controlled without e-mail ping-pong.
+
+**Acceptance Criteria:**
+- Administrators define approval rules per object: conditions on fields with thresholds, the approval level, and the approver (a user or a group); approvers name delegates for a period
+- "Approval check" evaluates the rules on the record and lists which apply and why, without side effects
+- "Submit for approval" creates the requests in level order with the submitter's comment; "Recall" withdraws open requests
+- Approvers and their delegates decide with Approve or Reject and a comment; a rejection ends the round; the last approval completes it
+- A record waiting for approval is read-only for the submitter until it is decided or recalled
+- Every step is in the record's history and notifies the people concerned (in the application and by e-mail, story 73)
+- The home page shows the user's waiting approvals (UX 74)
+
+### 73. E-mail Outbox
+As an administrator, I want the CRM to send its notifications by e-mail through the company's mail server, in each recipient's language, with a visible outbox, so that people learn about events without opening the CRM.
+
+**Acceptance Criteria:**
+- Notification e-mails (approvals, assignments, configurable events) are written to an outbox and sent in the background through the configured SMTP server and sender address
+- Subject and text come from the language packs in the recipient's language (user or contact language, else the instance default) and link to the record
+- An allow-list of addresses or domains (or all) decides which recipients receive mail, so test systems never write to real customers
+- Failed mails keep their error and attempts; an administrator can retry them (UX 75)
+
+### 74. Integration Connections, Call Log and Job Queue
+As an administrator, I want every connection to an external system configured, tested and monitored in one place so that integration problems are found and fixed without a developer. Extends stories 30 (pluggable data sources), 31 (bi-directional integration) and 59 (data replication).
+
+**Acceptance Criteria:**
+- A connection has an address, a login whose password is encrypted with a master key kept outside the database, a mode (Live or Off as emergency switch), a timeout and a maximum of parallel calls
+- "Test" and "Test all" check reachability and login and store the result
+- Every call is logged with connection, operation, record, duration, HTTP status, outcome class (success, warning, business error, system error, transport error, empty answer, refused) and message
+- Long-running or retryable work runs in a job queue with state and attempts; administrators retry or cancel jobs
+- Productive and demo instances never answer calls with simulated data
+

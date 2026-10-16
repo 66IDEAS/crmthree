@@ -205,6 +205,10 @@
 - [ ] A27 — Profile claiming architecture (pending profiles with empty auth_uid, claim-by-email on first sign-in, deactivation check)
 - [x] A28 — List sort configuration (`listViewSettings` collection, `ListSortService` session cache, mode→field resolution, hidden-record detection via orderBy-constrained count)
 
+## Opportunities
+
+- [ ] F63 - Opportunity Kanban board (specifications 64, UX 58): Table/Kanban toggle, stage columns with per-currency totals, cards with activity alerts, drag or menu to move with the stage rules, audit/notification/XP like a record-page stage change, lock check
+
 ## Agentic Engineering
 
 - [ ] F56 — AI-Powered System Configuration (Natural Language → Config)

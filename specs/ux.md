@@ -120,7 +120,7 @@
 ## Settings Page
 
 25. **Theme Selection on Profile Page**
-    The theme is configured from the Profile page alongside the language selector, not the top bar or Settings page. A dropdown offers three options: Light, Dark, and System (follows the operating system preference). The selection is persisted to localStorage so it survives page reloads and sessions.
+    The theme is configured from the Profile page alongside the language selector, not the top bar or Settings page. A dropdown offers three options: Light, Dark, and System (follows the operating system preference). The selection is persisted to localStorage so it survives page reloads and sessions. Further themes and the theme swatches in the user menu are defined in UX 71.
 
 37. **Ticket Status Configuration in Settings (Admin Only)**
     The Settings page includes a "Ticket Statuses" section visible only to admin users. It displays a table of configured statuses with columns: Name, Sort Order, Resolved, Closed, Active, and Actions (Edit, Delete). An "Add Status" button opens an inline row or dialog to create a new status. Each status has: a name (string), sort order (integer for display ordering), is_resolved flag, is_closed flag, and active flag. The admin can edit or delete existing statuses. Statuses are used as the options in the "Current Ticket Status" dropdown on Ticket records.
@@ -139,7 +139,7 @@
 ## Navigation History
 
 27. **Navigation History Breadcrumbs**
-    A navigation history trail is displayed above the main content area. It shows the last 5 visited detail pages (record detail and new-record pages) as simple text links separated by " / ". Each link shows the record's display name (e.g., "Acme Corp", "John Smith"). The current page is shown as plain text (not a link). Only detail pages are tracked — list pages, home, and settings are excluded. On the right side of the breadcrumb bar, a downward triangle arrow opens a dropdown showing up to 10 additional history entries. Clicking any breadcrumb or dropdown entry navigates to that page. The history trail is session-based and does not persist across page reloads.
+    A navigation history trail is displayed above the main content area. It shows the last 5 visited pages as simple text links separated by " / ". Each link shows the record's display name (e.g., "Acme Corp", "John Smith"), also for a record opened from a link or with the browser's back button. The current page is shown as plain text (not a link). Clicking a breadcrumb navigates to that page. Browser back and forward move through the same pages (UX 60); a back step to the previous page shortens the trail instead of adding to it. The trail is session-based and does not persist across page reloads (the address of the current page does).
 
 ## Lead Conversion
 
@@ -252,3 +252,78 @@
     **Default.** An object with nothing configured sorts by Number, ascending. This applies to a fresh instance with no settings saved at all.
 
     **Incomplete-data warning.** Records that do not have the sorted field are not returned by a sorted query at all, so they would silently disappear from the list. When a chosen combination would hide records, the row shows an amber warning chip reading "{n} hidden" with a tooltip naming the cause, and a "Fix" button that assigns the missing auto-numbers from the object's counter. The check runs when the section is expanded and after every change.
+
+58. **Opportunity Kanban Board**
+    The Opportunities list page shows a two-button toggle to the right of the page title: a table icon ("Table") and a board icon ("Kanban"). The selected display is remembered in the browser. Kanban replaces the table with a toolbar (search field filtering by opportunity and account name, "New" button) and a board below it.
+
+    **Board.** One column per active pipeline stage in stage order, closed stages included. The board scrolls horizontally; columns share the available width (at least 240 px, at most 340 px each, so all stages fit side by side on large screens) and are as tall as the viewport allows, and its card list scrolls vertically on its own. Columns sit on a light surface with rounded corners and a 3 px top border: primary colour for open stages, success colour for the won stage, grey for the lost stage. The header shows the stage name in bold with the card count in muted text, and below it the total amount per currency in caption style ("€302,363.90 + SEK 50,658.20"). An empty column says "No opportunities" in muted text and still accepts drops.
+
+    **Cards.** An outlined card per opportunity: the name as a link (bold, wraps), then the account as a link, the amount with its currency and the expected close date, and the owner in muted text. Alerts sit next to the name on open opportunities only: a red error icon (tooltip "Overdue activity") or an amber warning icon (tooltip "No open activity"). A menu button on the card offers "Open" and "Move to" with every other stage.
+
+    **Moving.** Cards show a grab cursor. While dragging, the card fades and the column under the pointer is highlighted with a dashed primary outline and a light tint; holding the card near the board's left or right edge scrolls the board. Dropping on the lost stage opens a small "Close as Lost" dialog with a loss reason (common reasons plus free text) and Cancel / Save; Cancel leaves the card where it was. After a move a snackbar confirms "Moved to <stage>"; a won deal also shows the existing celebration. A move refused because another user holds the edit lock shows an error snackbar naming that user. On phones the columns are 85% of the screen wide and the card menu is the way to move a card.
+
+## Retrofit from a customer project (2026-10-16)
+
+Generic improvements first built in a customer project and adopted by the standard. Functional stories 65 to 74 in `specifications.md`.
+
+59. **Reference Fields Are Links, With the Record Number**
+    Every reference field on a record page shows the referenced record's name as a link that opens that record. Next to the name, in muted text, comes the record's number when its object has one ("Acme expansion #2741"), because names are not unique. Reference columns in list views and in the related lists of a record page are links as well: a click on the link opens the referenced record, a click elsewhere on the row opens the row's record; the tooltip shows object and number. Links are real addresses (UX 60), so Ctrl/Cmd-click or the middle mouse button opens the record in a new browser tab. A reference to a record the user cannot see shows the name without a link.
+
+60. **Addresses, Browser Back and Deep Links**
+    Every page has its own address, and the browser's back and forward buttons, reload and bookmarks work: `/` home; `/<Object>` the list of an object, with its state in the query (`q` search, `page`, `size`, `sort` and `dir` when they differ from the default, `fav=1` favorites only, `filter` the filter of a "View all" or dashboard list); `/<Object>/<id>` a record page; `/<Object>/new` a new record (`prefill` in the query); workspace, settings, profile and timeline pages have their own. Paging, sorting and searching replace the current address (back returns to the previous page, not to every keystroke); opening another page adds one, and back from a record returns to the same page of the list. A link opened while signed out shows the sign-in page and then the linked page; signing out on purpose starts at home again. Edit mode is not part of the address: a reload or a link opens the record read-only. Leaving a record in edit mode with unsaved changes by the browser's back button asks first (UX 68); "Stay" keeps page and address together. The browser tab shows the page's name ("Acme Corp - CRMTHREE").
+
+61. **Favorites**
+    Any record can be marked as a favorite. Favorites are personal (stored per user on the server, so they follow the user to every device) and have no fixed limit.
+    - **Record page:** a star next to the record name and number in the page title: an outline star (tooltip "Add to favorites"), filled amber when the record is a favorite (tooltip "Remove from favorites"). One click toggles it.
+    - **List views:** every list of the main navigation has a narrow first column with a star per row; clicking the star toggles the favorite without opening the record. The toolbar has a two-part switch "All | ★ Favorites (n)": Favorites shows only the user's favorites of that object, with search, sort, paging and export working as usual. The choice is part of the address (`fav=1`) and remembered per object in the browser.
+    - **Top bar:** a star button next to the notifications opens "Favorites": the 50 most recently marked favorites the user can still see, grouped by object, each with name and number; a click opens the record, "Show all" next to an object opens its list filtered to favorites. Deleted or no longer visible records drop out.
+    Users who share one login share its favorites.
+
+62. **Favorites on the Home Page**
+    A section "★ My favorites" at the top of the home page: per object a link with its count to the list filtered to favorites ("Quotes 3 · Opportunities 2"), and the 12 newest favorites as quick links, each with its star (removes it without leaving the page), name, object and number. Without favorites the section is one line explaining the star. The section reloads after a star changes.
+
+63. **Related Lists Show Number, Title and Status**
+    The related lists on a record page show, in this order: the record number, the record's title or description (name, subject, title or description field), then the object's other list columns, at most five. The column that only points back to the record on screen (the opportunity on the opportunity's own quote list) is left out. Where an object has a more specific status than its generic one, the related list shows that status with its colour. Reference columns are links (UX 59).
+
+64. **Related Lists Load a Limited Number of Rows**
+    A record page loads the newest 100 related records per object. When there are more, the card header reads "Quotations (100 of 1,234)" and offers "View all", which opens the object's list filtered to the record with a readable filter chip ("Opportunity: Acme expansion ✕"); removing the chip shows the whole list. Documents (quote, order, invoice, contract) load their lines complete. Related lists of server-written logs (status history, call logs) have no "+ Add" button.
+
+65. **Unavailable Actions Are Disabled and Say Why**
+    An action button is disabled when the record's state or the user's rights rule it out, and its tooltip lists the reasons ("The opportunity is closed."). Reasons known from the record show at once; reasons only the server can check arrive a moment after the page opened. Reasons that depend on what the user enters still appear in the action's dialog; a dialog whose action cannot run shows only the reasons and a Close button, not a form that cannot be submitted. Applies to document conversion, lead conversion, deal room creation and every other action with preconditions.
+
+66. **Busy Overlay**
+    While an action that changes data waits for the server, the screen is covered by a transparent overlay that blocks further clicks, also over open dialogs. After 300 ms the overlay shows a spinner and the action ("Saving...", "Creating the quote..."). Typing, field edits and background calls (lock heartbeats, favorites, search) are never blocked.
+
+67. **Dialog Layout and Pinned Dialog Messages**
+    Dialogs with more than four fields use the width of the screen: up to 900 px wide, two columns of fields (one column below 700 px). Header and footer with the action buttons stay visible; only the fields scroll. Messages in a dialog (why an action is not possible, errors returned by the server) appear in a message area directly below the dialog title, outside the scrolling fields, so they stay visible while the user scrolls. A new message replaces the old one; the area takes no space when there is no message.
+
+68. **Edit Mode Under a Server Lock and Unsaved Changes**
+    A record opens read-only. "Edit" asks the server for the lock and switches to edit mode only after the server confirmed it. Everyone else sees "Being edited by <name> since <time>"; the editor sees a small "You are editing; others see it read-only" note with the idle timeout as tooltip. Administrators see "Release lock" on a record someone else edits. Leaving a record in edit mode with unsaved changes (header form or editable grids), by navigation or with the browser's back button, opens the in-app dialog "Unsaved changes" with "Stay and keep editing" and "Discard changes and leave"; browser popups are not used because users can silence them. Reload and closing the tab show the browser's own leave warning. Extends UX 54.
+
+69. **Tables Scroll Only Their Rows**
+    On every page, lists and tables scroll only their content; the page header, the search and filter bar, the table header and the paging stay visible. List views fill the screen and scroll their rows inside the list card. Tables on record pages (line items, related lists) and in Settings scroll inside their card, limited to about two thirds of the screen, with the card title, its search and buttons above and the column headers fixed on top. In dialogs the table header stays visible while the dialog scrolls. Implemented once for every table, not per screen.
+
+70. **Code List Fields**
+    A field bound to a code list shows "CODE label" in forms, record pages and lists ("YA14 Payable within 14 days"). Lists with more than 60 values are a searchable field that shows the label while typing; lists stored as arrays are multi-selects. A stored value that is not in the list stays selectable as "CODE (not in list)", so the record can still be saved. A model default that is not in the list (currency "USD" where the list has CHF and EUR) is not preselected; the user chooses.
+
+71. **Themes and Theme Swatches**
+    Themes are sets of design tokens plus a few rules each: Light, Dark, Lightning (the Salesforce Lightning look, for users coming from Salesforce) and a customer theme (colours, shapes, fallback fonts and the company name as a text wordmark) that a deployment fills. The user menu shows all themes as swatches side by side; one click applies the theme and the menu stays open. The choice is kept per browser, in addition to the Profile setting of UX 25. The navigation stays the left Ribbon in every theme.
+
+72. **Speed Tiles on the Home Page**
+    A row of tiles shows how fast the CRM answers, measured, not estimated: the home figures' server time ("all figures, counted by the database"), the time the last record page needed from click to drawn page in this browser, and further screens a deployment measures. A tile without a measurement shows "-".
+
+73. **Opportunity Team Card**
+    The opportunity page has an "Opportunity team" card: the owner and the members with their access (Edit or Read) and team role, a short note who sees the deal ("The owner, the team and the managers above the owner see this deal and its quotes. Members with access Read cannot edit."), and for the owner, the managers above and administrators a user picker with access and "Add", and "Remove" per member. A record the user may not see answers "You do not have access to this record (it belongs to another team)." (spec 71).
+
+74. **Approvals Card and "Approvals for Me"**
+    A record under an approval workflow (spec 72) shows an "Approvals" card: "Approval check" lists which rules apply and why; "Submit for approval" and "Recall" act on them; each request shows level, approver (or delegate), state, decision, comment and time. Approvers decide with "Approve" or "Reject" and a comment in a dialog. The home page shows a tile "Approvals for me" with the number of waiting requests and the oldest ones, each opening its record.
+
+75. **E-mail Outbox in Settings**
+    Settings shows the e-mail outbox (spec 73): recipient, language, subject, state (waiting, sent, failed), attempts, last error and time, newest first, with "Retry" on failed mails. A note shows whether sending is configured and which recipients the allow-list lets through.
+
+76. **Code List Maintenance in Settings**
+    Settings lists the code lists (spec 70) with their fields; an administrator opens a list, edits codes, labels per language, order and active flag, and adds values. Changes reach open browsers at once.
+
+77. **Integration Connections, Call Log and Job Queue in Settings**
+    Settings shows every connection to an external system (spec 74) with address, login, mode (Live or Off), timeout and the last test; "Test" and "Test all" report reachability and login; the login's password is entered once and never shown again. A call log lists every call with connection, operation, record, duration, HTTP status, outcome and message, filterable and linked from the record. A job queue lists background work with state, attempts and "Retry" or "Cancel".
+
